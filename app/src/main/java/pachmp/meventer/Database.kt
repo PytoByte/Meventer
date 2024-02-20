@@ -12,6 +12,7 @@ class Database {
     suspend fun createUser(nickname: String): Response<String> {
         return Response(ResultResponse(200, "yes"),data="123")
     }
+    
 
     suspend fun login(email: String, password: String): Response<String> {
         return Response(ResultResponse(200, "yes"),data="123")

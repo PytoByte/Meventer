@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp") version "1.8.10-1.0.9"
     kotlin("plugin.serialization") version "1.4.21"
 }
 
@@ -31,11 +32,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -55,8 +56,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
 
     // Navigation
-    val nav_version = "2.7.7"
-    implementation("androidx.navigation:navigation-compose:$nav_version")
+//    val nav_version = "2.7.7"
+//    implementation("androidx.navigation:navigation-compose:$nav_version")
+
+    implementation("io.github.raamcosta.compose-destinations:core:1.10.1")
+    ksp("io.github.raamcosta.compose-destinations:ksp:1.10.1")
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
