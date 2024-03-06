@@ -2,6 +2,8 @@ package pachmp.meventer.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+val TextBox = Color(0xFFEAEAEA)
+val MainColor = Color(48, 144, 196, 255)
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)

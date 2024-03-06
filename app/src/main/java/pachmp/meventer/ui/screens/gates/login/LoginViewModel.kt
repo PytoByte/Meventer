@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import pachmp.meventer.ui.MessageModel
 import pachmp.meventer.repository.DatabaseRepository
+import pachmp.meventer.ui.MessageModel
 import pachmp.meventer.ui.screens.NavGraphs
 
 class LoginViewModel(val navController: NavController): ViewModel() {
