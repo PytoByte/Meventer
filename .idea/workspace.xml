@@ -9,16 +9,26 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
+<<<<<<< HEAD
     <list default="true" id="174edf03-0718-4b5a-baa9-2e2ed6a333d4" name="Changes" comment="finaly fixed commit" />
+=======
+    <list default="true" id="174edf03-0718-4b5a-baa9-2e2ed6a333d4" name="Changes" comment="login and register with requests">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
+>>>>>>> VV
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+<<<<<<< HEAD
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[C:\Users\stuba\.android\avd\Pixel_6_API_24.avd]" />
+=======
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[C:\Users\Владимир\.android\avd\Pixel_API_24.avd]" />
+>>>>>>> VV
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -102,11 +112,19 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+<<<<<<< HEAD
       <recent name="C:\Users\stuba\AndroidStudioProjects\Meventer\app\src\main\res\drawable" />
       <recent name="C:\Users\stuba\AndroidStudioProjects\Meventer\app\src\main\java\pachmp\meventer\ui\screens\mainmenu\BottomScreens" />
       <recent name="C:\Users\stuba\AndroidStudioProjects\Meventer\app\src\main\java\pachmp\meventer\ui" />
       <recent name="D:\Android_projects\meventer\app\src\main\java\pachmp\meventer\login" />
       <recent name="D:\Android_projects\meventer\app\src\main\java\pachmp\meventer" />
+=======
+      <recent name="D:\Android_projects\meventer\app\src\main\res\drawable" />
+      <recent name="D:\Android_projects\meventer\app\src\main\java\pachmp\meventer\ui" />
+      <recent name="D:\Android_projects\meventer\app\src\main\java\pachmp\meventer\login" />
+      <recent name="D:\Android_projects\meventer\app\src\main\java\pachmp\meventer" />
+      <recent name="D:\Android_projects\meventer\app\src\main\java\pachmp\meventer\repository" />
+>>>>>>> VV
     </key>
     <key name="MoveKotlinTopLevelDeclarationsDialog.RECENTS_KEY">
       <recent name="pachmp.meventer.ui.screens.mainmenu.BottomScreens" />
@@ -347,6 +365,7 @@
       <option name="project" value="LOCAL" />
       <updated>1708628403016</updated>
     </task>
+<<<<<<< HEAD
     <task id="LOCAL-00003" summary="finaly fixed commit">
       <option name="closed" value="true" />
       <created>1709734962338</created>
@@ -356,6 +375,30 @@
       <updated>1709734962338</updated>
     </task>
     <option name="localTasksCounter" value="4" />
+=======
+    <task id="LOCAL-00003" summary="login and register without server">
+      <created>1708789865435</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1708789865435</updated>
+    </task>
+    <task id="LOCAL-00004" summary="login and register without server">
+      <created>1708789898856</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1708789898856</updated>
+    </task>
+    <task id="LOCAL-00005" summary="login and register with requests">
+      <created>1709715300965</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1709715300965</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
+>>>>>>> VV
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -372,6 +415,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="suspend" />
     <MESSAGE value="finaly fixed commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="finaly fixed commit" />
+    <MESSAGE value="login and register without server" />
+    <MESSAGE value="login and register with requests" />
+    <option name="LAST_COMMIT_MESSAGE" value="login and register with requests" />
   </component>
 </project>

@@ -1,33 +1,85 @@
 package pachmp.meventer.repository
 
+<<<<<<< HEAD
+=======
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.request
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
+>>>>>>> VV
 
 class DatabaseRepository {
 
-    suspend fun registerRequest(email: String): Boolean {
-        /*val client = HttpClient(CIO)
-        val response: HttpResponse = client.post("http://127.0.0.1:8080/user/sendEmailCode")
-        client.close()*/
-        return true
+    suspend fun sendEmailCode(email: String): ResultResponse {
+        println(email)
+        val client = HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val response: ResultResponse = client.post("http://10.0.2.2:8080/user/sendEmailCode") {
+            setBody(email)
+        }.body()
+        client.close()
+        return response
     }
 
-    suspend fun confirmRegister(code: Int): Boolean {
-        /*val client = HttpClient(CIO)
-        val response: HttpResponse = client.post("http://127.0.0.1:8080/user/verifyEmailCode")
-        client.close()*/
-        return true
+    suspend fun verifyEmailCode(userEmailCode: UserEmailCode): ResultResponse {
+        println(userEmailCode)
+        val client = HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val response: ResultResponse = client.post("http://10.0.2.2:8080/user/verifyEmailCode") {
+            contentType(ContentType.Application.Json)
+            setBody(userEmailCode)
+        }.body()
+        client.close()
+        return response
     }
 
-    suspend fun createUser(nickname: String, password: String): Response<String> {
-        /*val client = HttpClient(CIO)
-        val response: HttpResponse = client.post("http://127.0.0.1:8080/user/register")
-        client.close()*/
-        return Response(ResultResponse(200, "yes"),data="123")
+    suspend fun register(userRegister: UserRegister): Response<String?> {
+        val client = HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+
+        val response: Response<String?> = client.post("http://10.0.2.2:8080/user/register"){
+            contentType(ContentType.Application.Json)
+            setBody(userRegister)
+        }.body()
+        client.close()
+        return response
     }
 
-    suspend fun login(email: String, password: String): Response<String> {
-        /*val client = HttpClient(CIO)
-        val response: HttpResponse = client.post("https://ktor.io/")
-        client.close()*/
-        return Response(ResultResponse(200, "yes"),data="123")
+    suspend fun login(userLogin: UserLogin): Response<String?> {
+        val client = HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+
+        val res: String = client.post("http://10.0.2.2:8080/user/login"){
+            contentType(ContentType.Application.Json)
+            setBody(userLogin)
+        }.body()
+        println(res)
+
+        val response: Response<String?> = client.post("http://10.0.2.2:8080/user/login"){
+            contentType(ContentType.Application.Json)
+            setBody(userLogin)
+        }.body()
+        client.close()
+        return response
     }
 }

@@ -32,6 +32,8 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -53,6 +55,7 @@ android {
 }
 
 dependencies {
+<<<<<<< HEAD
     // Alt navigation
     implementation("io.github.raamcosta.compose-destinations:core:1.10.1")
     implementation("com.google.firebase:firebase-crashlytics-buildtools:2.9.9")
@@ -60,20 +63,39 @@ dependencies {
     implementation("androidx.compose.material:material:1.6.2")
     implementation("com.google.android.libraries.mapsplatform.transportation:transportation-consumer:2.1.0")
     implementation("com.google.android.material:material:1.11.0")
+=======
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation("com.kizitonwose.calendar:view:2.5.0")
+    implementation("com.kizitonwose.calendar:compose:2.5.0")
+
+    // Alternative navigation
+    implementation("io.github.raamcosta.compose-destinations:animations-core:1.10.1")
+    //implementation("io.github.raamcosta.compose-destinations:core:1.10.1")
+>>>>>>> VV
     ksp("io.github.raamcosta.compose-destinations:ksp:1.10.1")
 
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
 
-    // viewmodel
+    // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
     // ktor
-    implementation("io.ktor:ktor-client-core:2.3.8")
-    implementation("io.ktor:ktor-client-cio:2.3.8")
+    val ktor_version = "2.3.8"
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
 
+<<<<<<< HEAD
     implementation ("androidx.compose.material:material-icons-extended:1.4.3")
 
+=======
+    // EncryptedSharedPreferences
+    implementation("androidx.security:security-crypto:1.0.0")
+
+    // default
+>>>>>>> VV
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
