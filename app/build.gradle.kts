@@ -3,6 +3,9 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp") version "1.8.10-1.0.9"
     kotlin("plugin.serialization") version "1.4.21"
+
+    kotlin("kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -55,23 +58,19 @@ android {
 }
 
 dependencies {
-<<<<<<< HEAD
+    // DI
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("com.google.dagger:hilt-android:2.44")
+    kapt("com.google.dagger:hilt-android-compiler:2.44")
+
     // Alt navigation
     implementation("io.github.raamcosta.compose-destinations:core:1.10.1")
-    implementation("com.google.firebase:firebase-crashlytics-buildtools:2.9.9")
-    implementation ("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.compose.material:material:1.6.2")
-    implementation("com.google.android.libraries.mapsplatform.transportation:transportation-consumer:2.1.0")
-    implementation("com.google.android.material:material:1.11.0")
-=======
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation("com.kizitonwose.calendar:view:2.5.0")
     implementation("com.kizitonwose.calendar:compose:2.5.0")
 
     // Alternative navigation
     implementation("io.github.raamcosta.compose-destinations:animations-core:1.10.1")
-    //implementation("io.github.raamcosta.compose-destinations:core:1.10.1")
->>>>>>> VV
     ksp("io.github.raamcosta.compose-destinations:ksp:1.10.1")
 
     // Serialization
@@ -87,15 +86,16 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
 
-<<<<<<< HEAD
-    implementation ("androidx.compose.material:material-icons-extended:1.4.3")
+    // Icons
+    implementation ("androidx.compose.material:material-icons-extended:1.6.3")
 
-=======
     // EncryptedSharedPreferences
     implementation("androidx.security:security-crypto:1.0.0")
 
+    // async images
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
     // default
->>>>>>> VV
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
@@ -104,7 +104,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material3:material3-window-size-class:1.2.0")
+    implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -112,4 +112,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+kapt {
+    correctErrorTypes = true
 }
