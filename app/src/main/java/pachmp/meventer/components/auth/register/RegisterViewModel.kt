@@ -20,12 +20,13 @@ import pachmp.meventer.data.DTO.UserRegister
 import pachmp.meventer.DefaultViewModel
 import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
+import pachmp.meventer.RootNav
 import pachmp.meventer.components.destinations.CreateUserScreenDestination
 import pachmp.meventer.components.destinations.RegisterScreenDestination
 import javax.inject.Inject
 
 @HiltViewModel
-class RegisterViewModel @Inject constructor(@Nav navigator: Navigator, encryptedSharedPreferences: SharedPreferences):
+class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, encryptedSharedPreferences: SharedPreferences):
     DefaultViewModel(navigator, encryptedSharedPreferences) {
     var email by mutableStateOf("")
         private set
@@ -70,7 +71,7 @@ class RegisterViewModel @Inject constructor(@Nav navigator: Navigator, encrypted
     fun registerRequest() {
         viewModelScope.launch {
             if (email.isEmpty() || !Regex("""([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)""").matches(email)) {
-                snackbarHostState.showSnackbar(message = "Поля не заполненны или заполненны неверно")
+                snackbarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
             } else {
                 val response = repository.sendEmailCode(email)
                 if (checkResponse(response = response)) {
@@ -83,7 +84,7 @@ class RegisterViewModel @Inject constructor(@Nav navigator: Navigator, encrypted
     fun confirmRegister() {
         viewModelScope.launch {
             if (code.toIntOrNull() == null) {
-                snackbarHostState.showSnackbar(message = "Поля не заполненны")
+                snackbarHostState.showSnackbar(message = "Поля не заполнены")
             } else {
                 val response = repository.verifyEmailCode(UserEmailCode(email = email, code = code))
                 if (checkResponse(response = response)) {
@@ -96,7 +97,7 @@ class RegisterViewModel @Inject constructor(@Nav navigator: Navigator, encrypted
     fun createUser() {
         viewModelScope.launch {
             if (nickname.isEmpty() || birthday.isEmpty() || password.isEmpty() || password.length < 8 || password.length > 128) {
-                snackbarHostState.showSnackbar(message = "Поля не заполненны или заполненны неверно")
+                snackbarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
             } else {
                 val tokenResponse = repository.register(
                     UserRegister(

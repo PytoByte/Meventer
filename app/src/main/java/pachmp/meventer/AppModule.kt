@@ -24,6 +24,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 class AppModule {
     @Provides
+    @Singleton
     fun encryptedSharedPreferencesProvider(@ApplicationContext appContext: Context): SharedPreferences {
         val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
         return EncryptedSharedPreferences.create(
@@ -36,15 +37,18 @@ class AppModule {
     }
 
     @Provides
+    @Singleton
     fun databaseRepositoryProvider(): DatabaseRepository {
         return DatabaseRepository()
     }
 
     @Nav
     @Provides
+    @Singleton
     fun navigatorProvider() = Navigator()
 
     @RootNav
     @Provides
+    @Singleton
     fun rootNavigatorProvider() = Navigator()
 }

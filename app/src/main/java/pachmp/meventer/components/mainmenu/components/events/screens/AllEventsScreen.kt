@@ -57,6 +57,7 @@ import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.components.widgets.Background
 import pachmp.meventer.data.DTO.Event
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @EventsNavGraph(start = true)
 @Destination
@@ -74,7 +75,7 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel = hiltViewModel()) {
                 ) {
                     Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier
                         .padding(start = 14.dp, top = 4.dp)
-                        .clickable {/*TODO: filter dialog*/}) {
+                        .clickable {/*TODO: filter dialog*/ }) {
                         Icon(
                             imageVector = Icons.Default.FilterAlt,
                             contentDescription = "AllFilters",
@@ -96,7 +97,7 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel = hiltViewModel()) {
                     .fillMaxSize()
                     .padding(paddingValues), horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(eventsViewModel.events!!, key={it.id}) { event ->
+                items(eventsViewModel.events!!, key={it.id}, contentType = { Event }) { event ->
                     EventCard(event, eventsViewModel)
                 }
             }
@@ -141,7 +142,7 @@ fun EventCard(event: Event, eventsViewModel: EventsViewModel) {
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Text(text = event.name, fontSize = 20.sp, fontWeight = FontWeight(1000), maxLines = 2)
-                Text(text = event.startTime.atZone(ZoneId.systemDefault()).toString(), maxLines = 1)
+                Text(text = event.startTime.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm:ss")), maxLines = 1)
                 Text(text = if (event.price != 0) "Price: ${event.price}₽" else "Price: Free", maxLines = 1)
             }
 

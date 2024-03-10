@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.utils.navGraph
 import dagger.hilt.android.AndroidEntryPoint
 import pachmp.meventer.components.NavGraphs
 import javax.inject.Inject
@@ -37,15 +38,15 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            navigator.navController = rememberNavController()
-            rootNavigator.navController = rememberNavController()
+            rootNavigator.setController(rememberNavController())
 
             println("bruh")
-            println(navigator.navController)
-            println(rootNavigator.navController)
+            println(navigator.getController())
+            println(rootNavigator.getController())
 
-            DestinationsNavHost(navGraph = NavGraphs.root,
-                navController = navigator.navController!!,
+            DestinationsNavHost(
+                navGraph = NavGraphs.root,
+                navController = rootNavigator.getController()!!,
                 modifier = Modifier.fillMaxSize(),
                 startRoute = if (encryptedSharedPreferences.getString("token", null)==null) NavGraphs.login else NavGraphs.mainmenu
             )

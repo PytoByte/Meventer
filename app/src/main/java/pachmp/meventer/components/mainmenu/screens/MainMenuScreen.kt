@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.utils.currentDestinationAsState
@@ -23,15 +24,16 @@ import pachmp.meventer.components.mainmenu.MainMenuViewModel
 @Destination
 @Composable
 fun MainMenuScreen(mainmenuViewModel: MainMenuViewModel = hiltViewModel()) {
+    mainmenuViewModel.navigator.setController(rememberNavController())
     Scaffold(
         bottomBar = {
-            BottomBar(navigator = mainmenuViewModel.rootNavigator)
+            BottomBar(navigator = mainmenuViewModel.navigator)
         }
     ) { paddingValues ->
         DestinationsNavHost(
             modifier = Modifier.padding(paddingValues),
             navGraph = NavGraphs.bottom,
-            navController = mainmenuViewModel.rootNavigator.navController!!
+            navController = mainmenuViewModel.navigator.getController()!!
         )
     }
 }
@@ -39,7 +41,7 @@ fun MainMenuScreen(mainmenuViewModel: MainMenuViewModel = hiltViewModel()) {
 @Composable
 fun BottomBar(navigator: Navigator) {
     val currentDestination =
-        navigator.navController!!.currentDestinationAsState().value ?: NavGraphs.bottom.startDestination
+        navigator.getController()!!.currentDestinationAsState().value ?: NavGraphs.bottom.startDestination
     NavigationBar {
         BottomBarScreen.values().forEach { screen ->
             NavigationBarItem(

@@ -2,6 +2,8 @@ package pachmp.meventer.components.mainmenu
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -18,7 +20,7 @@ enum class BottomBarScreen (
     Profile(
         navGraph = NavGraphs.profile,
         title = "Profile",
-        icon = Icons.Default.Settings
+        icon = Icons.Default.Person
     ),
     Events(
         navGraph = NavGraphs.events,
@@ -27,7 +29,7 @@ enum class BottomBarScreen (
     ),
     Chats(
         navGraph = NavGraphs.chats,
-        title = "Your Events",
-        icon = Icons.Default.AccountCircle
+        title = "Chat",
+        icon = Icons.Default.ChatBubble
     )
 }

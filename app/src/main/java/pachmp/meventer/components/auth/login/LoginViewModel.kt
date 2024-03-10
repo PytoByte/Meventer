@@ -15,11 +15,12 @@ import pachmp.meventer.data.DTO.UserLogin
 import pachmp.meventer.DefaultViewModel
 import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
+import pachmp.meventer.RootNav
 import javax.inject.Inject
 import javax.inject.Named
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(@Nav navigator: Navigator, encryptedSharedPreferences: SharedPreferences):
+class LoginViewModel @Inject constructor(@RootNav navigator: Navigator, encryptedSharedPreferences: SharedPreferences):
     DefaultViewModel(navigator, encryptedSharedPreferences) {
 
     var email by mutableStateOf("")
@@ -39,7 +40,7 @@ class LoginViewModel @Inject constructor(@Nav navigator: Navigator, encryptedSha
     fun loginRequest() {
         viewModelScope.launch {
             if (email.isEmpty() || password.isEmpty()) {
-                snackbarHostState.showSnackbar(message = "Поля не заполненны")
+                snackbarHostState.showSnackbar(message = "Поля не заполнены")
             } else {
                 val tokenResponse = repository.login(UserLogin(email = email, password = password))
                 if (checkResponse(response = tokenResponse.result)) {
