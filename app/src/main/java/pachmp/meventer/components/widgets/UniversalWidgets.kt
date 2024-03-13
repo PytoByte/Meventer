@@ -1,6 +1,7 @@
 package pachmp.meventer.components.widgets
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.BrushPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -355,5 +357,16 @@ fun dropDownMenu(leb: String) {
             }
         }
     }
+}
 
+@Composable
+fun TextCom(key: String, value: String){
+    Column() {
+        OutlinedTextField(
+            value = value,
+            label = {Text(key, fontWeight = FontWeight.Bold, fontSize = 22.sp)},
+            onValueChange = { /*profileViewModel.setUserName(it)*/ },
+            singleLine = true
+        )
+    }
 }

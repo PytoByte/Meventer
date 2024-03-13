@@ -8,13 +8,15 @@ import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
 import pachmp.meventer.RootNav
 import pachmp.meventer.components.mainmenu.BottomViewModel
+import pachmp.meventer.components.mainmenu.MainMenuViewModel
+import pachmp.meventer.data.repository.Repositories
 import javax.inject.Inject
 
 @HiltViewModel
 class ChatsViewModel @Inject constructor(
     @RootNav rootNavigator: Navigator,
     @Nav navigator: Navigator,
-    encryptedSharedPreferences: SharedPreferences,
-) : BottomViewModel(rootNavigator, navigator, encryptedSharedPreferences) {
+    repositories: Repositories,
+) : BottomViewModel(rootNavigator, navigator, repositories)  {
 
 }

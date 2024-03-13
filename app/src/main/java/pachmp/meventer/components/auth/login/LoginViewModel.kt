@@ -16,12 +16,13 @@ import pachmp.meventer.DefaultViewModel
 import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
 import pachmp.meventer.RootNav
+import pachmp.meventer.data.repository.Repositories
 import javax.inject.Inject
 import javax.inject.Named
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(@RootNav navigator: Navigator, encryptedSharedPreferences: SharedPreferences):
-    DefaultViewModel(navigator, encryptedSharedPreferences) {
+class LoginViewModel @Inject constructor(@RootNav navigator: Navigator, repositories: Repositories):
+    DefaultViewModel(navigator, repositories) {
 
     var email by mutableStateOf("")
         private set
@@ -42,10 +43,10 @@ class LoginViewModel @Inject constructor(@RootNav navigator: Navigator, encrypte
             if (email.isEmpty() || password.isEmpty()) {
                 snackbarHostState.showSnackbar(message = "Поля не заполнены")
             } else {
-                val tokenResponse = repository.login(UserLogin(email = email, password = password))
-                if (checkResponse(response = tokenResponse.result)) {
-                    val token = tokenResponse.data
-                    encryptedSharedPreferences.edit().putString("token", token).apply()
+                val tokenResponse = repositories.authRepository.login(UserLogin(email = email, password = password))
+                if (checkResponse(response = tokenResponse)) {
+                    val token = tokenResponse!!.data
+                    repositories.encryptedSharedPreferences.edit().putString("token", token).apply()
                     navigator.clearNavigate(NavGraphs.mainmenu)
                 }
             }

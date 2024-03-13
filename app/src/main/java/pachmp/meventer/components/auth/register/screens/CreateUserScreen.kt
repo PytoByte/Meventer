@@ -45,7 +45,7 @@ import pachmp.meventer.components.auth.register.RegisterViewModel
 @RegisterNavGraph
 @Destination(style = FadeTransition::class)
 @Composable
-fun CreateUserScreen(registerViewModel: RegisterViewModel = hiltViewModel()) {
+fun CreateUserScreen(registerViewModel: RegisterViewModel) {
     val showCalendar = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     dialogDatePicker(

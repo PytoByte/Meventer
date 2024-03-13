@@ -39,11 +39,10 @@ annotation class RegisterNavGraph(
     val start: Boolean = false
 )
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @RegisterNavGraph(start = true)
 @Destination(style = FadeTransition::class)
 @Composable
-fun RegisterScreen(registerViewModel: RegisterViewModel = hiltViewModel()) {
+fun RegisterScreen(registerViewModel: RegisterViewModel) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }

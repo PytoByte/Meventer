@@ -35,7 +35,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
@@ -45,11 +44,12 @@ import pachmp.meventer.components.widgets.MaskVisualTransformation
 import pachmp.meventer.components.widgets.MaterialButton
 import pachmp.meventer.components.widgets.TextComponent
 import pachmp.meventer.components.widgets.dropDownMenu
+import pachmp.meventer.ui.transitions.FadeTransition
 
 @EventsNavGraph
-@Destination
+@Destination(style = FadeTransition::class)
 @Composable
-fun EditEventScreen(eventsViewModel: EventsViewModel = hiltViewModel()) {
+fun EditEventScreen(eventsViewModel: EventsViewModel) {
     Background()
 
     Card(

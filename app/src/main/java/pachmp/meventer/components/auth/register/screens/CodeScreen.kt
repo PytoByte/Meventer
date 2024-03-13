@@ -39,7 +39,7 @@ import pachmp.meventer.components.auth.register.RegisterViewModel
 @RegisterNavGraph
 @Destination(style = FadeTransition::class)
 @Composable
-fun CodeScreen(registerViewModel: RegisterViewModel = hiltViewModel()) {
+fun CodeScreen(registerViewModel: RegisterViewModel) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {

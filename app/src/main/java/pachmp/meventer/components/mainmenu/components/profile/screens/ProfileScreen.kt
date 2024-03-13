@@ -2,10 +2,8 @@ package pachmp.meventer.components.mainmenu.components.profile.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,33 +31,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.imageResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.gowtham.ratingbar.RatingBar
+import com.gowtham.ratingbar.RatingBarConfig
+import com.gowtham.ratingbar.RatingBarStyle
 import com.ramcosta.composedestinations.annotation.Destination
-import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
 import pachmp.meventer.components.widgets.Background
+import pachmp.meventer.ui.transitions.BottomTransition
 import java.time.LocalDate
 
 @ProfileNavGraph(start = true)
-@Destination
+@Destination(style = BottomTransition::class)
 @Composable
-fun ProfileScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
-    Background()
+fun ProfileScreen(profileViewModel: ProfileViewModel) {
     if (profileViewModel.user != null) {
         Scaffold(
             topBar = {
@@ -70,7 +59,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                 ) {
                     // Edit button
                     IconButton(
-                        onClick = { /* TODO: Implement edit account */ }
+                        onClick = { profileViewModel.navigateToEdit() }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
@@ -92,6 +81,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                 }
             }
         ) { paddingValues ->
+            Background()
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -114,8 +104,9 @@ fun ProfileScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     ProfileDetail("email", profileViewModel.user!!.email)
                     ProfileDetail("phone", "in progress") // TODO: We dont have this
-                    ProfileDetail("age",
-                        (LocalDate.now().year - profileViewModel.user!!.date.year).toString()
+                    ProfileDetail(
+                        "age",
+                        (LocalDate.now().year - profileViewModel.user!!.dateOfBirth.year).toString()
                     )
                     ProfileDetail("sex?", "in progress") // TODO: We dont have this
                 }
@@ -170,94 +161,13 @@ fun Avatar(image: Painter) {
 fun ProfileInfo(rating: Float) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(250.dp)
+        modifier = Modifier.width(300.dp)
     ) {
-        RatingBar(rating = rating)
+        RatingBar(
+            value = rating,
+            config = RatingBarConfig().numStars(5).style(RatingBarStyle.HighLighted).size(30.dp),
+            onValueChange = {},
+            onRatingChanged = {})
         Text(text = "Rating: $rating", style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
-
-@Composable
-private fun RatingBar(
-    modifier: Modifier = Modifier,
-    rating: Float,
-    spaceBetween: Dp = 0.dp
-) {
-
-    val image = ImageBitmap.imageResource(id = R.drawable.star_background)
-    val imageFull = ImageBitmap.imageResource(id = R.drawable.star_foreground)
-
-    val totalCount = 5
-
-    val height = LocalDensity.current.run { image.height.toDp() }
-    val width = LocalDensity.current.run { image.width.toDp() }
-    val space = LocalDensity.current.run { spaceBetween.toPx() }
-    val totalWidth = width * totalCount + spaceBetween * (totalCount - 1)
-
-
-    Box(
-        modifier
-            .width(totalWidth)
-            .height(height).background(color=Color.Black)
-            .drawBehind {
-                drawRating(rating, image, imageFull, space)
-            })
-}
-
-private fun DrawScope.drawRating(
-    rating: Float,
-    image: ImageBitmap,
-    imageFull: ImageBitmap,
-    space: Float
-) {
-
-    val totalCount = 5
-
-    val imageWidth = image.width.toFloat()
-    val imageHeight = size.height
-
-    val reminder = rating - rating.toInt()
-    val ratingInt = (rating - reminder).toInt()
-
-    for (i in 0 until totalCount) {
-
-        val start = imageWidth * i + space * i
-
-        drawImage(
-            image = image,
-            topLeft = Offset(start, 0f)
-        )
-    }
-
-    drawWithLayer {
-        for (i in 0 until totalCount) {
-            val start = imageWidth * i + space * i
-            // Destination
-            drawImage(
-                image = imageFull,
-                topLeft = Offset(start, 0f)
-            )
-        }
-
-        val end = imageWidth * totalCount + space * (totalCount - 1)
-        val start = rating * imageWidth + ratingInt * space
-        val size = end - start
-
-        // Source
-        drawRect(
-            Color.Transparent,
-            topLeft = Offset(start, 0f),
-            size = Size(size, height = imageHeight),
-            blendMode = BlendMode.SrcIn
-        )
-    }
-}
-
-private fun DrawScope.drawWithLayer(block: DrawScope.() -> Unit) {
-    with(drawContext.canvas.nativeCanvas) {
-        val checkPoint = saveLayer(null, null)
-        block()
-        restoreToCount(checkPoint)
     }
 }

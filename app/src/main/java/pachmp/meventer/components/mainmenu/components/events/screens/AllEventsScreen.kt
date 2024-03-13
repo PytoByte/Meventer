@@ -1,5 +1,6 @@
 package pachmp.meventer.components.mainmenu.components.events.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
@@ -50,21 +52,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.components.widgets.Background
 import pachmp.meventer.data.DTO.Event
+import pachmp.meventer.ui.transitions.BottomTransition
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @EventsNavGraph(start = true)
-@Destination
+@Destination(style = BottomTransition::class)
 @Composable
-fun AllEventsScreen(eventsViewModel: EventsViewModel = hiltViewModel()) {
-    Background()
-
+fun AllEventsScreen(eventsViewModel: EventsViewModel) {
+    Log.d("VIEWMODEL", eventsViewModel.toString())
     Scaffold(
         topBar = {
             Column {
@@ -73,14 +75,15 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel = hiltViewModel()) {
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier
-                        .padding(start = 14.dp, top = 4.dp)
-                        .clickable {/*TODO: filter dialog*/ }) {
-                        Icon(
-                            imageVector = Icons.Default.FilterAlt,
-                            contentDescription = "AllFilters",
-                            modifier = Modifier.size(32.dp)
-                        )
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier
+                            .padding(start = 14.dp, top = 4.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.FilterAlt,
+                                contentDescription = "AllFilters",
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
                     FilterChipExample()
                 }
@@ -89,6 +92,7 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel = hiltViewModel()) {
 
         }
     ) { paddingValues ->
+        Background()
         if (eventsViewModel.events==null) {
 
         } else {
@@ -123,10 +127,10 @@ fun EventCard(event: Event, eventsViewModel: EventsViewModel) {
                 .fillMaxWidth()
                 .height((400 * 0.6f).dp)
         ) {
-            Image(
+            AsyncImage(
                 modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = null,
+                model = event.images[0],
+                contentDescription = "title",
                 contentScale = ContentScale.Crop
             )
         }
@@ -147,7 +151,8 @@ fun EventCard(event: Event, eventsViewModel: EventsViewModel) {
             }
 
             Image(
-                painter = if (event.favourite) painterResource(id = R.drawable.fullheart2) else painterResource(
+                // TODO: FAVORITES ARE GONE
+                painter = if (false) painterResource(id = R.drawable.fullheart2) else painterResource(
                     id = R.drawable.emptyheart2
                 ),
                 contentDescription = "Favorite",
@@ -290,7 +295,7 @@ fun FiltersRow(
 
 @Composable
 fun FilterChipExample() {
-    val appliedFilters = listOf("Today", "Free", "Sport", "Learning", "Favorite", "Games")
+    val appliedFilters = listOf("Создатель", "Организатор", "Участник")
 
     var selectedFilters by remember { mutableStateOf(emptyList<String>()) }
     val allFilters = appliedFilters

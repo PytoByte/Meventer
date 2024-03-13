@@ -2,22 +2,17 @@ package pachmp.meventer
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.internal.modules.ApplicationContextModule
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ViewModelScoped
 import dagger.hilt.components.SingletonComponent
-import pachmp.meventer.data.repository.DatabaseRepository
-import javax.inject.Named
+import pachmp.meventer.data.repository.AuthRepository
+import pachmp.meventer.data.repository.EventRepository
+import pachmp.meventer.data.repository.Repositories
+import pachmp.meventer.data.repository.UserRepository
 import javax.inject.Singleton
 
 @Module
@@ -34,12 +29,6 @@ class AppModule {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
-    }
-
-    @Provides
-    @Singleton
-    fun databaseRepositoryProvider(): DatabaseRepository {
-        return DatabaseRepository()
     }
 
     @Nav

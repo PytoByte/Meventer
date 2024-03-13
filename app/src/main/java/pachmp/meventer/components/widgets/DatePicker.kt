@@ -51,19 +51,6 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        for (dayOfWeek in daysOfWeek) {
-            Text(
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center,
-                text = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
-            )
-        }
-    }
-}
-
-@Composable
 fun dialogDatePicker(
     visible: MutableState<Boolean>,
     currentSelected: CalendarDay = CalendarDay(
@@ -141,6 +128,19 @@ fun dialogDatePicker(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        for (dayOfWeek in daysOfWeek) {
+            Text(
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center,
+                text = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
+            )
         }
     }
 }

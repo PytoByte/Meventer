@@ -84,6 +84,7 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-client-auth:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
 
     // Icons
@@ -94,6 +95,9 @@ dependencies {
 
     // async images
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // ratingbar
+    implementation("com.github.a914-gowtham:compose-ratingbar:1.2.5")
 
     // default
     implementation("androidx.core:core-ktx:1.12.0")

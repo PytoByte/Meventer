@@ -8,11 +8,12 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.ramcosta.composedestinations.spec.Direction
+import kotlinx.serialization.Serializable
 import pachmp.meventer.components.NavGraph
 import pachmp.meventer.components.NavGraphs
 import pachmp.meventer.components.destinations.ChatsScreenDestination
 
-enum class BottomBarScreen (
+enum class BottomBarScreens (
     val navGraph: NavGraph,
     val title: String,
     val icon: ImageVector
