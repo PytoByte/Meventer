@@ -43,6 +43,10 @@ fun MainMenuScreen(startRoute: String="Events", mainmenuViewModel: MainMenuViewM
 
     var bottomBarShow by remember { mutableStateOf(true) }
 
+    val eventsViewModel: EventsViewModel = hiltViewModel()
+    val profileViewModel: ProfileViewModel = hiltViewModel()
+    val chatsViewModel: ChatsViewModel = hiltViewModel()
+
     mainmenuViewModel.navigator.getController()!!.addOnDestinationChangedListener { controller, destination, arguments ->
         var start = false
         BottomBarScreens.values().forEach {
@@ -50,6 +54,15 @@ fun MainMenuScreen(startRoute: String="Events", mainmenuViewModel: MainMenuViewM
                 start = true
             }
         }
+
+        if (BottomBarScreens.Profile.navGraph.startDestination.route == destination.route) {
+            profileViewModel.updateProfile()
+        }
+
+        if (BottomBarScreens.Events.navGraph.startDestination.route == destination.route) {
+            eventsViewModel.updateEvents()
+        }
+
         bottomBarShow = start
     }
 
@@ -65,10 +78,6 @@ fun MainMenuScreen(startRoute: String="Events", mainmenuViewModel: MainMenuViewM
             }
         }
     ) { paddingValues ->
-        val eventsViewModel: EventsViewModel = hiltViewModel()
-        val profileViewModel: ProfileViewModel = hiltViewModel()
-        val chatsViewModel: ChatsViewModel = hiltViewModel()
-
         DestinationsNavHost(
             modifier = Modifier.padding(paddingValues),
             navGraph = NavGraphs.bottom,

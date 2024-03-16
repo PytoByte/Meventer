@@ -77,13 +77,7 @@ fun CodeScreen(registerViewModel: RegisterViewModel) {
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
-            val corscope = rememberCoroutineScope()
-
-            Button(onClick = {
-                corscope.launch {
-                    registerViewModel.confirmRegister()
-                }
-            }) {
+            Button(onClick = { registerViewModel.confirmRegister() }) {
                 Text("Зарегистрироваться")
             }
         }

@@ -120,52 +120,36 @@ fun Background() {
 
 @Composable
 fun CustomText(text: String, modifier: Modifier = Modifier) {
-
-    val boldRegex = Regex("(?<!\\*)\\*\\*(?!\\*).*?(?<!\\*)\\*\\*(?!\\*)")
-
-    var results: MatchResult? = boldRegex.find(text)
-
-    val boldIndexes = mutableListOf<Pair<Int, Int>>()
-
-    val keywords = mutableListOf<String>()
-
+    var results: MatchResult? = Regex("(?<!\\*)\\*\\*(?!\\*).*?(?<!\\*)\\*\\*(?!\\*)").find(text)
     var finalText = text
-
-    while (results != null) {
-        keywords.add(results.value)
-        results = results.next()
-    }
-
-    keywords.forEach { keyword ->
-        val indexOf = finalText.indexOf(keyword)
-        val newKeyWord = keyword.removeSurrounding("**")
-        finalText = finalText.replace(keyword, newKeyWord)
-        boldIndexes.add(Pair(indexOf, indexOf + newKeyWord.length))
-    }
-
-    val annotatedString = buildAnnotatedString {
-        append(finalText)
-
-        // Add bold style to keywords that has to be bold
-        boldIndexes.forEach {
-            addStyle(
-                style = SpanStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-
-                ),
-                start = it.first,
-                end = it.second
-            )
-
+    val boldIndexes = buildMap {
+        while (results != null) {
+            val keyword = results!!.value
+            val indexOf = finalText.indexOf(keyword)
+            val newKeyword = keyword.removeSurrounding("**")
+            finalText = finalText.replace(keyword, newKeyword)
+            set(indexOf, indexOf + newKeyword.length)
+            results = results?.next()
         }
     }
-
     Text(
         modifier = modifier
             .fillMaxWidth(),
         fontSize = 18.sp,
-        text = annotatedString
+        text = buildAnnotatedString {
+            append(finalText)
+            for ((key, value) in boldIndexes) {
+                addStyle(
+                    style = SpanStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+
+                    ),
+                    start = key,
+                    end = value
+                )
+            }
+        }
     )
 }
 

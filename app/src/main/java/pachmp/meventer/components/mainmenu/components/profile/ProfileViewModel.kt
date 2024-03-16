@@ -27,12 +27,15 @@ class ProfileViewModel @Inject constructor(
     var user by mutableStateOf<User?>(null)
         private set
 
+    var avatar by mutableStateOf<String?>(null)
+        private set
 
-    init {
+    fun updateProfile() {
         viewModelScope.launch {
             val response = repositories.userRepository.getUserData()
             if (checkResponse(response)) {
                 user = response!!.data
+                avatar = repositories.userRepository.getFileURL(user!!.avatar)
             }
         }
     }

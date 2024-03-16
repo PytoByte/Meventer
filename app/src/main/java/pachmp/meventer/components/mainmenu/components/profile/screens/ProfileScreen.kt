@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -49,39 +50,39 @@ import java.time.LocalDate
 @Destination(style = BottomTransition::class)
 @Composable
 fun ProfileScreen(profileViewModel: ProfileViewModel) {
-    if (profileViewModel.user != null) {
-        Scaffold(
-            topBar = {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+    Scaffold(
+        topBar = {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Edit button
+                IconButton(
+                    onClick = { profileViewModel.navigateToEdit() }
                 ) {
-                    // Edit button
-                    IconButton(
-                        onClick = { profileViewModel.navigateToEdit() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit account",
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit account",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
 
-                    // Logout button
-                    IconButton(
-                        onClick = { profileViewModel.logout() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Logout,
-                            contentDescription = "Logout",
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
+                // Logout button
+                IconButton(
+                    onClick = { profileViewModel.logout() }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Logout,
+                        contentDescription = "Logout",
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
             }
-        ) { paddingValues ->
-            Background()
+        }
+    ) { paddingValues ->
+        Background()
+        if (profileViewModel.user != null) {
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -91,7 +92,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
             ) {
                 Spacer(modifier = Modifier.height(25.dp))
                 // Avatar
-                AsyncImage(model = profileViewModel.user!!.avatar, contentDescription = "avatar")
+                AsyncImage(modifier=Modifier.size(150.dp).clip(CircleShape), model = profileViewModel.avatar, contentDescription = "avatar", contentScale = ContentScale.Crop)
 
                 // Username and ID
                 Spacer(modifier = Modifier.height(12.dp))
@@ -111,9 +112,14 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
                     ProfileDetail("sex?", "in progress") // TODO: We dont have this
                 }
             }
+        } else {
+            Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Загрузка")
+            }
         }
     }
 }
+
 
 @Composable
 fun ProfileDetail(label: String, value: String) {

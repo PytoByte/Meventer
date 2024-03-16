@@ -11,6 +11,7 @@ import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
 import pachmp.meventer.RootNav
 import pachmp.meventer.components.destinations.AllEventsScreenDestination
+import pachmp.meventer.components.destinations.CreateEventScreenDestination
 import pachmp.meventer.components.destinations.EventScreenDestination
 import pachmp.meventer.components.mainmenu.BottomViewModel
 import pachmp.meventer.data.DTO.Event
@@ -31,10 +32,6 @@ class EventsViewModel @Inject constructor(
         private set
 
     private var selected: Event? = null
-
-    init {
-        updateEvents()
-    }
 
     fun getSelected(): Event? {
         return selected
@@ -87,6 +84,12 @@ class EventsViewModel @Inject constructor(
         viewModelScope.launch {
             updateEvents()
             navigator.clearNavigate(AllEventsScreenDestination)
+        }
+    }
+
+    fun navigateToCreateEvent() {
+        viewModelScope.launch {
+            navigator.clearNavigate(CreateEventScreenDestination)
         }
     }
 }

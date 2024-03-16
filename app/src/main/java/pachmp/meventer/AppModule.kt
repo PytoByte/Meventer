@@ -9,10 +9,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import pachmp.meventer.data.repository.AuthRepository
-import pachmp.meventer.data.repository.EventRepository
-import pachmp.meventer.data.repository.Repositories
-import pachmp.meventer.data.repository.UserRepository
 import javax.inject.Singleton
 
 @Module
@@ -21,14 +17,15 @@ class AppModule {
     @Provides
     @Singleton
     fun encryptedSharedPreferencesProvider(@ApplicationContext appContext: Context): SharedPreferences {
-        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+        /*val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
         return EncryptedSharedPreferences.create(
             "token",
             masterKeyAlias,
             appContext,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+        )*/
+        return appContext.getSharedPreferences("token", Context.MODE_PRIVATE)
     }
 
     @Nav

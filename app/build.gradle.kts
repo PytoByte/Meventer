@@ -86,6 +86,8 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-client-auth:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+    implementation("io.ktor:ktor-client-logging:$ktor_version")
+    //implementation("io.ktor:ktor-client-logging-native:$ktor_version")
 
     // Icons
     implementation ("androidx.compose.material:material-icons-extended:1.6.3")

@@ -1,7 +1,10 @@
 package pachmp.meventer.data.repository
 
+import android.content.Context
 import android.content.SharedPreferences
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.client.call.body
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
@@ -13,6 +16,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.headers
 import io.ktor.util.InternalAPI
+import kotlinx.serialization.json.Json
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.data.DTO.EventCreate
 import pachmp.meventer.data.DTO.EventSelection
@@ -20,23 +24,27 @@ import pachmp.meventer.data.DTO.EventUpdate
 import pachmp.meventer.data.DTO.EventsGet
 import pachmp.meventer.data.DTO.Response
 import pachmp.meventer.data.DTO.ResultResponse
+import pachmp.meventer.data.DTO.UserRegister
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
-class EventRepository @Inject constructor(encryptedSharedPreferences: SharedPreferences): DefaultRepository(encryptedSharedPreferences) {
-    val repositoryURL = baseURL+"event/"
+class EventRepository @Inject constructor(
+    encryptedSharedPreferences: SharedPreferences,
+    @ApplicationContext appContext: Context
+) : DefaultRepository(encryptedSharedPreferences, appContext) {
+    val repositoryURL = baseURL + "event/"
 
     @OptIn(InternalAPI::class)
     suspend fun createEvent(eventCreate: EventCreate, images: List<File>) = withHttpClient {
         post("${repositoryURL}create") {
-            setTokenHeader()
+            bearerAuth(getToken())
             setBody(
                 MultiPartFormDataContent(
                     parts = formData {
                         append(
                             key = "event",
-                            value = eventCreate,
+                            value = Json.encodeToString(EventCreate.serializer(), eventCreate),
                             headers = headers {
                                 append(
                                     HttpHeaders.ContentType,
@@ -65,7 +73,7 @@ class EventRepository @Inject constructor(encryptedSharedPreferences: SharedPref
 
     suspend fun getUserEvents(eventsGet: EventsGet) = withHttpClient {
         post("${repositoryURL}user") {
-            setTokenHeader()
+            bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(eventsGet)
         }.body<Response<List<Event>>>()
@@ -73,7 +81,7 @@ class EventRepository @Inject constructor(encryptedSharedPreferences: SharedPref
 
     suspend fun deteleEvent(eventID: Int) = withHttpClient {
         post("${repositoryURL}delete") {
-            setTokenHeader()
+            bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(eventID)
         }.body<ResultResponse>()
@@ -81,7 +89,7 @@ class EventRepository @Inject constructor(encryptedSharedPreferences: SharedPref
 
     suspend fun editEvent(eventUpdate: EventUpdate) = withHttpClient {
         post("${repositoryURL}update") {
-            setTokenHeader()
+            bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(eventUpdate)
         }.body<ResultResponse>()
@@ -89,7 +97,7 @@ class EventRepository @Inject constructor(encryptedSharedPreferences: SharedPref
 
     suspend fun changeFavourite(eventID: Int) = withHttpClient {
         post("${repositoryURL}changeUsers/featured") {
-            setTokenHeader()
+            bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(eventID)
         }.body<ResultResponse>()
@@ -102,7 +110,7 @@ class EventRepository @Inject constructor(encryptedSharedPreferences: SharedPref
 
     suspend fun getGlobalEvents(eventSelection: EventSelection) = withHttpClient {
         post("${repositoryURL}global") {
-            setTokenHeader()
+            bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(eventSelection)
         }.body<Response<List<Event>>>()

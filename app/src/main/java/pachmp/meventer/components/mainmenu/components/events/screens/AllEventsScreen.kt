@@ -1,7 +1,11 @@
 package pachmp.meventer.components.mainmenu.components.events.screens
 
 import android.util.Log
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,19 +26,26 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,13 +54,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,11 +81,21 @@ import java.time.format.DateTimeFormatter
 @Destination(style = BottomTransition::class)
 @Composable
 fun AllEventsScreen(eventsViewModel: EventsViewModel) {
-    Log.d("VIEWMODEL", eventsViewModel.toString())
+    var isSearchActive by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
+        floatingActionButton = {
+            FloatingButtonAdd {
+                eventsViewModel.navigateToCreateEvent()
+            }
+        },
         topBar = {
             Column {
-                SearchBarWidget()
+                EmbeddedSearchBar(
+                    //onQueryChange = onQueryChange,
+                    isSearchActive = isSearchActive,
+                    onActiveChanged = { isSearchActive = it }
+                )
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
@@ -92,7 +117,6 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
 
         }
     ) { paddingValues ->
-        Background()
         if (eventsViewModel.events==null) {
 
         } else {
@@ -106,6 +130,17 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FloatingButtonAdd(onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = { onClick() },
+        modifier = Modifier
+            .size(60.dp)
+    ) {
+        Icon(Icons.Filled.Add, "Floating action button.")
     }
 }
 
@@ -167,60 +202,115 @@ fun EventCard(event: Event, eventsViewModel: EventsViewModel) {
 }
 
 //Searh
-@OptIn(ExperimentalMaterial3Api::class)
+//Searh
 @Composable
-fun SearchBarWidget() {
-    var text by remember { mutableStateOf("") } // Query for SearchBar
-    var active by remember { mutableStateOf(false) } // Active state for SearchBar
+@OptIn(ExperimentalMaterial3Api::class)
+fun EmbeddedSearchBar(
+    isSearchActive: Boolean,
+    onActiveChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    onSearch: ((String) -> Unit)? = null
+) {
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     val searchHistory = remember { mutableStateListOf("") }
-
-    SearchBar(modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 10.dp),
-        query = text,
-        onQueryChange = {
-            text = it
+    val activeChanged: (Boolean) -> Unit = { active ->
+        //searchQuery = ""
+//        onQueryChange("")
+        onActiveChanged(active)
+    }
+    SearchBar(
+        query = searchQuery,
+        onQueryChange = { query ->
+            searchQuery = query
+//            onQueryChange(query)
         },
-        onSearch = {
-            searchHistory.add(text)
-            active = false
+        onSearch = onSearch ?: {
+            if (searchHistory.contains(searchQuery)) {
+                searchHistory.remove(searchQuery)
+            }
+            searchHistory.add(0, searchQuery)
+            activeChanged(false)
         },
-        active = active,
-        onActiveChange = {
-            active = it
+        active = isSearchActive,
+        onActiveChange = activeChanged,
+        modifier = if (isSearchActive) {
+            modifier
+                .animateContentSize(spring(stiffness = Spring.StiffnessHigh))
+        } else {
+            modifier
+                .padding(start = 12.dp, top = 2.dp, end = 12.dp)
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.onPrimary)
+                .animateContentSize(spring(stiffness = Spring.StiffnessHigh))
         },
-        placeholder = {
-            Text(text = "Enter your query")
-        },
+        placeholder = { Text("Поиск") },
         leadingIcon = {
-            Icon(imageVector = Icons.Default.Search, contentDescription = "Search icon")
-        },
-        trailingIcon = {
-            if (active) {
+            if (isSearchActive) {
+                IconButton(
+                    onClick = { activeChanged(false) },
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                        contentDescription = "back",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            } else {
                 Icon(
-                    modifier = Modifier.clickable {
-                        if (text.isNotEmpty()) {
-                            text = ""
-                        } else {
-                            active = false
-                        }
-                    },
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close icon"
+                    imageVector = Icons.Rounded.Search,
+                    contentDescription = "lupa",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        },
+        trailingIcon = if (isSearchActive && searchQuery.isNotEmpty()) {
+            {
+                IconButton(
+                    onClick = {
+                        searchQuery = ""
+//                        onQueryChange("")
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = "clearField",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+        } else {
+            null
+        },
+        colors = SearchBarDefaults.colors(
+            containerColor = if (isSearchActive) {
+                MaterialTheme.colorScheme.background
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerLow
+            },
+        ),
+        tonalElevation = 0.dp,
+        windowInsets = if (isSearchActive) {
+            SearchBarDefaults.windowInsets
+        } else {
+            WindowInsets(0.dp)
         }
     ) {
         searchHistory.forEach {
             if (it.isNotEmpty()) {
-                Row(modifier = Modifier.padding(all = 14.dp)) {
+                Row(
+                    modifier = Modifier
+                        .padding(all = 14.dp)
+                        .fillMaxWidth()
+                        .clickable { searchQuery = it },
+                    horizontalArrangement = Arrangement.Start
+                )
+                {
                     Icon(imageVector = Icons.Default.History, contentDescription = null)
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(text = it)
                 }
             }
         }
-
         HorizontalDivider()
         Text(
             modifier = Modifier
@@ -230,9 +320,10 @@ fun SearchBarWidget() {
                     searchHistory.clear()
                 },
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold,
-            text = "clear all history"
+            fontWeight = Bold,
+            text = "отчистить историю"
         )
+        // Search suggestions or results
     }
 }
 

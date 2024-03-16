@@ -51,7 +51,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun dialogDatePicker(
+fun DialogDatePicker(
     visible: MutableState<Boolean>,
     currentSelected: CalendarDay = CalendarDay(
         date = LocalDate.now(),

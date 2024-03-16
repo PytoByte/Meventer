@@ -1,29 +1,29 @@
 package pachmp.meventer.components.auth.register
 
-import android.content.SharedPreferences
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toFile
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import com.kizitonwose.calendar.core.CalendarDay
-import com.ramcosta.composedestinations.navigation.navigate
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch
 import pachmp.meventer.components.NavGraphs
 import pachmp.meventer.components.destinations.CodeScreenDestination
 import pachmp.meventer.data.DTO.UserEmailCode
 import pachmp.meventer.data.DTO.UserRegister
 import pachmp.meventer.DefaultViewModel
-import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
 import pachmp.meventer.RootNav
 import pachmp.meventer.components.destinations.CreateUserScreenDestination
 import pachmp.meventer.components.destinations.RegisterScreenDestination
 import pachmp.meventer.data.repository.Repositories
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,10 +42,16 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
     var code by mutableStateOf("")
         private set
 
+    var name by mutableStateOf("")
+        private set
+
     var nickname by mutableStateOf("")
         private set
 
     var birthday by mutableStateOf("")
+        private set
+
+    var avatarUri by mutableStateOf<Uri?>(null)
         private set
 
     fun updateEmail(newEmail: String) {
@@ -64,6 +70,16 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
         nickname = newNickname
     }
 
+    fun updateAvatarUri(newAvatarURI: Uri?) {
+        if (newAvatarURI!=null) {
+            avatarUri = newAvatarURI
+        }
+    }
+
+    fun updateName(newName: String) {
+        name = newName
+    }
+
     fun updateBirthday(newBirthday: CalendarDay) {
         birthday = "%04d-%02d-%02d".format(
             newBirthday.date.year,
@@ -78,7 +94,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
             if (email.isEmpty() || !Regex("""([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)""").matches(email)) {
                 snackbarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
             } else {
-                val response = repositories.authRepository.sendEmailCode(email)
+                val response = repositories.userRepository.sendEmailCode(email)
                 if (checkResultResponse(response = response)) {
                     navigator.clearNavigate(CodeScreenDestination())
                 }
@@ -91,7 +107,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
             if (code.toIntOrNull() == null) {
                 snackbarHostState.showSnackbar(message = "Поля не заполнены")
             } else {
-                val response = repositories.authRepository.verifyEmailCode(UserEmailCode(email = email, code = code))
+                val response = repositories.userRepository.verifyEmailCode(UserEmailCode(email = email, code = code))
                 if (checkResultResponse(response = response)) {
                     navigator.clearNavigate(CreateUserScreenDestination())
                 }
@@ -104,14 +120,16 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
             if (nickname.isEmpty() || birthday.isEmpty() || password.isEmpty() || password.length < 8 || password.length > 128) {
                 snackbarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
             } else {
-                val tokenResponse = repositories.authRepository.register(
+                val tokenResponse = repositories.userRepository.register(
                     UserRegister(
                         code = code,
                         email = email,
                         password = password,
                         nickname = nickname,
+                        name = name,
                         dateOfBirth = birthday
-                    )
+                    ),
+                    if (avatarUri!=null) cacheFile(avatarUri!!, "avatar") else null
                 )
 
                 if (checkResponse(response = tokenResponse)) {

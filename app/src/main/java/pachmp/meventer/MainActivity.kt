@@ -1,12 +1,25 @@
 package pachmp.meventer
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavBackStackEntry
@@ -18,6 +31,7 @@ import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.navigation.dependency
 import com.ramcosta.composedestinations.utils.navGraph
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import pachmp.meventer.components.NavGraphs
 import pachmp.meventer.components.auth.login.LoginViewModel
@@ -49,43 +63,54 @@ class MainActivity : ComponentActivity() {
 
             val registerViewModel: RegisterViewModel = hiltViewModel()
             val loginViewModel: LoginViewModel = hiltViewModel()
+            var uiState by remember { mutableStateOf(false) }
+            var textState by remember { mutableStateOf("") }
 
-            runBlocking() {
-                val response = repositories.authRepository.verifyToken()
-                if (response==null) {
-                    repositories.encryptedSharedPreferences.edit().putString("token", null).apply()
-                } else if (response.code!=200.toShort()) {
-                    repositories.encryptedSharedPreferences.edit().putString("token", null).apply()
+            if (uiState) {
+                MeventerTheme() {
+                    DestinationsNavHost(
+                        navGraph = NavGraphs.root,
+                        navController = rootNavigator.getController()!!,
+                        modifier = Modifier.fillMaxSize(),
+                        startRoute = if (repositories.encryptedSharedPreferences.getString("token", null)==null) NavGraphs.login else NavGraphs.mainmenu,
+                        dependenciesContainerBuilder = {
+                            dependency(NavGraphs.register) {
+                                registerViewModel
+                            }
+
+                            dependency(NavGraphs.login) {
+                                loginViewModel
+                            }
+                        }
+                    )
                 }
-            }
-
-            MeventerTheme() {
-                DestinationsNavHost(
-                    navGraph = NavGraphs.root,
-                    navController = rootNavigator.getController()!!,
+            } else {
+                Column(
                     modifier = Modifier.fillMaxSize(),
-                    startRoute = if (repositories.encryptedSharedPreferences.getString("token", null)==null) NavGraphs.login else NavGraphs.mainmenu,
-                    dependenciesContainerBuilder = {
-                        dependency(NavGraphs.register) {
-                            registerViewModel
-                        }
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        modifier = Modifier.size(250.dp),
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "logo"
+                    )
+                    Text(textState)
+                }
 
-                        dependency(NavGraphs.login) {
-                            loginViewModel
-                        }
+                rememberCoroutineScope().launch {
+                    val response = repositories.userRepository.verifyToken()
+                    if (response==null) {
+                        textState = "Сервер не отвечает"
+                    } else if (response.code!=200.toShort()) {
+                        Log.d("TOKEN FIRST", repositories.encryptedSharedPreferences.getString("token", "")!!)
+                        repositories.encryptedSharedPreferences.edit().putString("token", null).apply()
+                        uiState = true
+                    } else {
+                        uiState = true
                     }
-                )
+                }
             }
         }
     }
-}
-
-@Composable
-inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(navController: NavController): T {
-    val navGraphRoute = destination.parent?.route ?: return hiltViewModel()
-    val parentEntry = remember(this) {
-        navController.getBackStackEntry(navGraphRoute)
-    }
-
-    return hiltViewModel(parentEntry)
 }

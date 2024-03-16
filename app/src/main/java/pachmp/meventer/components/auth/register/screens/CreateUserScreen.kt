@@ -1,17 +1,22 @@
 package pachmp.meventer.components.auth.register.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -28,16 +33,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.ramcosta.composedestinations.annotation.Destination
-import dialogDatePicker
+import DialogDatePicker
 import pachmp.meventer.ui.transitions.FadeTransition
 import pachmp.meventer.R
 import pachmp.meventer.components.auth.register.RegisterViewModel
@@ -48,7 +57,11 @@ import pachmp.meventer.components.auth.register.RegisterViewModel
 fun CreateUserScreen(registerViewModel: RegisterViewModel) {
     val showCalendar = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-    dialogDatePicker(
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+        registerViewModel.updateAvatarUri(it)
+    }
+
+    DialogDatePicker(
         showCalendar
     ) { registerViewModel.updateBirthday(it) }
 
@@ -71,7 +84,10 @@ fun CreateUserScreen(registerViewModel: RegisterViewModel) {
         snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
     ) { paddingValues ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
         ) {
@@ -80,14 +96,36 @@ fun CreateUserScreen(registerViewModel: RegisterViewModel) {
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "logo"
             )
-            Text("Заполните все поля")
+            Text("Создание пользователя")
+            Spacer(modifier = Modifier.padding(2.dp))
+            Text("Аватар")
+            AsyncImage(
+                modifier = Modifier
+                    .size(150.dp)
+                    .clip(CircleShape),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(registerViewModel.avatarUri).build(),
+                contentDescription = "avatar",
+                contentScale = ContentScale.Crop)
+            Button(onClick = { launcher.launch(arrayOf("image/*")) }) {
+                Text(text = "Выбрать файл")
+            }
 
             OutlinedTextField(
                 value = registerViewModel.nickname,
                 onValueChange = { registerViewModel.updateNickname(it) },
+                label = { Text("Ник") },
+                singleLine = true,
+                supportingText = { Text(text = "Результат: @${registerViewModel.nickname}") }
+            )
+
+            OutlinedTextField(
+                value = registerViewModel.name,
+                onValueChange = { registerViewModel.updateName(it) },
                 label = { Text("Имя") },
                 singleLine = true
             )
+
             OutlinedTextField(
                 modifier = Modifier.onFocusEvent { state ->
                     if (state.isFocused) {
@@ -116,7 +154,8 @@ fun CreateUserScreen(registerViewModel: RegisterViewModel) {
                         modifier = Modifier.padding(2.dp),
                         onClick = { passwordVisibleState = passwordVisibleState.not() }
                     ) {
-                        val description = if (passwordVisibleState) "Hide password" else "Show password"
+                        val description =
+                            if (passwordVisibleState) "Hide password" else "Show password"
                         Icon(
                             imageVector = if (passwordVisibleState) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                             contentDescription = description,
