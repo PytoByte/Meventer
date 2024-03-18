@@ -1,17 +1,17 @@
 package pachmp.meventer
 
-import android.content.SharedPreferences
 import android.net.Uri
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
+import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.data.DTO.Response
 import pachmp.meventer.data.DTO.ResultResponse
+import pachmp.meventer.data.DTO.User
 import pachmp.meventer.data.repository.Repositories
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import javax.inject.Inject
 
 open class DefaultViewModel(
     val navigator: Navigator,
@@ -20,10 +20,14 @@ open class DefaultViewModel(
 
     val snackbarHostState = SnackbarHostState()
 
-    suspend fun checkResultResponse(response: ResultResponse?): Boolean {
+    suspend fun checkResultResponse(response: ResultResponse?, requestHandler: (ResultResponse)->Boolean? = {null}): Boolean {
         if (response==null) {
             snackbarHostState.showSnackbar(message = "Сервер не отвечает", duration = SnackbarDuration.Short)
         } else if (response.code!=200.toShort()) {
+            val handlerResult = requestHandler(response)
+            if (handlerResult!=null) {
+                return handlerResult
+            }
             snackbarHostState.showSnackbar(message = response.message, duration = SnackbarDuration.Short)
         } else { return true }
         return false
@@ -44,12 +48,22 @@ open class DefaultViewModel(
         return file
     }
 
-    suspend fun <Type>checkResponse(response: Response<Type>?): Boolean {
+    suspend fun <Type>checkResponse(response: Response<Type>?, requestHandler: (ResultResponse)->Boolean? = {null}): Boolean {
         if (response==null) {
             snackbarHostState.showSnackbar(message = "Сервер не отвечает", duration = SnackbarDuration.Short)
         } else if (response.result.code!=200.toShort()) {
+            val handlerResult = requestHandler(response.result)
+            if (handlerResult!=null) {
+                return handlerResult
+            }
             snackbarHostState.showSnackbar(message = response.result.message, duration = SnackbarDuration.Short)
         } else { return true }
         return false
     }
+
+    fun fixEventImages(event: Event) =
+        event.copy(images = event.images.map { repositories.eventRepository.getFileURL(it) })
+
+    fun fixUserAvatar(user: User) =
+        user.copy(avatar = repositories.userRepository.getFileURL(user.avatar) )
 }

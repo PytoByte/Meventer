@@ -24,69 +24,28 @@ import pachmp.meventer.data.repository.Repositories
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repositories: Repositories):
     DefaultViewModel(navigator, repositories) {
 
-    init {
-        println(this.toString())
-    }
     var email by mutableStateOf("")
-        private set
-
     var password by mutableStateOf("")
-        private set
-
     var code by mutableStateOf("")
-        private set
-
     var name by mutableStateOf("")
-        private set
-
     var nickname by mutableStateOf("")
-        private set
-
-    var birthday by mutableStateOf("")
-        private set
+    var birthday by mutableStateOf(LocalDate.now())
 
     var avatarUri by mutableStateOf<Uri?>(null)
         private set
-
-    fun updateEmail(newEmail: String) {
-        email = newEmail
-    }
-
-    fun updatePassword(newPassword: String) {
-        password = newPassword
-    }
-
-    fun updateCode(newCode: String) {
-        code = newCode
-    }
-
-    fun updateNickname(newNickname: String) {
-        nickname = newNickname
-    }
 
     fun updateAvatarUri(newAvatarURI: Uri?) {
         if (newAvatarURI!=null) {
             avatarUri = newAvatarURI
         }
-    }
-
-    fun updateName(newName: String) {
-        name = newName
-    }
-
-    fun updateBirthday(newBirthday: CalendarDay) {
-        birthday = "%04d-%02d-%02d".format(
-            newBirthday.date.year,
-            newBirthday.date.month.value,
-            newBirthday.date.dayOfMonth
-        )
-        Log.d("newClendarDay", birthday)
     }
 
     fun registerRequest() {
@@ -117,7 +76,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
 
     fun createUser() {
         viewModelScope.launch {
-            if (nickname.isEmpty() || birthday.isEmpty() || password.isEmpty() || password.length < 8 || password.length > 128) {
+            if (nickname.isEmpty() || password.isEmpty() || password.length < 8 || password.length > 128) {
                 snackbarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
             } else {
                 val tokenResponse = repositories.userRepository.register(
@@ -127,7 +86,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
                         password = password,
                         nickname = nickname,
                         name = name,
-                        dateOfBirth = birthday
+                        dateOfBirth = birthday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                     ),
                     if (avatarUri!=null) cacheFile(avatarUri!!, "avatar") else null
                 )
@@ -147,10 +106,12 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
 
 
     fun cancelRegister() {
-        code = ""
-        nickname = ""
-        birthday = ""
         password = ""
+        code = ""
+        name = ""
+        nickname = ""
+        birthday = LocalDate.now()
+        avatarUri = null
         navigator.clearNavigate(RegisterScreenDestination)
     }
 }

@@ -47,127 +47,160 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ramcosta.composedestinations.annotation.Destination
 import DialogDatePicker
+import androidx.compose.runtime.derivedStateOf
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.datepicker
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import pachmp.meventer.ui.transitions.FadeTransition
 import pachmp.meventer.R
 import pachmp.meventer.components.auth.register.RegisterViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @RegisterNavGraph
 @Destination(style = FadeTransition::class)
 @Composable
 fun CreateUserScreen(registerViewModel: RegisterViewModel) {
-    val showCalendar = remember { mutableStateOf(false) }
-    val focusManager = LocalFocusManager.current
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
-        registerViewModel.updateAvatarUri(it)
-    }
-
-    DialogDatePicker(
-        showCalendar
-    ) { registerViewModel.updateBirthday(it) }
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                IconButton(
-                    modifier = Modifier.padding(2.dp),
-                    onClick = { registerViewModel.cancelRegister() }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBackIosNew,
-                        contentDescription = "cancel register",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+    with(registerViewModel) {
+        val focusManager = LocalFocusManager.current
+        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+            registerViewModel.updateAvatarUri(it)
+        }
+        var passwordVisibleState by remember { mutableStateOf(false) }
+        val dateDialogState = rememberMaterialDialogState()
+        val formattedBirthday by remember {
+            derivedStateOf {
+                DateTimeFormatter
+                    .ofPattern("dd MMM yyyy")
+                    .withLocale(Locale.getDefault())
+                    .format(birthday)
             }
-        },
-        snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
+        }
+
+        MaterialDialog(
+            dialogState = dateDialogState,
+            buttons = {
+                positiveButton(text = "Ок")
+                negativeButton(text = "Отмена")
+            }
         ) {
-            Image(
-                modifier = Modifier.size(250.dp),
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "logo"
-            )
-            Text("Создание пользователя")
-            Spacer(modifier = Modifier.padding(2.dp))
-            Text("Аватар")
-            AsyncImage(
-                modifier = Modifier
-                    .size(150.dp)
-                    .clip(CircleShape),
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(registerViewModel.avatarUri).build(),
-                contentDescription = "avatar",
-                contentScale = ContentScale.Crop)
-            Button(onClick = { launcher.launch(arrayOf("image/*")) }) {
-                Text(text = "Выбрать файл")
-            }
-
-            OutlinedTextField(
-                value = registerViewModel.nickname,
-                onValueChange = { registerViewModel.updateNickname(it) },
-                label = { Text("Ник") },
-                singleLine = true,
-                supportingText = { Text(text = "Результат: @${registerViewModel.nickname}") }
-            )
-
-            OutlinedTextField(
-                value = registerViewModel.name,
-                onValueChange = { registerViewModel.updateName(it) },
-                label = { Text("Имя") },
-                singleLine = true
-            )
-
-            OutlinedTextField(
-                modifier = Modifier.onFocusEvent { state ->
-                    if (state.isFocused) {
-                        showCalendar.value = true
-                        focusManager.clearFocus()
-                    }
+            datepicker(
+                initialDate = LocalDate.now(),
+                title = "Выберите дату",
+                allowedDateValidator = {
+                    it<=LocalDate.now()
                 },
-                value = registerViewModel.birthday,
-                onValueChange = {},
-                label = { Text("Дата рождения") },
-                singleLine = true,
-                enabled = true,
-                readOnly = true
-            )
-            var passwordVisibleState by remember { mutableStateOf(false) }
-            OutlinedTextField(
-                value = registerViewModel.password,
-                onValueChange = { registerViewModel.updatePassword(it) },
-                label = { Text("Пароль") },
-                singleLine = true,
-                supportingText = { Text("длина от 8 до 128 символов") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                visualTransformation = if (passwordVisibleState) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
+                locale = Locale.getDefault()
+            ) {
+                birthday = it
+            }
+        }
+
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                Row(modifier = Modifier.fillMaxWidth()) {
                     IconButton(
                         modifier = Modifier.padding(2.dp),
-                        onClick = { passwordVisibleState = passwordVisibleState.not() }
+                        onClick = { registerViewModel.cancelRegister() }
                     ) {
-                        val description =
-                            if (passwordVisibleState) "Hide password" else "Show password"
                         Icon(
-                            imageVector = if (passwordVisibleState) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = description,
+                            imageVector = Icons.Default.ArrowBackIosNew,
+                            contentDescription = "cancel register",
                             modifier = Modifier.size(32.dp)
                         )
                     }
                 }
-            )
-            Button(onClick = {
-                registerViewModel.createUser()
-            }) {
-                Text("Готово")
+            },
+            snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(paddingValues),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
+            ) {
+                Image(
+                    modifier = Modifier.size(250.dp),
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "logo"
+                )
+                Text("Создание пользователя")
+                Spacer(modifier = Modifier.padding(2.dp))
+                Text("Аватар")
+                AsyncImage(
+                    modifier = Modifier
+                        .size(150.dp)
+                        .clip(CircleShape),
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(avatarUri).build(),
+                    contentDescription = "avatar",
+                    contentScale = ContentScale.Crop)
+                Button(onClick = { launcher.launch(arrayOf("image/*")) }) {
+                    Text(text = "Выбрать файл")
+                }
+
+                OutlinedTextField(
+                    value = registerViewModel.nickname,
+                    onValueChange = { nickname = it },
+                    label = { Text("Ник") },
+                    singleLine = true,
+                    supportingText = { Text(text = "Результат: @${nickname}") }
+                )
+
+                OutlinedTextField(
+                    value = registerViewModel.name,
+                    onValueChange = { name = it },
+                    label = { Text("Имя") },
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    modifier = Modifier.onFocusEvent { state ->
+                        if (state.isFocused) {
+                            dateDialogState.show()
+                            focusManager.clearFocus()
+                        }
+                    },
+                    value = formattedBirthday,
+                    onValueChange = {},
+                    label = { Text("Дата рождения") },
+                    singleLine = true,
+                    enabled = true,
+                    readOnly = true
+                )
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Пароль") },
+                    singleLine = true,
+                    supportingText = { Text("длина от 8 до 128 символов") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = if (passwordVisibleState) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(
+                            modifier = Modifier.padding(2.dp),
+                            onClick = { passwordVisibleState = passwordVisibleState.not() }
+                        ) {
+                            val description =
+                                if (passwordVisibleState) "Hide password" else "Show password"
+                            Icon(
+                                imageVector = if (passwordVisibleState) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = description,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                )
+                Button(onClick = {
+                    createUser()
+                }) {
+                    Text("Готово")
+                }
             }
         }
     }

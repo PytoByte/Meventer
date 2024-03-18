@@ -40,45 +40,47 @@ import pachmp.meventer.components.auth.register.RegisterViewModel
 @Destination(style = FadeTransition::class)
 @Composable
 fun CodeScreen(registerViewModel: RegisterViewModel) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                IconButton(
-                    modifier = Modifier.padding(2.dp),
-                    onClick = { registerViewModel.cancelRegister() }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBackIosNew,
-                        contentDescription = "cancel register",
-                        modifier = Modifier.size(32.dp)
-                    )
+    with(registerViewModel) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    IconButton(
+                        modifier = Modifier.padding(2.dp),
+                        onClick = { registerViewModel.cancelRegister() }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBackIosNew,
+                            contentDescription = "cancel register",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                 }
-            }
-        },
-        snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
-        ) {
-            Image(
-                modifier = Modifier.size(250.dp),
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "logo"
-            )
-            Text("Введите код")
-            OutlinedTextField(
-                value = registerViewModel.code,
-                onValueChange = { registerViewModel.updateCode(it) },
-                label = { Text("Код") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
+            },
+            snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
+            ) {
+                Image(
+                    modifier = Modifier.size(250.dp),
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "logo"
+                )
+                Text("Введите код")
+                OutlinedTextField(
+                    value = registerViewModel.code,
+                    onValueChange = { code = it },
+                    label = { Text("Код") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
 
-            Button(onClick = { registerViewModel.confirmRegister() }) {
-                Text("Зарегистрироваться")
+                Button(onClick = { registerViewModel.confirmRegister() }) {
+                    Text("Зарегистрироваться")
+                }
             }
         }
     }

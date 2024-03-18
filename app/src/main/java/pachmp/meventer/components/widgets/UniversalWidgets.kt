@@ -53,8 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import pachmp.meventer.R
-import pachmp.meventer.ui.theme.MainColor
-import pachmp.meventer.ui.theme.TextBox
 import kotlin.math.absoluteValue
 
 class MaskVisualTransformation(private val mask: String) : VisualTransformation {
@@ -97,25 +95,10 @@ class MaskVisualTransformation(private val mask: String) : VisualTransformation 
 fun MaterialButton(modifier: Modifier = Modifier, text: String = "", onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MainColor
-        ),
         modifier = modifier
     ) {
         Text(text, textAlign = TextAlign.Center, fontSize = 20.sp)
     }
-}
-
-
-
-@Composable
-fun Background() {
-    Image(
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.FillBounds,
-        painter = painterResource(id = R.drawable.white65),
-        contentDescription = null
-    )
 }
 
 @Composable
@@ -194,14 +177,6 @@ fun HeadingTextComponent(
                     fontSize = 20.sp
                 )
             },
-            colors = TextFieldDefaults.textFieldColors(
-                focusedLabelColor = Color.Black,
-                cursorColor = Color.Black,
-                containerColor = TextBox,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent
-            ),
             keyboardOptions = KeyboardOptions.Default,
             value = textValue.value,
             textStyle = androidx.compose.ui.text.TextStyle(
@@ -262,14 +237,6 @@ fun TextComponent(
                 .padding(paddingValues)
                 .border(1.dp, Color.LightGray, RoundedCornerShape(5.dp)),
             label = { Text(text = labelValue, fontSize = 18.sp) },
-            colors = TextFieldDefaults.textFieldColors(
-                focusedLabelColor = Color.Black,
-                cursorColor = Color.Black,
-                containerColor = TextBox,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent
-            ),
             keyboardOptions = keyboardOptions,
             value = textValue.value,
             textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),

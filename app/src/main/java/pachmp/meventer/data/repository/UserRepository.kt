@@ -47,7 +47,7 @@ class UserRepository @Inject constructor(
         }.body<ResultResponse>()
     }
 
-    suspend fun getFeedbacks(nullableUserID: NullableUserID? = null) = withHttpClient {
+    suspend fun getFeedbacks(nullableUserID: NullableUserID = NullableUserID(null)) = withHttpClient {
         post("${repositoryURL}feedback/get") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)

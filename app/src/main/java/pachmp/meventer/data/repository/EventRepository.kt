@@ -2,6 +2,7 @@ package pachmp.meventer.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
@@ -19,6 +20,7 @@ import io.ktor.util.InternalAPI
 import kotlinx.serialization.json.Json
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.data.DTO.EventCreate
+import pachmp.meventer.data.DTO.EventOrganizer
 import pachmp.meventer.data.DTO.EventSelection
 import pachmp.meventer.data.DTO.EventUpdate
 import pachmp.meventer.data.DTO.EventsGet
@@ -35,7 +37,6 @@ class EventRepository @Inject constructor(
 ) : DefaultRepository(encryptedSharedPreferences, appContext) {
     val repositoryURL = baseURL + "event/"
 
-    @OptIn(InternalAPI::class)
     suspend fun createEvent(eventCreate: EventCreate, images: List<File>) = withHttpClient {
         post("${repositoryURL}create") {
             bearerAuth(getToken())
@@ -104,12 +105,28 @@ class EventRepository @Inject constructor(
     }
 
     suspend fun getEvent(eventID: Int) = withHttpClient {
-        get("${repositoryURL}{${eventID}}") {
+        get("${repositoryURL}${eventID}") {
         }.body<Response<Event>>()
     }
 
+    suspend fun changeUserOrganizer(eventOrganizer: EventOrganizer) = withHttpClient {
+        post("${repositoryURL}changeUsers/organizer") {
+            bearerAuth(getToken())
+            contentType(ContentType.Application.Json)
+            setBody(eventOrganizer)
+        }.body<ResultResponse>()
+    }
+
+    /*suspend fun changeUserParticipant(eventSelection: EventSelection) = withHttpClient {
+        post("${repositoryURL}changeUsers/participant") {
+            bearerAuth(getToken())
+            contentType(ContentType.Application.Json)
+            setBody(eventSelection)
+        }.body<Response<List<Event>>>()
+    }*/
+
     suspend fun getGlobalEvents(eventSelection: EventSelection) = withHttpClient {
-        post("${repositoryURL}global") {
+        post("${repositoryURL}event/global") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(eventSelection)

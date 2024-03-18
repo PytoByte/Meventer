@@ -1,5 +1,6 @@
 package pachmp.meventer.components.mainmenu.components.events.screens
 
+import android.app.TimePickerDialog
 import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -46,8 +47,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -71,7 +75,6 @@ import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
-import pachmp.meventer.components.widgets.Background
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.ui.transitions.BottomTransition
 import java.time.ZoneId
@@ -82,8 +85,14 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AllEventsScreen(eventsViewModel: EventsViewModel) {
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
+    val showDialog = remember { mutableStateOf(false) }
+
+    FilterDialog(showDialog) {
+        eventsViewModel.eventSelection = it
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(eventsViewModel.snackbarHostState) },
         floatingActionButton = {
             FloatingButtonAdd {
                 eventsViewModel.navigateToCreateEvent()
@@ -94,15 +103,17 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
                 EmbeddedSearchBar(
                     //onQueryChange = onQueryChange,
                     isSearchActive = isSearchActive,
-                    onActiveChanged = { isSearchActive = it }
+                    onActiveChanged = { isSearchActive = it },
+                    onSearch = {
+                        eventsViewModel.searchEvents()
+                    }
                 )
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier
-                            .padding(start = 14.dp, top = 4.dp)) {
+                    IconButton(onClick = { showDialog.value = true }) {
+                        Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.FilterAlt,
                                 contentDescription = "AllFilters",
@@ -118,7 +129,21 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
         }
     ) { paddingValues ->
         if (eventsViewModel.events==null) {
-
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Загрузка")
+            }
+        } else if (eventsViewModel.events!!.size==0) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Ваш список мероприятий пуст")
+            }
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -164,7 +189,7 @@ fun EventCard(event: Event, eventsViewModel: EventsViewModel) {
         ) {
             AsyncImage(
                 modifier = Modifier.fillMaxSize(),
-                model = event.images[0],
+                model = if (event.images.isEmpty()) null else event.images[0],
                 contentDescription = "title",
                 contentScale = ContentScale.Crop
             )
@@ -187,7 +212,7 @@ fun EventCard(event: Event, eventsViewModel: EventsViewModel) {
 
             Image(
                 // TODO: FAVORITES ARE GONE
-                painter = if (false) painterResource(id = R.drawable.fullheart2) else painterResource(
+                painter = if (eventsViewModel.user!!.id in event.inFavourites) painterResource(id = R.drawable.fullheart2) else painterResource(
                     id = R.drawable.emptyheart2
                 ),
                 contentDescription = "Favorite",

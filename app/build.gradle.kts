@@ -101,6 +101,10 @@ dependencies {
     // ratingbar
     implementation("com.github.a914-gowtham:compose-ratingbar:1.2.5")
 
+    // DateTime pickers
+    implementation("io.github.vanpra.compose-material-dialogs:datetime:0.8.1-rc")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
     // default
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")

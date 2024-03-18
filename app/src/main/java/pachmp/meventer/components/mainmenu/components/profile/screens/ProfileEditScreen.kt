@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
-import pachmp.meventer.components.widgets.Background
 import pachmp.meventer.components.widgets.TextCom
 import pachmp.meventer.ui.transitions.FadeTransition
 import java.time.LocalDate
@@ -30,7 +29,6 @@ import java.time.LocalDate
 @Destination(style = FadeTransition::class)
 @Composable
 fun ProfileEdit(profileViewModel: ProfileViewModel) {
-    Background()
     Scaffold(
         topBar = {
             Row(
@@ -59,7 +57,6 @@ fun ProfileEdit(profileViewModel: ProfileViewModel) {
             }
         }
     ) { paddingValues ->
-        Background()
         Column(
             modifier = Modifier
                 .padding(paddingValues)
@@ -67,7 +64,7 @@ fun ProfileEdit(profileViewModel: ProfileViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Avatar(image = painterResource(id = R.drawable.avatar))
+            //Avatar(image = painterResource(id = R.drawable.avatar))
             Text(
                 text = "Выбрать фотографию",
                 textAlign = TextAlign.Center,

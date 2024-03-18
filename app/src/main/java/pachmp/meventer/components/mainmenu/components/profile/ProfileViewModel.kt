@@ -14,7 +14,9 @@ import pachmp.meventer.components.NavGraphs
 import pachmp.meventer.components.destinations.ProfileEditDestination
 import pachmp.meventer.components.destinations.ProfileScreenDestination
 import pachmp.meventer.components.mainmenu.BottomViewModel
+import pachmp.meventer.data.DTO.NullableUserID
 import pachmp.meventer.data.DTO.User
+import pachmp.meventer.data.DTO.UserFeedback
 import pachmp.meventer.data.repository.Repositories
 import javax.inject.Inject
 
@@ -30,12 +32,36 @@ class ProfileViewModel @Inject constructor(
     var avatar by mutableStateOf<String?>(null)
         private set
 
+    var feedbackModels by mutableStateOf<List<FeedbackModel>?>(null)
+        private set
+
     fun updateProfile() {
         viewModelScope.launch {
             val response = repositories.userRepository.getUserData()
             if (checkResponse(response)) {
                 user = response!!.data
                 avatar = repositories.userRepository.getFileURL(user!!.avatar)
+            }
+
+            val feedbacksResponse = repositories.userRepository.getFeedbacks()
+            if (checkResponse(feedbacksResponse) {
+                if (it.code==404.toShort()) { feedbackModels = emptyList(); false } else {  null } }) {
+                feedbackModels = List(feedbacksResponse!!.data!!.size) {
+                    val authorResponse = repositories.userRepository.getUserData(NullableUserID(feedbacksResponse.data!![it].fromUserID))
+                    if (checkResponse(authorResponse)) {
+                        FeedbackModel(
+                            author = authorResponse!!.data!!,
+                            rating = feedbacksResponse.data[it].rating,
+                            comment = feedbacksResponse.data[it].comment
+                        )
+                    } else {
+                        FeedbackModel(
+                            author = null,
+                            rating = feedbacksResponse.data[it].rating,
+                            comment = feedbacksResponse.data[it].comment
+                        )
+                    }
+                }
             }
         }
     }

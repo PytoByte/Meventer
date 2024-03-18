@@ -54,42 +54,44 @@ annotation class RegisterNavGraph(
 @Destination(style = FadeTransition::class)
 @Composable
 fun RegisterScreen(registerViewModel: RegisterViewModel) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
-        ) {
-            Image(
-                modifier = Modifier.size(250.dp),
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "logo"
-            )
-            Text("Регистрация")
-
-            OutlinedTextField(
-                value = registerViewModel.email,
-                onValueChange = { registerViewModel.updateEmail(it) },
-                label = { Text("Почта") },
-                singleLine = true
-            )
-
-            Button(onClick = {
-                registerViewModel.registerRequest()
-            }) {
-                Text("Зарегистрироваться")
-            }
-
-            OutlinedButton(
-                modifier = Modifier.padding(top = 10.dp, bottom = 25.dp),
-                onClick = { registerViewModel.navigateToLogin() }
+    with(registerViewModel) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
             ) {
-                Text("У меня есть аккаунт")
+                Image(
+                    modifier = Modifier.size(250.dp),
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "logo"
+                )
+                Text("Регистрация")
+
+                OutlinedTextField(
+                    value = registerViewModel.email,
+                    onValueChange = { email = it },
+                    label = { Text("Почта") },
+                    singleLine = true
+                )
+
+                Button(onClick = {
+                    registerViewModel.registerRequest()
+                }) {
+                    Text("Зарегистрироваться")
+                }
+
+                OutlinedButton(
+                    modifier = Modifier.padding(top = 10.dp, bottom = 25.dp),
+                    onClick = { registerViewModel.navigateToLogin() }
+                ) {
+                    Text("У меня есть аккаунт")
+                }
             }
         }
     }
