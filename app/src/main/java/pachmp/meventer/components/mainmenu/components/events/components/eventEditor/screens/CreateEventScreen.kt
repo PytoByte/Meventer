@@ -434,6 +434,7 @@ fun CreateEventScreen(
                         value = price,
                         onValueChange = {if (it.length<=100) price = it},
                         label = { Text("Стоимость") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true
                     )
                     OutlinedTextField(

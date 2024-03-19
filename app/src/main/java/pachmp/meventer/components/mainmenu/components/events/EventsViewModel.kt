@@ -30,12 +30,39 @@ class EventsViewModel @Inject constructor(
 ) : BottomViewModel(rootNavigator, navigator, repositories) {
     var events by mutableStateOf<List<Event>?>(null)
         private set
+
+    var eventsVisible by mutableStateOf<List<Event>?>(null)
+        private set
+
     var user by mutableStateOf<User?>(null)
         private set
 
     var selected: Event? = null
 
-    var eventSelection by mutableStateOf(EventSelection(null, null, null, null, null))
+    var query by mutableStateOf("")
+
+    var eventSelection by mutableStateOf(EventSelection(emptyList(), 0, 0, null, EventSelection.SortingStates.NEAREST_ONES_FIRST.state))
+
+    var favoriteFilter by mutableStateOf(false)
+    var participantFilter by mutableStateOf(false)
+    var organizerFilter by mutableStateOf(false)
+    var originatorFilter by mutableStateOf(false)
+
+    fun filterByFastTags() {
+        if (events!=null) {
+            eventsVisible = events!!.filter {
+                if (!favoriteFilter && !participantFilter && !organizerFilter && !originatorFilter) {
+                    true
+                } else if (participantFilter && (user!!.id in it.participants || user!!.id in it.organizers || user!!.id ==it.originator)) {
+                    true
+                } else if (organizerFilter && (user!!.id in it.organizers)) {
+                    true
+                } else if (favoriteFilter && (user!!.id in it.inFavourites)) {
+                    true
+                } else originatorFilter && (user!!.id == it.originator)
+            }
+        }
+    }
 
     fun updateEvents() {
         viewModelScope.launch {
@@ -58,6 +85,7 @@ class EventsViewModel @Inject constructor(
                     fixEventImages(responseEvents.data!![it])
                 }
             }
+            eventsVisible = events
         }
     }
 
@@ -116,15 +144,11 @@ class EventsViewModel @Inject constructor(
 
     fun searchEvents() {
         viewModelScope.launch {
+            eventSelection = eventSelection.copy(tags = (eventSelection.tags ?: emptyList())+listOf(query))
             val response = repositories.eventRepository.getGlobalEvents(eventSelection = eventSelection)
-            if (checkResponse(response) {
-                if (it.code==404.toShort()) {
-                    false
-                } else {
-                    null
-                }
-                }) {
-                events = response!!.data!!
+            if (checkResponse(response) {false}) {
+                snackbarHostState.showSnackbar("Найдено ${response!!.data!!.size} мероприятий")
+                events = response.data!!
             } else {
                 snackbarHostState.showSnackbar("Мероприятия не найдены")
             }

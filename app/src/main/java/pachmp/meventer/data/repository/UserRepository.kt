@@ -29,6 +29,9 @@ import pachmp.meventer.data.DTO.UserFeedback
 import pachmp.meventer.data.DTO.UserFeedbackCreate
 import pachmp.meventer.data.DTO.UserLogin
 import pachmp.meventer.data.DTO.UserRegister
+import pachmp.meventer.data.DTO.UserUpdate
+import pachmp.meventer.data.DTO.UserUpdateEmail
+import pachmp.meventer.data.DTO.UserUpdatePassword
 import java.io.File
 import java.time.LocalDate
 import javax.inject.Inject
@@ -125,10 +128,59 @@ class UserRepository @Inject constructor(
         post("${repositoryURL}login") {
             contentType(ContentType.Application.Json)
             setBody(userLogin)
-
-            headers {
-                append(HttpHeaders.ContentType, "application/json")
-            }
         }.body<Response<String>>()
+    }
+
+    @OptIn(InternalAPI::class)
+    suspend fun updateUserData(userUpdate: UserUpdate, avatar: File?) = withHttpClient {
+        post("${repositoryURL}update/data") {
+            bearerAuth(getToken())
+            setBody(MultiPartFormDataContent(
+                parts = formData {
+                    append(
+                        key = "user",
+                        value = encodeToString(UserUpdate.serializer(), userUpdate),
+                        headers = headers {
+                            append(
+                                HttpHeaders.ContentType,
+                                "application/json"
+                            )
+                        })
+
+                    if (avatar != null) {
+                        append(
+                            key = "avatar",
+                            value = avatar.readBytes(),
+                            headers = Headers.build {
+                                append(
+                                    HttpHeaders.ContentType,
+                                    "image/${avatar.extension}"
+                                )
+                                append(
+                                    HttpHeaders.ContentDisposition,
+                                    "filename=\"${avatar.name}\""
+                                )
+                            }
+                        )
+                    }
+                }
+            ))
+        }.body<ResultResponse>()
+    }
+
+    suspend fun updateUserEmail(userUpdateEmail: UserUpdateEmail) = withHttpClient {
+        post("${repositoryURL}update/email") {
+            bearerAuth(getToken())
+            contentType(ContentType.Application.Json)
+            setBody(userUpdateEmail)
+        }.body<ResultResponse>()
+    }
+
+    suspend fun updateUserPassword(userUpdatePassword: UserUpdatePassword) = withHttpClient {
+        post("${repositoryURL}update/password") {
+            bearerAuth(getToken())
+            contentType(ContentType.Application.Json)
+            setBody(userUpdatePassword)
+        }.body<ResultResponse>()
     }
 }

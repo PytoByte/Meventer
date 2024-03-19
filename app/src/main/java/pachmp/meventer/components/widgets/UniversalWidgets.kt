@@ -311,13 +311,14 @@ fun dropDownMenu(leb: String) {
 }
 
 @Composable
-fun TextCom(key: String, value: String){
+fun TextCom(label: String, value: String, keyboardOptions: KeyboardOptions = KeyboardOptions.Default, onValueChange: (String)->Unit){
     Column() {
         OutlinedTextField(
             value = value,
-            label = {Text(key, fontWeight = FontWeight.Bold, fontSize = 22.sp)},
-            onValueChange = { /*profileViewModel.setUserName(it)*/ },
-            singleLine = true
+            label = {Text(label, fontWeight = FontWeight.Bold, fontSize = 22.sp)},
+            onValueChange = {onValueChange(it)},
+            singleLine = true,
+            keyboardOptions = keyboardOptions
         )
     }
 }

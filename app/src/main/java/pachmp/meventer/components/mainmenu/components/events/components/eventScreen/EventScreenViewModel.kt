@@ -38,7 +38,7 @@ class EventScreenViewModel @Inject constructor(
                 originator = fixUserAvatar(originatorRequest!!.data!!)
             }
 
-            organizers = List<User?>(event.organizers.size) {
+            organizers = List(event.organizers.size) {
                 val userRequest = repositories.userRepository.getUserData(NullableUserID(id = event.organizers[it]))
                 if (checkResponse(originatorRequest)) {
                     fixUserAvatar(originatorRequest!!.data!!)
@@ -48,14 +48,14 @@ class EventScreenViewModel @Inject constructor(
             }
 
 
-            /*participants = List<User?>(event.organizers.size) {
-                val userRequest = repositories.userRepository.getUserData(NullableUserID(id = event.[it]))
+            participants = List(event.organizers.size) {
+                val userRequest = repositories.userRepository.getUserData(NullableUserID(id = event.participants[it]))
                 if (checkResponse(originatorRequest)) {
                     originatorRequest!!.data!!
                 } else {
                     null
                 }
-            }*/
+            }
 
             ready = true
         }

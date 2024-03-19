@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -65,6 +67,8 @@ import java.time.LocalDate
 @Destination(style = BottomTransition::class)
 @Composable
 fun ProfileScreen(profileViewModel: ProfileViewModel) {
+    var dropdownMenuExpanded by remember { mutableStateOf(false) }
+
     with(profileViewModel) {
         if (user == null) {
             Column(
@@ -86,13 +90,19 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
                         ) {
                             // Edit button
                             IconButton(
-                                onClick = { navigateToEdit() }
+                                onClick = { dropdownMenuExpanded = true }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = "Edit account",
                                     modifier = Modifier.size(32.dp)
                                 )
+                            }
+
+                            DropdownMenu(expanded = dropdownMenuExpanded, onDismissRequest = { dropdownMenuExpanded=false }) {
+                                DropdownMenuItem(text = { Text("Редактировать данные") }, onClick = { navigateToEditData() })
+                                DropdownMenuItem(text = { Text("Изменить почту") }, onClick = { navigateToEditEmail() })
+                                DropdownMenuItem(text = { Text("Изменить пароль") }, onClick = { navigateToEditPassword() })
                             }
 
                             // Logout button
@@ -140,7 +150,9 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
 
                                 //comments
                                 OutlinedCard(
-                                    modifier = Modifier.height(288.dp).fillMaxWidth(),
+                                    modifier = Modifier
+                                        .height(288.dp)
+                                        .fillMaxWidth(),
                                     border = BorderStroke(
                                         0.65f.dp,
                                         MaterialTheme.colorScheme.onSecondaryContainer
@@ -268,8 +280,7 @@ fun CommentsList(feedbacks: List<FeedbackModel>) {
 fun ProfileDetail(label: String, value: String) {
     OutlinedCard(
         border = BorderStroke(0.55f.dp, MaterialTheme.colorScheme.onSecondaryContainer),
-        modifier = Modifier.height(60.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        modifier = Modifier.height(60.dp)
     ) {
         Row(
             modifier = Modifier

@@ -11,6 +11,8 @@ import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
 import pachmp.meventer.RootNav
 import pachmp.meventer.components.NavGraphs
+import pachmp.meventer.components.destinations.EmailEditScreenDestination
+import pachmp.meventer.components.destinations.PasswordEditScreenDestination
 import pachmp.meventer.components.destinations.ProfileEditDestination
 import pachmp.meventer.components.destinations.ProfileScreenDestination
 import pachmp.meventer.components.mainmenu.BottomViewModel
@@ -71,8 +73,14 @@ class ProfileViewModel @Inject constructor(
         rootNavigator.clearNavigate(NavGraphs.login)
     }
 
-    fun navigateToEdit() {
+    fun navigateToEditData() {
         navigator.clearNavigate(ProfileEditDestination)
+    }
+    fun navigateToEditPassword() {
+        navigator.clearNavigate(PasswordEditScreenDestination)
+    }
+    fun navigateToEditEmail() {
+        navigator.clearNavigate(EmailEditScreenDestination)
     }
 
     fun navigateToProfile() {

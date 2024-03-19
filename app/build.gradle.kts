@@ -66,8 +66,8 @@ dependencies {
     // Alt navigation
     implementation("io.github.raamcosta.compose-destinations:core:1.10.1")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-    implementation("com.kizitonwose.calendar:view:2.5.0")
-    implementation("com.kizitonwose.calendar:compose:2.5.0")
+    //implementation("com.kizitonwose.calendar:view:2.5.0")
+    //implementation("com.kizitonwose.calendar:compose:2.5.0")
 
     // Alternative navigation
     implementation("io.github.raamcosta.compose-destinations:animations-core:1.10.1")

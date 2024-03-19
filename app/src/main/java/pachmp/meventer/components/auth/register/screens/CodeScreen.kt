@@ -69,7 +69,7 @@ fun CodeScreen(registerViewModel: RegisterViewModel) {
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "logo"
                 )
-                Text("Введите код")
+                Text("Введите код, отправленный на почту")
                 OutlinedTextField(
                     value = registerViewModel.code,
                     onValueChange = { code = it },

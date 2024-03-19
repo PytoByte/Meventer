@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -157,64 +158,66 @@ fun EventScreen(
                             }
                         }
                     }
-                ) { paddingValues ->
+                ) {
                     Column(
                         modifier = Modifier
-                            .padding(paddingValues)
-                            .fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                            .fillMaxWidth().padding(it)
+                            .padding(top = 8.dp, start = 15.dp, end = 15.dp)
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp, start = 15.dp, end = 15.dp)
-                                .verticalScroll(rememberScrollState()),
-                            horizontalAlignment = Alignment.Start,
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            MarqueeText(text = event!!.name)
-                            CustomText(
-                                text = "**Начало: **" + event!!.startTime.atZone(ZoneId.systemDefault())
-                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm:ss"))
-                            )
-                            CustomText(
-                                text = if (event!!.maximalAge != null) "**Возростное ограничение:** от ${event!!.minimalAge} до ${event!!.maximalAge} лет" else "**Возростное ограничение:** ${event!!.minimalAge}+ лет"
-                            )
-                            CustomText(
-                                text = "**Стоимость: **" + if (event!!.price == 0) "Бесплатно" else "${event!!.price}₽"
-                            )
-                            CustomText(
-                                text = "**Описание: **" + event!!.description
-                            )
-                            Spacer(modifier = Modifier.padding(5.dp))
-                            Text(
-                                text = "Участники мероприятия",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
-                                item {
-                                    UserItem(
-                                        event = event!!,
-                                        user = originator!!,
-                                        appUser = appUser!!,
-                                        userRank = Rank.ORIGINATOR,
-                                        appUserRank = getUserRank(event!!, appUser!!)
-                                    )
-                                    HorizontalDivider()
-                                }
+                        /*LazyRow() {
+                            items(event!!.ta)
+                        }*/
+                        MarqueeText(text = event!!.name)
+                        CustomText(
+                            text = "**Начало: **" + event!!.startTime.atZone(ZoneId.systemDefault())
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm:ss"))
+                        )
+                        CustomText(
+                            text = if (event!!.maximalAge != null) "**Возростное ограничение:** от ${event!!.minimalAge} до ${event!!.maximalAge} лет" else "**Возростное ограничение:** ${event!!.minimalAge}+ лет"
+                        )
+                        CustomText(
+                            text = "**Стоимость: **" + if (event!!.price == 0) "Бесплатно" else "${event!!.price}₽"
+                        )
+                        CustomText(
+                            text = "**Описание: **" + event!!.description
+                        )
+                        Spacer(modifier = Modifier.padding(5.dp))
+                        Text(
+                            text = "Участники мероприятия",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
+                            item {
+                                UserItem(
+                                    event = event!!,
+                                    user = originator!!,
+                                    appUser = appUser!!,
+                                    userRank = Rank.ORIGINATOR,
+                                    appUserRank = getUserRank(event!!, appUser!!)
+                                )
+                                HorizontalDivider()
+                            }
 
-                                items(organizers!!) {
-                                    UserItem(
-                                        event = event!!,
-                                        user = originator!!,
-                                        appUser = appUser!!,
-                                        userRank = Rank.ORGANIZER,
-                                        appUserRank = getUserRank(event!!, appUser!!)
-                                    )
-                                }
-                                /*items(participants!!) {
-                                    UserItem(event = event!!, user = it, appUser = appUser!!)
-                                }*/
+                            items(organizers!!) {
+                                UserItem(
+                                    event = event!!,
+                                    user = originator!!,
+                                    appUser = appUser!!,
+                                    userRank = Rank.ORGANIZER,
+                                    appUserRank = getUserRank(event!!, appUser!!)
+                                )
+                            }
+                            items(participants!!) {
+                                UserItem(
+                                    event = event!!,
+                                    user = originator!!,
+                                    appUser = appUser!!,
+                                    userRank = Rank.PARTICIPANT,
+                                    appUserRank = getUserRank(event!!, appUser!!)
+                                )
                             }
                         }
                     }

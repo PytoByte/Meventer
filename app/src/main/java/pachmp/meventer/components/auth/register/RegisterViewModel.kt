@@ -1,14 +1,10 @@
 package pachmp.meventer.components.auth.register
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toFile
 import androidx.lifecycle.viewModelScope
-import com.kizitonwose.calendar.core.CalendarDay
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import pachmp.meventer.components.NavGraphs
@@ -21,9 +17,6 @@ import pachmp.meventer.RootNav
 import pachmp.meventer.components.destinations.CreateUserScreenDestination
 import pachmp.meventer.components.destinations.RegisterScreenDestination
 import pachmp.meventer.data.repository.Repositories
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -54,7 +47,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
                 snackbarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
             } else {
                 val response = repositories.userRepository.sendEmailCode(email)
-                if (checkResultResponse(response = response)) {
+                if (checkResultResponse(response = response, checkToken = false)) {
                     navigator.clearNavigate(CodeScreenDestination())
                 }
             }
@@ -67,7 +60,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
                 snackbarHostState.showSnackbar(message = "Поля не заполнены")
             } else {
                 val response = repositories.userRepository.verifyEmailCode(UserEmailCode(email = email, code = code))
-                if (checkResultResponse(response = response)) {
+                if (checkResultResponse(response = response, checkToken = false)) {
                     navigator.clearNavigate(CreateUserScreenDestination())
                 }
             }
@@ -91,7 +84,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
                     if (avatarUri!=null) cacheFile(avatarUri!!, "avatar") else null
                 )
 
-                if (checkResponse(response = tokenResponse)) {
+                if (checkResponse(response = tokenResponse, checkToken = false)) {
                     val token = tokenResponse!!.data
                     repositories.encryptedSharedPreferences.edit().putString("token", token).apply()
                     navigator.clearNavigate(NavGraphs.mainmenu)

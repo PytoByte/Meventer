@@ -8,6 +8,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.FlingBehavior
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -54,10 +57,12 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -73,6 +78,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.launch
 import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.data.DTO.Event
@@ -101,12 +107,13 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
         topBar = {
             Column {
                 EmbeddedSearchBar(
-                    //onQueryChange = onQueryChange,
                     isSearchActive = isSearchActive,
                     onActiveChanged = { isSearchActive = it },
                     onSearch = {
+                        isSearchActive = false
                         eventsViewModel.searchEvents()
-                    }
+                    },
+                    onQueryChange = { eventsViewModel.query = it }
                 )
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -121,14 +128,31 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
                             )
                         }
                     }
-                    FilterChipExample()
+                    FilterChipExample(
+                        onAdd = {
+                            when(it) {
+                                "Нравится" -> eventsViewModel.favoriteFilter = true
+                                "Создатель" -> eventsViewModel.originatorFilter = true
+                                "Организатор" -> eventsViewModel.organizerFilter = true
+                                "Участник" -> eventsViewModel.participantFilter = true
+                            }
+                            eventsViewModel.filterByFastTags()
+                        },
+                        onRemove = {
+                            when(it) {
+                                "Нравится" -> eventsViewModel.favoriteFilter = false
+                                "Создатель" -> eventsViewModel.originatorFilter = false
+                                "Организатор" -> eventsViewModel.organizerFilter = false
+                                "Участник" -> eventsViewModel.participantFilter = false
+                            }
+                            eventsViewModel.filterByFastTags()
+                        }
+                    )
                 }
-
             }
-
         }
     ) { paddingValues ->
-        if (eventsViewModel.events==null) {
+        if (eventsViewModel.eventsVisible == null) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
@@ -136,7 +160,7 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
             ) {
                 Text("Загрузка")
             }
-        } else if (eventsViewModel.events!!.size==0) {
+        } else if (eventsViewModel.eventsVisible!!.size == 0) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
@@ -150,8 +174,11 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
                     .fillMaxSize()
                     .padding(paddingValues), horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(eventsViewModel.events!!, key={it.id}, contentType = { Event }) { event ->
+                items(eventsViewModel.eventsVisible!!, key = { it.id }, contentType = { Event }) { event ->
                     EventCard(event, eventsViewModel)
+                }
+                item {
+                    Spacer(modifier = Modifier.size(65.dp))
                 }
             }
         }
@@ -205,9 +232,20 @@ fun EventCard(event: Event, eventsViewModel: EventsViewModel) {
                 modifier = Modifier.padding(top = 6.dp, bottom = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
-                Text(text = event.name, fontSize = 20.sp, fontWeight = FontWeight(1000), maxLines = 2)
-                Text(text = event.startTime.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm:ss")), maxLines = 1)
-                Text(text = if (event.price != 0) "Price: ${event.price}₽" else "Price: Free", maxLines = 1)
+                Text(
+                    text = event.name,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight(1000),
+                    maxLines = 2
+                )
+                Text(
+                    text = event.startTime.atZone(ZoneId.systemDefault())
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm:ss")), maxLines = 1
+                )
+                Text(
+                    text = if (event.price != 0) "Price: ${event.price}₽" else "Price: Free",
+                    maxLines = 1
+                )
             }
 
             Image(
@@ -234,20 +272,19 @@ fun EmbeddedSearchBar(
     isSearchActive: Boolean,
     onActiveChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    onSearch: ((String) -> Unit)? = null
+    onSearch: ((String) -> Unit)? = null,
+    onQueryChange: (String) -> Unit,
 ) {
     var searchQuery by rememberSaveable { mutableStateOf("") }
     val searchHistory = remember { mutableStateListOf("") }
     val activeChanged: (Boolean) -> Unit = { active ->
-        //searchQuery = ""
-//        onQueryChange("")
         onActiveChanged(active)
     }
     SearchBar(
         query = searchQuery,
         onQueryChange = { query ->
+            onQueryChange(query)
             searchQuery = query
-//            onQueryChange(query)
         },
         onSearch = onSearch ?: {
             if (searchHistory.contains(searchQuery)) {
@@ -293,7 +330,6 @@ fun EmbeddedSearchBar(
                 IconButton(
                     onClick = {
                         searchQuery = ""
-//                        onQueryChange("")
                     },
                 ) {
                     Icon(
@@ -358,10 +394,12 @@ fun FilterChip(
     text: String,
     isSelected: Boolean,
     onSelectedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val backgroundColor =
-        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(
+            alpha = 0.2f
+        )
     val contentColor =
         if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
 
@@ -385,7 +423,7 @@ fun FiltersRow(
     allFilters: List<String>,
     selectedFilters: MutableState<List<String>>,
     onFilterSelected: (String) -> Unit,
-    onFilterDeselected: (String) -> Unit
+    onFilterDeselected: (String) -> Unit,
 ) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -410,8 +448,11 @@ fun FiltersRow(
 }
 
 @Composable
-fun FilterChipExample() {
-    val appliedFilters = listOf("Создатель", "Организатор", "Участник")
+fun FilterChipExample(
+    onAdd: (String) -> Unit,
+    onRemove: (String) -> Unit,
+) {
+    val appliedFilters = listOf("Нравится", "Создатель", "Организатор", "Участник")
 
     var selectedFilters by remember { mutableStateOf(emptyList<String>()) }
     val allFilters = appliedFilters
@@ -424,10 +465,16 @@ fun FilterChipExample() {
             allFilters = mergedFilters,
             selectedFilters = mutableStateOf(selectedFilters),
             onFilterSelected = { filter ->
-                selectedFilters = selectedFilters.toMutableList().apply { add(filter) }
+                selectedFilters = selectedFilters.toMutableList().apply {
+                    add(filter)
+                    onAdd(filter)
+                }
             },
             onFilterDeselected = { filter ->
-                selectedFilters = selectedFilters.toMutableList().apply { remove(filter) }
+                selectedFilters = selectedFilters.toMutableList().apply {
+                    remove(filter)
+                    onRemove(filter)
+                }
             }
         )
     }

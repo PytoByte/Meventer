@@ -112,10 +112,10 @@ fun FilterDialog(
                                 modifier = Modifier.clickable {
                                     onFilterApply(EventSelection(
                                         tags = selectedCategories.toList(),
-                                        age = if (minAge==0) null else minAge.toShort(),
-                                        minimalPrice = if (minPrice==0) null else minPrice,
+                                        age = minAge.toShort(),
+                                        minimalPrice = minPrice,
                                         maximalPrice = if (maxPrice==0) null else maxPrice,
-                                        sortBy = null
+                                        sortBy = EventSelection.SortingStates.NEAREST_ONES_FIRST.state
                                     ))
                                     visible.value = false
                                 })
