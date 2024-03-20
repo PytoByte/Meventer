@@ -85,17 +85,19 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             } else {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        modifier = Modifier.size(250.dp),
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "logo"
-                    )
-                    Text(textState)
+                MeventerTheme {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            modifier = Modifier.size(250.dp),
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "logo"
+                        )
+                        Text(textState)
+                    }
                 }
 
                 rememberCoroutineScope().launch {

@@ -88,7 +88,7 @@ fun CreateUserScreen(registerViewModel: RegisterViewModel) {
                 initialDate = LocalDate.now(),
                 title = "Выберите дату",
                 allowedDateValidator = {
-                    it<=LocalDate.now()
+                    it <= LocalDate.now()
                 },
                 locale = Locale.getDefault()
             ) {
@@ -122,11 +122,6 @@ fun CreateUserScreen(registerViewModel: RegisterViewModel) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
             ) {
-                Image(
-                    modifier = Modifier.size(250.dp),
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "logo"
-                )
                 Text("Создание пользователя")
                 Spacer(modifier = Modifier.padding(2.dp))
                 Text("Аватар")
@@ -137,7 +132,8 @@ fun CreateUserScreen(registerViewModel: RegisterViewModel) {
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(avatarUri).build(),
                     contentDescription = "avatar",
-                    contentScale = ContentScale.Crop)
+                    contentScale = ContentScale.Crop
+                )
                 Button(onClick = { launcher.launch(arrayOf("image/*")) }) {
                     Text(text = "Выбрать файл")
                 }

@@ -27,6 +27,7 @@ import pachmp.meventer.data.DTO.User
 import pachmp.meventer.data.DTO.UserEmailCode
 import pachmp.meventer.data.DTO.UserFeedback
 import pachmp.meventer.data.DTO.UserFeedbackCreate
+import pachmp.meventer.data.DTO.UserFeedbackUpdate
 import pachmp.meventer.data.DTO.UserLogin
 import pachmp.meventer.data.DTO.UserRegister
 import pachmp.meventer.data.DTO.UserUpdate
@@ -43,10 +44,26 @@ class UserRepository @Inject constructor(
 ) : DefaultRepository(encryptedSharedPreferences, appContext) {
     val repositoryURL = baseURL + "user/"
     suspend fun createFeedback(userFeedbackCreate: UserFeedbackCreate) = withHttpClient {
-        post("${repositoryURL}data") {
+        post("${repositoryURL}feedback/create") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(userFeedbackCreate)
+        }.body<ResultResponse>()
+    }
+
+    suspend fun updateFeedback(userFeedbackUpdate: UserFeedbackUpdate) = withHttpClient {
+        post("${repositoryURL}feedback/update") {
+            bearerAuth(getToken())
+            contentType(ContentType.Application.Json)
+            setBody(userFeedbackUpdate)
+        }.body<ResultResponse>()
+    }
+
+    suspend fun deleteFeedback(FeedbackID: Long) = withHttpClient {
+        post("${repositoryURL}feedback/delete") {
+            bearerAuth(getToken())
+            contentType(ContentType.Application.Json)
+            setBody(FeedbackID)
         }.body<ResultResponse>()
     }
 

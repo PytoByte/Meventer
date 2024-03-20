@@ -88,11 +88,38 @@ class EventRepository @Inject constructor(
         }.body<ResultResponse>()
     }
 
-    suspend fun editEvent(eventUpdate: EventUpdate) = withHttpClient {
+    suspend fun editEvent(eventUpdate: EventUpdate, images: List<File>) = withHttpClient {
         post("${repositoryURL}update") {
             bearerAuth(getToken())
-            contentType(ContentType.Application.Json)
-            setBody(eventUpdate)
+            setBody(
+                MultiPartFormDataContent(
+                    parts = formData {
+                        append(
+                            key = "update",
+                            value = Json.encodeToString(EventUpdate.serializer(), eventUpdate),
+                            headers = headers {
+                                append(
+                                    HttpHeaders.ContentType,
+                                    "application/json"
+                                )
+                            })
+
+                        for ((index, image) in images.withIndex()) {
+                            append(
+                                key = "image$index",
+                                value = image.readBytes(),
+                                headers = Headers.build {
+                                    append(HttpHeaders.ContentType, "image/${image.extension}")
+                                    append(
+                                        HttpHeaders.ContentDisposition,
+                                        "filename=\"${image.name}\""
+                                    )
+                                }
+                            )
+                        }
+                    }
+                )
+            )
         }.body<ResultResponse>()
     }
 
@@ -117,13 +144,13 @@ class EventRepository @Inject constructor(
         }.body<ResultResponse>()
     }
 
-    /*suspend fun changeUserParticipant(eventSelection: EventSelection) = withHttpClient {
+    suspend fun changeUserParticipant(eventID: Int) = withHttpClient {
         post("${repositoryURL}changeUsers/participant") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
-            setBody(eventSelection)
-        }.body<Response<List<Event>>>()
-    }*/
+            setBody(eventID)
+        }.body<ResultResponse>()
+    }
 
     suspend fun getGlobalEvents(eventSelection: EventSelection) = withHttpClient {
         post("${repositoryURL}event/global") {

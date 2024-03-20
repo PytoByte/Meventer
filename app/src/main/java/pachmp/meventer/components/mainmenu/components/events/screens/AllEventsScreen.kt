@@ -81,6 +81,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
+import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.ui.transitions.BottomTransition
 import java.time.ZoneId
@@ -153,13 +154,7 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
         }
     ) { paddingValues ->
         if (eventsViewModel.eventsVisible == null) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Загрузка")
-            }
+            LoadingScreen(Modifier.fillMaxSize())
         } else if (eventsViewModel.eventsVisible!!.size == 0) {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -302,7 +297,6 @@ fun EmbeddedSearchBar(
             modifier
                 .padding(start = 12.dp, top = 2.dp, end = 12.dp)
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.onPrimary)
                 .animateContentSize(spring(stiffness = Spring.StiffnessHigh))
         },
         placeholder = { Text("Поиск") },
@@ -452,10 +446,8 @@ fun FilterChipExample(
     onAdd: (String) -> Unit,
     onRemove: (String) -> Unit,
 ) {
-    val appliedFilters = listOf("Нравится", "Создатель", "Организатор", "Участник")
-
     var selectedFilters by remember { mutableStateOf(emptyList<String>()) }
-    val allFilters = appliedFilters
+    val allFilters = remember {listOf("Нравится", "Создатель", "Организатор", "Участник")}
 
     Column(modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 6.dp)) {
         val filteredSelectedFilters = allFilters.filter { it in selectedFilters }

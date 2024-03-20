@@ -12,6 +12,7 @@ import javax.inject.Singleton
 data class Repositories @Inject constructor(
     val eventRepository: EventRepository,
     val userRepository: UserRepository,
+    val fileRepository: FileRepository,
     val encryptedSharedPreferences: SharedPreferences,
     @ApplicationContext val appContext: Context
 )

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -58,6 +59,8 @@ import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.profile.FeedbackModel
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
+import pachmp.meventer.components.mainmenu.components.profile.widgets.Avatar
+import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.data.DTO.UserFeedback
 import pachmp.meventer.ui.theme.MeventerTheme
 import pachmp.meventer.ui.transitions.BottomTransition
@@ -71,13 +74,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
 
     with(profileViewModel) {
         if (user == null) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Загрузка")
-            }
+            LoadingScreen(Modifier.fillMaxSize())
         } else {
             MeventerTheme {
                 Scaffold(
@@ -151,7 +148,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
                                 //comments
                                 OutlinedCard(
                                     modifier = Modifier
-                                        .height(288.dp)
+                                        .heightIn(max = 288.dp)
                                         .fillMaxWidth(),
                                     border = BorderStroke(
                                         0.65f.dp,
@@ -166,7 +163,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
                                                 modifier = Modifier.padding(12.dp)
                                             )
                                             RatingBar(
-                                                value = 4.2f,
+                                                value = avrRating,
                                                 config = RatingBarConfig().numStars(5)
                                                     .style(RatingBarStyle.HighLighted).size(24.dp),
                                                 onValueChange = {},
@@ -174,9 +171,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
                                         }
                                         CommentsList(feedbacks = feedbackModels!!)
                                     } else {
-                                        Row(modifier = Modifier.fillMaxWidth()) {
-                                            Text("Загрузка")
-                                        }
+                                        LoadingScreen(Modifier.fillMaxWidth())
                                     }
 
                                 }
@@ -184,17 +179,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
 
                         }
                     } else {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.width(74.dp),
-                                color = MaterialTheme.colorScheme.secondary,
-                                trackColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        }
+                        LoadingScreen(Modifier.fillMaxSize())
                     }
                 }
             }
@@ -304,15 +289,4 @@ fun ProfileDetail(label: String, value: String) {
             )
         }
     }
-}
-
-@Composable
-fun Avatar(model: String) {
-    AsyncImage(
-        model = model,
-        contentDescription = "avatar",
-        modifier = Modifier
-            .size(220.dp)
-            .clip(CircleShape)
-    )
 }

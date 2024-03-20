@@ -19,7 +19,8 @@ data class Event(
     val originator: Int,
     val organizers: List<Int>,
     val participants: List<Int>,
-    val inFavourites: List<Int>
+    val inFavourites: List<Int>,
+    val tags: List<String>
 )
 
 @Serializable
@@ -63,7 +64,9 @@ data class EventUpdate(
     val startTime: Instant?,
     val minimalAge: Short?,
     val maximalAge: Short?,
-    val price: Int?
+    val price: Int?,
+    val tags: List<String>?,
+    val deletedImages: List<String>?
 )
 
 @Serializable

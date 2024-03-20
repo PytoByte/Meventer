@@ -12,11 +12,14 @@ import pachmp.meventer.Navigator
 import pachmp.meventer.RootNav
 import pachmp.meventer.components.destinations.AllEventsScreenDestination
 import pachmp.meventer.components.destinations.CreateEventScreenDestination
+import pachmp.meventer.components.destinations.EditEventScreenDestination
 import pachmp.meventer.components.destinations.EventScreenDestination
 import pachmp.meventer.components.mainmenu.BottomViewModel
+import pachmp.meventer.components.mainmenu.components.events.components.eventEditor.screens.EditEventScreen
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.data.DTO.EventCreate
 import pachmp.meventer.data.DTO.EventSelection
+import pachmp.meventer.data.DTO.EventUpdate
 import pachmp.meventer.data.DTO.EventsGet
 import pachmp.meventer.data.DTO.User
 import pachmp.meventer.data.repository.Repositories
@@ -103,11 +106,9 @@ class EventsViewModel @Inject constructor(
             val response = repositories.eventRepository.getEvent(event.id)
             if (checkResponse(response)) {
                 selected = fixEventImages(response!!.data!!)
-                if (selected == null) {
-                    snackbarHostState.showSnackbar("Мероприятие не найдено")
-                } else {
-                    navigator.clearNavigate(EventScreenDestination)
-                }
+                navigator.clearNavigate(EventScreenDestination)
+            } else {
+                snackbarHostState.showSnackbar("Мероприятие не найдено")
             }
         }
     }
@@ -122,6 +123,12 @@ class EventsViewModel @Inject constructor(
     fun navigateToCreateEvent() {
         viewModelScope.launch {
             navigator.clearNavigate(CreateEventScreenDestination)
+        }
+    }
+
+    fun navigateToEditEvent() {
+        viewModelScope.launch {
+            navigator.clearNavigate(EditEventScreenDestination)
         }
     }
 
@@ -142,6 +149,23 @@ class EventsViewModel @Inject constructor(
         }
     }
 
+    fun editEvent(eventUpdate: EventUpdate?, images: List<Uri>) {
+        viewModelScope.launch {
+            if (eventUpdate != null) {
+                val files = List(images.size) {
+                    cacheFile(images[it], "image${it}")
+                }
+                val response = repositories.eventRepository.editEvent(eventUpdate, files)
+                if (checkResultResponse(response)) {
+                    navigateToAllEvents()
+                    snackbarHostState.showSnackbar("Мероприятие успешно изменено")
+                }
+            } else {
+                snackbarHostState.showSnackbar("Некоторые поля не заполненны или заполненны неверно. Проверьте актуальность даты создания")
+            }
+        }
+    }
+
     fun searchEvents() {
         viewModelScope.launch {
             eventSelection = eventSelection.copy(tags = (eventSelection.tags ?: emptyList())+listOf(query))
@@ -151,6 +175,16 @@ class EventsViewModel @Inject constructor(
                 events = response.data!!
             } else {
                 snackbarHostState.showSnackbar("Мероприятия не найдены")
+            }
+        }
+    }
+
+    fun deleteEvent(eventID: Int) {
+        viewModelScope.launch {
+            val response = repositories.eventRepository.deteleEvent(eventID)
+            if (checkResultResponse(response)) {
+                navigator.clearNavigate(AllEventsScreenDestination)
+                snackbarHostState.showSnackbar("Мероприятие удалено")
             }
         }
     }

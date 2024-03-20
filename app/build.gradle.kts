@@ -66,8 +66,6 @@ dependencies {
     // Alt navigation
     implementation("io.github.raamcosta.compose-destinations:core:1.10.1")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-    //implementation("com.kizitonwose.calendar:view:2.5.0")
-    //implementation("com.kizitonwose.calendar:compose:2.5.0")
 
     // Alternative navigation
     implementation("io.github.raamcosta.compose-destinations:animations-core:1.10.1")
@@ -87,7 +85,6 @@ dependencies {
     implementation("io.ktor:ktor-client-auth:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("io.ktor:ktor-client-logging:$ktor_version")
-    //implementation("io.ktor:ktor-client-logging-native:$ktor_version")
 
     // Icons
     implementation ("androidx.compose.material:material-icons-extended:1.6.3")

@@ -115,8 +115,8 @@ open class DefaultViewModel(
     }
 
     fun fixEventImages(event: Event) =
-        event.copy(images = event.images.map { repositories.eventRepository.getFileURL(it) })
+        event.copy(images = event.images.map { repositories.fileRepository.getFileURL(it) })
 
     fun fixUserAvatar(user: User) =
-        user.copy(avatar = repositories.userRepository.getFileURL(user.avatar))
+        user.copy(avatar = repositories.fileRepository.getFileURL(user.avatar))
 }

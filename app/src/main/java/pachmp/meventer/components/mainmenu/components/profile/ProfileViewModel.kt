@@ -37,12 +37,15 @@ class ProfileViewModel @Inject constructor(
     var feedbackModels by mutableStateOf<List<FeedbackModel>?>(null)
         private set
 
+    var avrRating by mutableStateOf(0f)
+        private set
+
     fun updateProfile() {
         viewModelScope.launch {
             val response = repositories.userRepository.getUserData()
             if (checkResponse(response)) {
                 user = response!!.data
-                avatar = repositories.userRepository.getFileURL(user!!.avatar)
+                avatar = repositories.fileRepository.getFileURL(user!!.avatar)
             }
 
             val feedbacksResponse = repositories.userRepository.getFeedbacks()
@@ -50,20 +53,24 @@ class ProfileViewModel @Inject constructor(
                 if (it.code==404.toShort()) { feedbackModels = emptyList(); false } else {  null } }) {
                 feedbackModels = List(feedbacksResponse!!.data!!.size) {
                     val authorResponse = repositories.userRepository.getUserData(NullableUserID(feedbacksResponse.data!![it].fromUserID))
+                    avrRating += feedbacksResponse.data[it].rating
                     if (checkResponse(authorResponse)) {
                         FeedbackModel(
+                            id = feedbacksResponse.data[it].id,
                             author = authorResponse!!.data!!,
                             rating = feedbacksResponse.data[it].rating,
                             comment = feedbacksResponse.data[it].comment
                         )
                     } else {
                         FeedbackModel(
+                            id = feedbacksResponse.data[it].id,
                             author = null,
                             rating = feedbacksResponse.data[it].rating,
                             comment = feedbacksResponse.data[it].comment
                         )
                     }
                 }
+                avrRating /= feedbackModels!!.size
             }
         }
     }

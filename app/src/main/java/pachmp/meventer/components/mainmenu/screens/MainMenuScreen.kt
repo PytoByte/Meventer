@@ -47,6 +47,7 @@ fun MainMenuScreen(startRoute: String="Events", mainmenuViewModel: MainMenuViewM
     val profileViewModel: ProfileViewModel = hiltViewModel()
     val chatsViewModel: ChatsViewModel = hiltViewModel()
 
+
     mainmenuViewModel.navigator.getController()!!.addOnDestinationChangedListener { controller, destination, arguments ->
         var start = false
         BottomBarScreens.values().forEach {

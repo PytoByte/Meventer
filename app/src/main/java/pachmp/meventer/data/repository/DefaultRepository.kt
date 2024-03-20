@@ -7,23 +7,11 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.engine.cio.CIOEngineConfig
-import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.ANDROID
-import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.statement.HttpResponse
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.headers
 import io.ktor.serialization.kotlinx.json.json
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.security.KeyStore
-import javax.net.ssl.TrustManagerFactory
-import javax.net.ssl.X509TrustManager
 
 
 open class DefaultRepository(
@@ -44,47 +32,41 @@ open class DefaultRepository(
         }
         /*engine {
             https {
-                trustManager = getTrustManagerFactory()?.trustManagers?.first {
-                    it is X509TrustManager
-                } as X509TrustManager
+                trustManager = object: X509TrustManager {
+                    override fun checkClientTrusted(p0: Array<out X509Certificate>?, p1: String?) { }
+
+                    override fun checkServerTrusted(p0: Array<out X509Certificate>?, p1: String?) { }
+
+                    override fun getAcceptedIssuers(): Array<X509Certificate>? = null
+                }
             }
         }*/
     }
 
-    /*private fun getTrustManagerFactory(): TrustManagerFactory? {
+    /*fun getKeyStore(): KeyStore {
+        val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+        keyStore.load(appContext.assets.open("keystore.jks"), "XgfX231TufOvGaeTU3Rwvjuf3k6jnvdsesRycToF0BQZ7tkzZ8qsd4yTtc5oNgql".toCharArray())
+        return keyStore
+    }
+
+    fun getTrustManagerFactory(): TrustManagerFactory? {
         val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
         trustManagerFactory.init(getKeyStore())
         return trustManagerFactory
     }
 
-    private fun getKeyStore(): KeyStore {
+    fun getSslContext(): SSLContext? {
+        val sslContext = SSLContext.getInstance("TLS")
+        sslContext.init(null, getTrustManagerFactory()?.trustManagers, null)
+        return sslContext
+    }
 
-        val tempFile = java.io.File.createTempFile("temp", ".jks")
-
-        val fileOutputStream = FileOutputStream(tempFile)
-        val originalInputStream = appContext.assets.use { it.open("keystore.jks") }
-
-        val buffer = ByteArray(1024)
-        var bytesRead: Int
-        while (originalInputStream.read(buffer).also { bytesRead = it } != -1) {
-            fileOutputStream.write(buffer, 0, bytesRead)
-        }
-
-        originalInputStream.close()
-        fileOutputStream.close()
-
-        val fileInputStream = FileInputStream(tempFile)
-
-        //val keyStoreFile = appContext.assets.use { it.open("keystore.jks") }
-        //val keyStoreFile = FileInputStream("keystore.jks")
-        val keyStorePassword = "password".toCharArray()
-        val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-        keyStore.load(fileInputStream, keyStorePassword)
-        return keyStore
+    fun getTrustManager(): X509TrustManager {
+        return getTrustManagerFactory()?.trustManagers?.first { it is X509TrustManager } as X509TrustManager
     }*/
 
     protected val baseURL = "http://10.0.2.2:8080/"
-    //protected val baseURL = "http://127.0.0.1:8080/"
+    //protected val baseURL = "https://127.0.0.1:8080/"
 
     protected suspend fun <Type> withHttpClient(
         config: HttpClientConfig<CIOEngineConfig>.() -> Unit = defaultConfig,
@@ -99,6 +81,4 @@ open class DefaultRepository(
     }
 
     protected fun getToken() = encryptedSharedPreferences.getString("token", "")!!
-
-    fun getFileURL(fileName: String) = "${baseURL}file/${fileName}"
 }

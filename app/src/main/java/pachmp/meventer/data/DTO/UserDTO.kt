@@ -24,6 +24,7 @@ data class UserEmailCode(
 
 @Serializable
 data class UserFeedback(
+    val id: Long,
     val fromUserID: Int,
     val rating: Float,
     val comment: String
@@ -80,4 +81,11 @@ data class UserShort(
     val id: Int,
     val nickname: String,
     val avatar: String
+)
+
+@Serializable
+data class UserFeedbackUpdate(
+    val FeedbackID: Long,
+    val rating: Float,
+    val comment: String
 )

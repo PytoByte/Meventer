@@ -2,6 +2,7 @@ package pachmp.meventer.components.mainmenu.components.events.components.eventSc
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -26,18 +26,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddModerator
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.PeopleAlt
-import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.RemoveModerator
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,16 +54,24 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.gowtham.ratingbar.RatingBar
+import com.gowtham.ratingbar.RatingBarConfig
+import com.gowtham.ratingbar.RatingBarStyle
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
-import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
+import pachmp.meventer.components.mainmenu.components.events.components.Rank
 import pachmp.meventer.components.mainmenu.components.events.components.eventScreen.EventScreenViewModel
+import pachmp.meventer.components.mainmenu.components.events.components.eventScreen.UserModel
+import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
+import pachmp.meventer.components.mainmenu.components.profile.FeedbackModel
+import pachmp.meventer.components.mainmenu.components.profile.screens.CommentsList
 import pachmp.meventer.components.widgets.CustomText
+import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.components.widgets.MaterialButton
 import pachmp.meventer.data.DTO.Event
-import pachmp.meventer.data.DTO.User
 import pachmp.meventer.ui.transitions.FadeTransition
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -72,20 +84,19 @@ fun EventScreen(
     eventsViewModel: EventsViewModel,
     eventScreenViewModel: EventScreenViewModel = hiltViewModel(),
 ) {
-    eventScreenViewModel.init(eventsViewModel.selected!!, eventsViewModel.user!!)
+    eventScreenViewModel.init(eventsViewModel.selected!!.id, eventsViewModel.user!!.id)
     with(eventScreenViewModel) {
+        parentSnackbarHostState = eventsViewModel.snackbarHostState
         if (ready == null) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Загрузка")
-            }
+            LoadingScreen(Modifier.fillMaxSize())
         } else if (ready!!) {
+            val showRatingDialog = remember { mutableStateOf(false) }
+
             val pagerState = rememberPagerState {
                 event!!.images.size
             }
+
+            OriginarorFeedbacksDialog(showRatingDialog, originatorFeedbacks, eventScreenViewModel)
 
             Card(
                 modifier = Modifier
@@ -113,6 +124,7 @@ fun EventScreen(
                     }
                 }
                 Scaffold(
+                    snackbarHost = { SnackbarHost(parentSnackbarHostState) },
                     bottomBar = {
                         Row(
                             modifier = Modifier
@@ -141,42 +153,52 @@ fun EventScreen(
                                     .heightIn(40.dp)
                                     .height(50.dp)
                                     .weight(3f),
-                                text = "Присоединиться",
-                                onClick = { }
+                                enabled = appUser!!.rank != Rank.ORIGINATOR,
+                                text = if (allMembers!!.contains(appUser)) "Присоединиться" else "Покинуть",
+                                onClick = { changeUserParticipant() }
                             )
-                            IconButton(
-                                onClick = { /*TODO back to screen participants*/ },
-                                modifier = Modifier
-                                    .padding(end = 5.dp)
-                                    .weight(1f)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PeopleAlt,
-                                    contentDescription = "Participants",
-                                    modifier = Modifier.size(32.dp)
-                                )
+                            if (appUser!!.rank.value >= Rank.ORGANIZER.value) {
+                                IconButton(
+                                    onClick = { eventsViewModel.navigateToEditEvent() },
+                                    modifier = Modifier
+                                        .padding(end = 5.dp)
+                                        .weight(1f)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = "Settings",
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 ) {
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth().padding(it)
+                            .fillMaxWidth()
+                            .padding(it)
                             .padding(top = 8.dp, start = 15.dp, end = 15.dp)
                             .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.Start,
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        /*LazyRow() {
-                            items(event!!.ta)
-                        }*/
                         MarqueeText(text = event!!.name)
+
+                        RatingBar(
+                            value = originatorRating,
+                            config = RatingBarConfig().numStars(5)
+                                .style(RatingBarStyle.HighLighted)
+                                .size(20.dp),
+                            onValueChange = {},
+                            onRatingChanged = { showRatingDialog.value = true })
+
                         CustomText(
                             text = "**Начало: **" + event!!.startTime.atZone(ZoneId.systemDefault())
                                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm:ss"))
                         )
                         CustomText(
-                            text = if (event!!.maximalAge != null) "**Возростное ограничение:** от ${event!!.minimalAge} до ${event!!.maximalAge} лет" else "**Возростное ограничение:** ${event!!.minimalAge}+ лет"
+                            text = if (event!!.maximalAge == null || event!!.maximalAge == 999.toShort()) "**Возростное ограничение:** ${event!!.minimalAge}+ лет" else "**Возростное ограничение:** от ${event!!.minimalAge} до ${event!!.maximalAge} лет"
                         )
                         CustomText(
                             text = "**Стоимость: **" + if (event!!.price == 0) "Бесплатно" else "${event!!.price}₽"
@@ -195,8 +217,7 @@ fun EventScreen(
                                     event = event!!,
                                     user = originator!!,
                                     appUser = appUser!!,
-                                    userRank = Rank.ORIGINATOR,
-                                    appUserRank = getUserRank(event!!, appUser!!)
+                                    eventScreenViewModel
                                 )
                                 HorizontalDivider()
                             }
@@ -204,20 +225,20 @@ fun EventScreen(
                             items(organizers!!) {
                                 UserItem(
                                     event = event!!,
-                                    user = originator!!,
+                                    user = it,
                                     appUser = appUser!!,
-                                    userRank = Rank.ORGANIZER,
-                                    appUserRank = getUserRank(event!!, appUser!!)
+                                    eventScreenViewModel
                                 )
+                                HorizontalDivider()
                             }
                             items(participants!!) {
                                 UserItem(
                                     event = event!!,
-                                    user = originator!!,
+                                    user = it,
                                     appUser = appUser!!,
-                                    userRank = Rank.PARTICIPANT,
-                                    appUserRank = getUserRank(event!!, appUser!!)
+                                    eventScreenViewModel
                                 )
+                                HorizontalDivider()
                             }
                         }
                     }
@@ -230,7 +251,12 @@ fun EventScreen(
 }
 
 @Composable
-fun UserItem(event: Event, user: User?, appUser: User, userRank: Rank, appUserRank: Rank) {
+fun UserItem(
+    event: Event,
+    user: UserModel?,
+    appUser: UserModel,
+    eventScreenViewModel: EventScreenViewModel,
+) {
     if (user == null) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Text(text = "Не удалось загрузить пользователя")
@@ -253,45 +279,33 @@ fun UserItem(event: Event, user: User?, appUser: User, userRank: Rank, appUserRa
                     .size(60.dp), contentScale = ContentScale.Crop
             )
             Column(modifier = Modifier.padding(4.dp), verticalArrangement = Arrangement.Center) {
-                if (user.id == appUser.id) Text("${user.name} (Вы)") else Text(user.name)
+                if (user.id == appUser.id) Text("${user.name} (Вы)") else Text(user.rank.name)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
-                    Text(text = userRank.title)
-                    if (appUserRank.value == Rank.ORIGINATOR.value && user.id != appUser.id) {
-                        IconButton(onClick = { /*TODO назначить организатором*/ }) {
+                    Text(text = user.rank.title)
+                    if (appUser.rank == Rank.ORIGINATOR && user.id != appUser.id) {
+                        IconButton(onClick = { eventScreenViewModel.changeUserOrganizer(user.id) }) {
                             Icon(
                                 imageVector = if (user.id in event.organizers) Icons.Default.RemoveModerator else Icons.Default.AddModerator,
                                 contentDescription = "organizer"
                             )
                         }
                     }
-                    if (appUserRank.value > userRank.value) {
+                    /*if (appUser.rank.value > user.rank.value) {
                         IconButton(onClick = { /*TODO кик человека*/ }) {
                             Icon(
                                 imageVector = Icons.Default.PersonRemove,
                                 contentDescription = "kick"
                             )
                         }
-                    }
+                    }*/
                 }
             }
         }
     }
-}
-
-enum class Rank(val value: Byte, val title: String) {
-    PARTICIPANT(0.toByte(), "Участник"),
-    ORGANIZER(1.toByte(), "Организатор"),
-    ORIGINATOR(2.toByte(), "Основатель")
-}
-
-fun getUserRank(event: Event, user: User) = when (user.id) {
-    event.originator -> Rank.ORIGINATOR
-    in event.organizers -> Rank.ORGANIZER
-    else -> Rank.PARTICIPANT
 }
 
 
@@ -329,6 +343,77 @@ fun MarqueeText(text: String) {
                     }
                 }
             )
+        }
+    }
+}
+
+
+@Composable
+fun OriginarorFeedbacksDialog(
+    visible: MutableState<Boolean>,
+    feedbackModels: List<FeedbackModel>?,
+    eventScreenViewModel: EventScreenViewModel,
+) {
+    if (visible.value) {
+        with(eventScreenViewModel) {
+            Dialog(onDismissRequest = { visible.value = false }) {
+                Surface {
+                    if (feedbackModels != null) {
+                        Column(
+                            Modifier
+                                .padding(10.dp)
+                                .verticalScroll(rememberScrollState()),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            if (appUser!!.id != originator!!.id) {
+                                val feedback = feedbackModels.find { it.author?.id == appUser!!.id }
+
+                                Text("Оставить отзыв")
+                                RatingBar(
+                                    value = rating,
+                                    config = RatingBarConfig().numStars(5)
+                                        .style(RatingBarStyle.HighLighted)
+                                        .size(20.dp),
+                                    onValueChange = {},
+                                    onRatingChanged = { rating = it })
+                                OutlinedTextField(value = comment, onValueChange = { comment = it })
+                                if (feedback == null) {
+                                    Button(onClick = { eventScreenViewModel.createFeedback() }) {
+                                        Text("Отправить")
+                                    }
+                                } else {
+                                    Row() {
+                                        Button(onClick = { updateFeedback() }) {
+                                            Text("Изменить")
+                                        }
+                                        Button(onClick = { deleteFeedback() }) {
+                                            Text("Удалить")
+                                        }
+                                    }
+                                }
+                            }
+                            Text("Отзывы")
+                            if (feedbackModels.isEmpty()) {
+                                Text("Нету отзывов")
+                            } else {
+                                Box(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = 200.dp)
+                                ) {
+                                    CommentsList(feedbacks = feedbackModels)
+                                }
+                            }
+                            Button(onClick = { visible.value = false }) {
+                                Text("Закрыть")
+                            }
+                        }
+                    } else {
+                        LoadingScreen(Modifier.fillMaxWidth())
+                    }
+                }
+            }
         }
     }
 }

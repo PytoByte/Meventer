@@ -63,7 +63,7 @@ class ProfileEditViewModel @Inject constructor(
             name = user!!.name
             nickname = user!!.nickname
             birthday = user!!.dateOfBirth
-            avatarUriCurrent = repositories.userRepository.getFileURL(user!!.avatar).toUri()
+            avatarUriCurrent = repositories.fileRepository.getFileURL(user!!.avatar).toUri()
         }
     }
 
@@ -85,17 +85,20 @@ class ProfileEditViewModel @Inject constructor(
     fun updateUserData() {
         viewModelScope.launch {
             if (nickname.isEmpty() || name.isEmpty()) {
-                snackbarHostState.showSnackbar(message = "Поля не заполнены")
+                parentSnackbarHostState.showSnackbar(message = "Поля не заполнены")
+            } else if (nickname == user!!.nickname && name == user!!.name && avatarUri==null) {
+                parentSnackbarHostState.showSnackbar(message = "Нет никаких изменений")
             } else {
                 val response =
                     repositories.userRepository.updateUserData(
-                        UserUpdate(nickname, name),
+                        UserUpdate(
+                            if (nickname == user!!.nickname) null else nickname,
+                            if (name == user!!.name) null else name
+                        ),
                         avatar = avatarUri?.let { cacheFile(it, "avatar") })
                 if (checkResultResponse(response = response)) {
-                    coroutineScope {
-                        parentSnackbarHostState.showSnackbar("Сохранено")
-                    }
                     navigator.clearNavigate(ProfileScreenDestination)
+                    parentSnackbarHostState.showSnackbar("Сохранено")
                 }
             }
         }
@@ -104,15 +107,15 @@ class ProfileEditViewModel @Inject constructor(
     fun updateUserEmail() {
         viewModelScope.launch {
             if (code.toIntOrNull() == null || email.isEmpty()) {
-                snackbarHostState.showSnackbar(message = "Поля не заполнены")
+                parentSnackbarHostState.showSnackbar(message = "Поля не заполнены")
+            } else if (email==user!!.email) {
+                parentSnackbarHostState.showSnackbar(message = "Нет никаких изменений")
             } else {
                 val response =
                     repositories.userRepository.updateUserEmail(UserUpdateEmail(code, email))
                 if (checkResultResponse(response = response)) {
-                    coroutineScope {
-                        parentSnackbarHostState.showSnackbar("Сохранено")
-                    }
                     navigator.clearNavigate(ProfileScreenDestination)
+                    parentSnackbarHostState.showSnackbar("Сохранено")
                 }
             }
         }
@@ -120,8 +123,8 @@ class ProfileEditViewModel @Inject constructor(
 
     fun updateUserPassword() {
         viewModelScope.launch {
-            if (code.toIntOrNull() == null || password.isEmpty()  || password.length < 8 || password.length > 128) {
-                snackbarHostState.showSnackbar(message = "Поля не заполнены или заполненны неверно")
+            if (code.toIntOrNull() == null || password.isEmpty() || password.length < 8 || password.length > 128) {
+                parentSnackbarHostState.showSnackbar(message = "Поля не заполнены или заполненны неверно")
             } else {
                 val response = repositories.userRepository.updateUserPassword(
                     UserUpdatePassword(
@@ -130,10 +133,8 @@ class ProfileEditViewModel @Inject constructor(
                     )
                 )
                 if (checkResultResponse(response = response)) {
-                    coroutineScope {
-                        parentSnackbarHostState.showSnackbar("Сохранено")
-                    }
                     navigator.clearNavigate(ProfileScreenDestination)
+                    parentSnackbarHostState.showSnackbar("Сохранено")
                 }
             }
         }
