@@ -1,25 +1,19 @@
 package pachmp.meventer.components.mainmenu.components.profile.components
 
 import android.net.Uri
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import pachmp.meventer.DefaultViewModel
 import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
 import pachmp.meventer.RootNav
-import pachmp.meventer.components.destinations.CreateUserScreenDestination
 import pachmp.meventer.components.destinations.ProfileScreenDestination
 import pachmp.meventer.components.mainmenu.BottomViewModel
 import pachmp.meventer.data.DTO.User
-import pachmp.meventer.data.DTO.UserEmailCode
 import pachmp.meventer.data.DTO.UserUpdate
 import pachmp.meventer.data.DTO.UserUpdateEmail
 import pachmp.meventer.data.DTO.UserUpdatePassword
@@ -44,7 +38,7 @@ class ProfileEditViewModel @Inject constructor(
     var nickname by mutableStateOf("")
     var birthday by mutableStateOf(LocalDate.now())
 
-    var parentSnackbarHostState by mutableStateOf(snackbarHostState)
+    var parentSnackbarHostState by mutableStateOf(snackBarHostState)
 
     var avatarUriCurrent by mutableStateOf<Uri?>(null)
         private set
@@ -76,7 +70,7 @@ class ProfileEditViewModel @Inject constructor(
     fun sendCode() {
         viewModelScope.launch {
             val response = repositories.userRepository.sendEmailCode(email)
-            if (checkResultResponse(response = response)) {
+            if (checkResponse(response = response)) {
                 codeDialogVisible.value = true
             }
         }
@@ -96,7 +90,7 @@ class ProfileEditViewModel @Inject constructor(
                             if (name == user!!.name) null else name
                         ),
                         avatar = avatarUri?.let { cacheFile(it, "avatar") })
-                if (checkResultResponse(response = response)) {
+                if (checkResponse(response = response)) {
                     navigator.clearNavigate(ProfileScreenDestination)
                     parentSnackbarHostState.showSnackbar("Сохранено")
                 }
@@ -113,7 +107,7 @@ class ProfileEditViewModel @Inject constructor(
             } else {
                 val response =
                     repositories.userRepository.updateUserEmail(UserUpdateEmail(code, email))
-                if (checkResultResponse(response = response)) {
+                if (checkResponse(response = response)) {
                     navigator.clearNavigate(ProfileScreenDestination)
                     parentSnackbarHostState.showSnackbar("Сохранено")
                 }
@@ -132,7 +126,7 @@ class ProfileEditViewModel @Inject constructor(
                         password
                     )
                 )
-                if (checkResultResponse(response = response)) {
+                if (checkResponse(response = response)) {
                     navigator.clearNavigate(ProfileScreenDestination)
                     parentSnackbarHostState.showSnackbar("Сохранено")
                 }

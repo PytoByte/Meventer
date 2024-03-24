@@ -1,6 +1,5 @@
 package pachmp.meventer.components.auth.register.screens
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,9 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,15 +19,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.launch
 import pachmp.meventer.ui.transitions.FadeTransition
 import pachmp.meventer.R
 import pachmp.meventer.components.auth.register.RegisterViewModel
@@ -57,7 +50,7 @@ fun CodeScreen(registerViewModel: RegisterViewModel) {
                     }
                 }
             },
-            snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
+            snackbarHost = { SnackbarHost(registerViewModel.snackBarHostState) }
         ) { paddingValues ->
             Column(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),

@@ -44,20 +44,20 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             val response = repositories.userRepository.getUserData()
             if (checkResponse(response)) {
-                user = response!!.data
-                avatar = repositories.fileRepository.getFileURL(user!!.avatar)
+                user = fixUserAvatar(response!!.data!!)
+                avatar = user!!.avatar
             }
 
             val feedbacksResponse = repositories.userRepository.getFeedbacks()
             if (checkResponse(feedbacksResponse) {
-                if (it.code==404.toShort()) { feedbackModels = emptyList(); false } else {  null } }) {
+                if (it.value==404) { feedbackModels = emptyList(); false } else {  null } }) {
                 feedbackModels = List(feedbacksResponse!!.data!!.size) {
-                    val authorResponse = repositories.userRepository.getUserData(NullableUserID(feedbacksResponse.data!![it].fromUserID))
+                    val authorResponse = repositories.userRepository.getUserData(feedbacksResponse.data!![it].fromUserID)
                     avrRating += feedbacksResponse.data[it].rating
                     if (checkResponse(authorResponse)) {
                         FeedbackModel(
                             id = feedbacksResponse.data[it].id,
-                            author = authorResponse!!.data!!,
+                            author = fixUserAvatar(authorResponse!!.data!!),
                             rating = feedbacksResponse.data[it].rating,
                             comment = feedbacksResponse.data[it].comment
                         )
@@ -76,7 +76,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun logout() {
-        repositories.encryptedSharedPreferences.edit().clear().apply()
+        repositories.encryptedSharedPreferences.edit().putString("token", null).apply()
         rootNavigator.clearNavigate(NavGraphs.login)
     }
 

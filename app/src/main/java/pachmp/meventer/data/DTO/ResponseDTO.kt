@@ -1,15 +1,8 @@
 package pachmp.meventer.data.DTO
 
-import kotlinx.serialization.Serializable
+import io.ktor.http.HttpStatusCode
 
-@Serializable
 data class Response<Type>(
-    val result: ResultResponse,
+    val result: HttpStatusCode,
     val data: Type? = null
-)
-
-@Serializable
-data class ResultResponse(
-    val code: Short,
-    val message: String
 )

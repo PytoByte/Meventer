@@ -4,25 +4,20 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.headers
 import io.ktor.util.InternalAPI
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.Json.Default.encodeToString
 import pachmp.meventer.data.DTO.NullableUserID
-import pachmp.meventer.data.DTO.Response
-import pachmp.meventer.data.DTO.ResultResponse
 import pachmp.meventer.data.DTO.User
 import pachmp.meventer.data.DTO.UserEmailCode
 import pachmp.meventer.data.DTO.UserFeedback
@@ -34,21 +29,19 @@ import pachmp.meventer.data.DTO.UserUpdate
 import pachmp.meventer.data.DTO.UserUpdateEmail
 import pachmp.meventer.data.DTO.UserUpdatePassword
 import java.io.File
-import java.time.LocalDate
 import javax.inject.Inject
-import javax.inject.Singleton
 
 class UserRepository @Inject constructor(
     encryptedSharedPreferences: SharedPreferences,
     @ApplicationContext appContext: Context,
 ) : DefaultRepository(encryptedSharedPreferences, appContext) {
-    val repositoryURL = baseURL + "user/"
+    private val repositoryURL = baseURL + "user/"
     suspend fun createFeedback(userFeedbackCreate: UserFeedbackCreate) = withHttpClient {
         post("${repositoryURL}feedback/create") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(userFeedbackCreate)
-        }.body<ResultResponse>()
+        }.toResponse<Unit>()
     }
 
     suspend fun updateFeedback(userFeedbackUpdate: UserFeedbackUpdate) = withHttpClient {
@@ -56,7 +49,7 @@ class UserRepository @Inject constructor(
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(userFeedbackUpdate)
-        }.body<ResultResponse>()
+        }.toResponse<Unit>()
     }
 
     suspend fun deleteFeedback(FeedbackID: Long) = withHttpClient {
@@ -64,7 +57,7 @@ class UserRepository @Inject constructor(
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(FeedbackID)
-        }.body<ResultResponse>()
+        }.toResponse<Unit>()
     }
 
     suspend fun getFeedbacks(nullableUserID: NullableUserID = NullableUserID(null)) = withHttpClient {
@@ -72,15 +65,17 @@ class UserRepository @Inject constructor(
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(nullableUserID)
-        }.body<Response<List<UserFeedback>>>()
+        }.toResponse<List<UserFeedback>>()
     }
 
-    suspend fun getUserData(nullableUserID: NullableUserID = NullableUserID(null)) = withHttpClient {
+    suspend fun getUserData(userID: Int? = null) = withHttpClient {
         post("${repositoryURL}data") {
             contentType(ContentType.Application.Json)
-            setBody(nullableUserID)
+            if (userID!=null) {
+                setBody(userID)
+            }
             bearerAuth(getToken())
-        }.body<Response<User>>()
+        }.apply { Log.d("I AM HERE", this.status.value.toString()+this.status.description) }.toResponse<User>()
     }
 
 
@@ -88,19 +83,19 @@ class UserRepository @Inject constructor(
         get("${repositoryURL}verifyToken") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
-        }.body<ResultResponse>()
+        }.toResponse<Unit>()
     }
 
     suspend fun sendEmailCode(email: String) = withHttpClient {
         post("${repositoryURL}sendEmailCode") { setBody(email) }
-            .body<ResultResponse>()
+            .toResponse<Unit>()
     }
 
     suspend fun verifyEmailCode(userEmailCode: UserEmailCode) = withHttpClient {
         post("${repositoryURL}verifyEmailCode") {
             contentType(ContentType.Application.Json)
             setBody(userEmailCode)
-        }.body<ResultResponse>()
+        }.toResponse<Unit>()
     }
 
     suspend fun register(userRegister: UserRegister, avatar: File? = null) = withHttpClient {
@@ -138,14 +133,14 @@ class UserRepository @Inject constructor(
                     }
                 )
             )
-        }.body<Response<String>>()
+        }.toResponse<String>()
     }
 
     suspend fun login(userLogin: UserLogin) = withHttpClient {
         post("${repositoryURL}login") {
             contentType(ContentType.Application.Json)
             setBody(userLogin)
-        }.body<Response<String>>()
+        }.toResponse<String>()
     }
 
     @OptIn(InternalAPI::class)
@@ -182,7 +177,7 @@ class UserRepository @Inject constructor(
                     }
                 }
             ))
-        }.body<ResultResponse>()
+        }.toResponse<Unit>()
     }
 
     suspend fun updateUserEmail(userUpdateEmail: UserUpdateEmail) = withHttpClient {
@@ -190,7 +185,7 @@ class UserRepository @Inject constructor(
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(userUpdateEmail)
-        }.body<ResultResponse>()
+        }.toResponse<Unit>()
     }
 
     suspend fun updateUserPassword(userUpdatePassword: UserUpdatePassword) = withHttpClient {
@@ -198,6 +193,6 @@ class UserRepository @Inject constructor(
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(userUpdatePassword)
-        }.body<ResultResponse>()
+        }.toResponse<Unit>()
     }
 }

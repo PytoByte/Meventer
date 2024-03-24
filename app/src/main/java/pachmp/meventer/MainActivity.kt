@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,22 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.navigation.dependency
-import com.ramcosta.composedestinations.utils.navGraph
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import pachmp.meventer.components.NavGraphs
 import pachmp.meventer.components.auth.login.LoginViewModel
 import pachmp.meventer.components.auth.register.RegisterViewModel
-import pachmp.meventer.data.DTO.ResultResponse
 import pachmp.meventer.data.repository.Repositories
 import pachmp.meventer.ui.theme.MeventerTheme
 import javax.inject.Inject
@@ -100,11 +92,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                rememberCoroutineScope().launch {
+                LaunchedEffect(Unit) {
                     val response = repositories.userRepository.verifyToken()
                     if (response==null) {
                         textState = "Сервер не отвечает"
-                    } else if (response.code!=200.toShort()) {
+                    } else if (response.result.value!=200) {
                         Log.d("TOKEN FIRST", repositories.encryptedSharedPreferences.getString("token", "")!!)
                         repositories.encryptedSharedPreferences.edit().putString("token", null).apply()
                         uiState = true

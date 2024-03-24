@@ -44,10 +44,10 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
     fun registerRequest() {
         viewModelScope.launch {
             if (email.isEmpty() || !Regex("""([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)""").matches(email)) {
-                snackbarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
+                snackBarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
             } else {
                 val response = repositories.userRepository.sendEmailCode(email)
-                if (checkResultResponse(response = response, checkToken = false)) {
+                if (checkResponse(response = response, checkToken = false)) {
                     navigator.clearNavigate(CodeScreenDestination())
                 }
             }
@@ -57,10 +57,10 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
     fun confirmRegister() {
         viewModelScope.launch {
             if (code.toIntOrNull() == null) {
-                snackbarHostState.showSnackbar(message = "Поля не заполнены")
+                snackBarHostState.showSnackbar(message = "Поля не заполнены")
             } else {
                 val response = repositories.userRepository.verifyEmailCode(UserEmailCode(email = email, code = code))
-                if (checkResultResponse(response = response, checkToken = false)) {
+                if (checkResponse(response = response, checkToken = false)) {
                     navigator.clearNavigate(CreateUserScreenDestination())
                 }
             }
@@ -70,7 +70,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
     fun createUser() {
         viewModelScope.launch {
             if (nickname.isEmpty() || password.isEmpty() || password.length < 8 || password.length > 128) {
-                snackbarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
+                snackBarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
             } else {
                 val tokenResponse = repositories.userRepository.register(
                     UserRegister(

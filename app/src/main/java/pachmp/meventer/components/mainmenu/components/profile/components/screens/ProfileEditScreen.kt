@@ -53,7 +53,7 @@ fun ProfileEdit(
     }
 
     with(profileEditViewModel) {
-        parentSnackbarHostState = profileViewModel.snackbarHostState
+        parentSnackbarHostState = profileViewModel.snackBarHostState
         if (user != null) {
             Scaffold(
                 snackbarHost = { SnackbarHost(parentSnackbarHostState) },
@@ -108,7 +108,7 @@ fun ProfileEdit(
 }
 
 @Composable
-fun codeDialog(
+fun CodeDialog(
     visible: MutableState<Boolean>,
     profileEditViewModel: ProfileEditViewModel,
     check: () -> Unit,

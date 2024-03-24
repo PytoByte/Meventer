@@ -35,7 +35,7 @@ fun EmailEditScreen(
     profileEditViewModel: ProfileEditViewModel = hiltViewModel(),
 ) {
     with(profileEditViewModel) {
-        parentSnackbarHostState = profileViewModel.snackbarHostState
+        parentSnackbarHostState = profileViewModel.snackBarHostState
         if (user != null) {
             Scaffold(
                 snackbarHost = { SnackbarHost(parentSnackbarHostState) },
@@ -53,7 +53,7 @@ fun EmailEditScreen(
                     }
                 }
             ) { paddingValues ->
-                codeDialog(codeDialogVisible, profileEditViewModel) {
+                CodeDialog(codeDialogVisible, profileEditViewModel) {
                     updateUserEmail()
                 }
                 Column(
