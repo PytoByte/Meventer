@@ -1,10 +1,9 @@
-package pachmp.meventer.components.mainmenu.components.events.components.eventEditor
+package pachmp.meventer.components.mainmenu.components.events.components.editor
 
 import android.net.Uri
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
@@ -37,7 +36,7 @@ class EventEditorViewModel @Inject constructor(
     var event by mutableStateOf<Event?>(null)
     var appUser by mutableStateOf<User?>(null)
 
-    var parentSnackbarHostState: SnackbarHostState = snackbarHostState
+    var parentSnackbarHostState: SnackbarHostState = snackBarHostState
 
     var title by mutableStateOf("")
     var price by mutableStateOf("")
@@ -74,7 +73,7 @@ class EventEditorViewModel @Inject constructor(
                 parentSnackbarHostState.showSnackbar("Не удалось загрузить мероприятие")
             }
 
-            val userResponse = repositories.userRepository.getUserData(NullableUserID(id = appUserID))
+            val userResponse = repositories.userRepository.getUserData(appUserID)
             if (checkResponse(userResponse)) {
                 appUser = userResponse!!.data!!
             } else {

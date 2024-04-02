@@ -1,8 +1,7 @@
-package pachmp.meventer.components.mainmenu.components.events.components.eventScreen.screens
+package pachmp.meventer.components.mainmenu.components.events.components.display.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -42,6 +42,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,15 +64,14 @@ import com.gowtham.ratingbar.RatingBarStyle
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.components.mainmenu.components.events.components.Rank
-import pachmp.meventer.components.mainmenu.components.events.components.eventScreen.EventScreenViewModel
-import pachmp.meventer.components.mainmenu.components.events.components.eventScreen.UserModel
+import pachmp.meventer.components.mainmenu.components.events.components.display.EventScreenViewModel
+import pachmp.meventer.components.mainmenu.components.events.components.display.UserModel
 import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
 import pachmp.meventer.components.mainmenu.components.profile.FeedbackModel
 import pachmp.meventer.components.mainmenu.components.profile.screens.CommentsList
 import pachmp.meventer.components.widgets.CustomText
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.components.widgets.MaterialButton
-import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.ui.transitions.FadeTransition
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -86,7 +86,7 @@ fun EventScreen(
 ) {
     eventScreenViewModel.init(eventsViewModel.selected!!.id, eventsViewModel.user!!.id)
     with(eventScreenViewModel) {
-        parentSnackbarHostState = eventsViewModel.snackbarHostState
+        parentSnackbarHostState = eventsViewModel.snackBarHostState
         if (ready == null) {
             LoadingScreen(Modifier.fillMaxSize())
         } else if (ready!!) {
@@ -124,7 +124,7 @@ fun EventScreen(
                     }
                 }
                 Scaffold(
-                    snackbarHost = { SnackbarHost(parentSnackbarHostState) },
+                    snackbarHost = { SnackbarHost(snackBarHostState) },
                     bottomBar = {
                         Row(
                             modifier = Modifier
@@ -154,7 +154,7 @@ fun EventScreen(
                                     .height(50.dp)
                                     .weight(3f),
                                 enabled = appUser!!.rank != Rank.ORIGINATOR,
-                                text = if (allMembers!!.contains(appUser)) "Присоединиться" else "Покинуть",
+                                text = if ( remember{derivedStateOf{allMembers!!.find { it.id==appUser!!.id }}}.value!=null ) "Покинуть" else "Присоединиться",
                                 onClick = { changeUserParticipant() }
                             )
                             if (appUser!!.rank.value >= Rank.ORGANIZER.value) {
@@ -185,6 +185,13 @@ fun EventScreen(
                     ) {
                         MarqueeText(text = event!!.name)
 
+                        LazyRow(modifier = Modifier.fillMaxWidth()) {
+                            items(event!!.tags) {
+                                Text("#${it}")
+                                Spacer(modifier = Modifier.size(5.dp))
+                            }
+                        }
+
                         RatingBar(
                             value = originatorRating,
                             config = RatingBarConfig().numStars(5)
@@ -214,7 +221,6 @@ fun EventScreen(
                         LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
                             item {
                                 UserItem(
-                                    event = event!!,
                                     user = originator!!,
                                     appUser = appUser!!,
                                     eventScreenViewModel
@@ -224,7 +230,6 @@ fun EventScreen(
 
                             items(organizers!!) {
                                 UserItem(
-                                    event = event!!,
                                     user = it,
                                     appUser = appUser!!,
                                     eventScreenViewModel
@@ -233,7 +238,6 @@ fun EventScreen(
                             }
                             items(participants!!) {
                                 UserItem(
-                                    event = event!!,
                                     user = it,
                                     appUser = appUser!!,
                                     eventScreenViewModel
@@ -252,56 +256,57 @@ fun EventScreen(
 
 @Composable
 fun UserItem(
-    event: Event,
     user: UserModel?,
     appUser: UserModel,
     eventScreenViewModel: EventScreenViewModel,
 ) {
-    if (user == null) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Не удалось загрузить пользователя")
-        }
+    with(eventScreenViewModel) {
+        if (user == null) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Text(text = "Не удалось загрузить пользователя")
+            }
 
-    } else {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
-            AsyncImage(
-                model = user.avatar, contentDescription = "avatar",
-                Modifier
-                    .clip(
-                        CircleShape
-                    )
-                    .size(60.dp), contentScale = ContentScale.Crop
-            )
-            Column(modifier = Modifier.padding(4.dp), verticalArrangement = Arrangement.Center) {
-                if (user.id == appUser.id) Text("${user.name} (Вы)") else Text(user.rank.name)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    Text(text = user.rank.title)
-                    if (appUser.rank == Rank.ORIGINATOR && user.id != appUser.id) {
-                        IconButton(onClick = { eventScreenViewModel.changeUserOrganizer(user.id) }) {
-                            Icon(
-                                imageVector = if (user.id in event.organizers) Icons.Default.RemoveModerator else Icons.Default.AddModerator,
-                                contentDescription = "organizer"
-                            )
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(70.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                AsyncImage(
+                    model = user.avatar, contentDescription = "avatar",
+                    Modifier
+                        .clip(
+                            CircleShape
+                        )
+                        .size(60.dp), contentScale = ContentScale.Crop
+                )
+                Column(modifier = Modifier.padding(4.dp), verticalArrangement = Arrangement.Center) {
+                    if (user.id == appUser.id) Text("${user.name!!} (Вы)") else Text(user.name!!)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Text(text = user.rank.title)
+                        if (appUser.rank == Rank.ORIGINATOR && user.id != appUser.id) {
+                            IconButton(onClick = { eventScreenViewModel.changeUserOrganizer(user) }) {
+                                Icon(
+                                    imageVector = if (remember{derivedStateOf{organizers!!.find { it.id==user.id }}}.value!=null) Icons.Default.RemoveModerator else Icons.Default.AddModerator,
+                                    contentDescription = "organizer"
+                                )
+                            }
                         }
+                        /*if (appUser.rank.value > user.rank.value) {
+                            IconButton(onClick = { /*TODO кик человека*/ }) {
+                                Icon(
+                                    imageVector = Icons.Default.PersonRemove,
+                                    contentDescription = "kick"
+                                )
+                            }
+                        }*/
                     }
-                    /*if (appUser.rank.value > user.rank.value) {
-                        IconButton(onClick = { /*TODO кик человека*/ }) {
-                            Icon(
-                                imageVector = Icons.Default.PersonRemove,
-                                contentDescription = "kick"
-                            )
-                        }
-                    }*/
                 }
             }
         }

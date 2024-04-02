@@ -1,4 +1,4 @@
-package pachmp.meventer.components.mainmenu.components.events.components.eventEditor.screens
+package pachmp.meventer.components.mainmenu.components.events.components.editor.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,7 +76,7 @@ import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
-import pachmp.meventer.components.mainmenu.components.events.components.eventEditor.EventEditorViewModel
+import pachmp.meventer.components.mainmenu.components.events.components.editor.EventEditorViewModel
 import pachmp.meventer.components.widgets.MaterialButton
 import pachmp.meventer.data.categories
 import pachmp.meventer.ui.transitions.FadeTransition
@@ -239,7 +239,7 @@ fun CreateEventScreen(
                 }
             }
             Scaffold(
-                snackbarHost = { SnackbarHost(eventsViewModel.snackbarHostState) },
+                snackbarHost = { SnackbarHost(eventsViewModel.snackBarHostState) },
                 bottomBar = {
                     Row(
                         modifier = Modifier

@@ -15,7 +15,7 @@ android {
     defaultConfig {
         applicationId = "pachmp.meventer"
         minSdk = 24
-        targetSdk = 34
+        maxSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -80,14 +80,15 @@ dependencies {
     // ktor
     val ktor_version = "2.3.8"
     implementation("io.ktor:ktor-client-core:$ktor_version")
-    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-client-websockets:$ktor_version")
+    implementation("io.ktor:ktor-client-okhttp:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-client-auth:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("io.ktor:ktor-client-logging:$ktor_version")
 
     // Icons
-    implementation ("androidx.compose.material:material-icons-extended:1.6.3")
+    implementation ("androidx.compose.material:material-icons-extended:1.6.4")
 
     // EncryptedSharedPreferences
     implementation("androidx.security:security-crypto:1.0.0")

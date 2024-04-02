@@ -5,20 +5,37 @@ import android.content.SharedPreferences
 import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.engine.cio.CIOEngineConfig
+import io.ktor.client.call.body
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.engine.okhttp.OkHttpConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.statement.HttpResponse
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
+import pachmp.meventer.R
+import pachmp.meventer.data.DTO.Response
+import java.security.KeyStore
+import java.security.cert.CertificateFactory
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 
 open class DefaultRepository(
     val encryptedSharedPreferences: SharedPreferences,
     val appContext: Context
 ) {
-    private val defaultConfig: HttpClientConfig<CIOEngineConfig>.() -> Unit = {
+    private val defaultConfig: HttpClientConfig<OkHttpConfig>.() -> Unit = {
+        install(WebSockets) {
+            contentConverter = KotlinxWebsocketSerializationConverter(Json)
+        }
+
         install(ContentNegotiation) {
             json()
         }
@@ -30,48 +47,48 @@ open class DefaultRepository(
                 }
             }
         }
-        /*engine {
-            https {
-                trustManager = object: X509TrustManager {
-                    override fun checkClientTrusted(p0: Array<out X509Certificate>?, p1: String?) { }
 
-                    override fun checkServerTrusted(p0: Array<out X509Certificate>?, p1: String?) { }
+        engine {
+            config {
+                pingInterval(20, TimeUnit.SECONDS)
+                hostnameVerifier { _, _ -> true }
+                val cf = CertificateFactory.getInstance("X.509")
+                val cert = appContext.resources.openRawResource(R.raw.my_key_store)
+                try {
+                    val ca = cf.generateCertificate(cert)
 
-                    override fun getAcceptedIssuers(): Array<X509Certificate>? = null
+                    val keyStoreType = KeyStore.getDefaultType()
+                    val keyStore = KeyStore.getInstance(keyStoreType)
+                    keyStore.load(null, null)
+                    keyStore.setCertificateEntry("ca", ca)
+
+                    val tmfAlgo = TrustManagerFactory.getDefaultAlgorithm()
+                    val tmf = TrustManagerFactory.getInstance(tmfAlgo)
+                    tmf.init(keyStore)
+
+                    val sslContext = SSLContext.getInstance("TLS")
+                    sslContext.init(null, tmf.trustManagers, null)
+
+                    sslSocketFactory(
+                        sslContext.socketFactory,
+                        tmf.trustManagers[0] as X509TrustManager
+                    )
+                } finally {
+                    cert.close()
                 }
+
             }
-        }*/
+        }
     }
 
-    /*fun getKeyStore(): KeyStore {
-        val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-        keyStore.load(appContext.assets.open("keystore.jks"), "XgfX231TufOvGaeTU3Rwvjuf3k6jnvdsesRycToF0BQZ7tkzZ8qsd4yTtc5oNgql".toCharArray())
-        return keyStore
-    }
-
-    fun getTrustManagerFactory(): TrustManagerFactory? {
-        val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
-        trustManagerFactory.init(getKeyStore())
-        return trustManagerFactory
-    }
-
-    fun getSslContext(): SSLContext? {
-        val sslContext = SSLContext.getInstance("TLS")
-        sslContext.init(null, getTrustManagerFactory()?.trustManagers, null)
-        return sslContext
-    }
-
-    fun getTrustManager(): X509TrustManager {
-        return getTrustManagerFactory()?.trustManagers?.first { it is X509TrustManager } as X509TrustManager
-    }*/
-
-    protected val baseURL = "http://10.0.2.2:8080/"
     //protected val baseURL = "https://127.0.0.1:8080/"
+    private val serverIP = "10.0.2.2"
+    protected val baseURL = "https://${serverIP}:8080/"
 
     protected suspend fun <Type> withHttpClient(
-        config: HttpClientConfig<CIOEngineConfig>.() -> Unit = defaultConfig,
+        config: HttpClientConfig<OkHttpConfig>.() -> Unit = defaultConfig,
         block: suspend HttpClient.() -> Type
-    ): Type? = HttpClient(CIO, config).use {
+    ): Type? = HttpClient(OkHttp, config).use {
         try {
             it.block()
         } catch (exception: Exception) {
@@ -81,4 +98,6 @@ open class DefaultRepository(
     }
 
     protected fun getToken() = encryptedSharedPreferences.getString("token", "")!!
+
+    suspend inline fun <reified T>HttpResponse.toResponse() = Response(this.status, this.body<T>())
 }

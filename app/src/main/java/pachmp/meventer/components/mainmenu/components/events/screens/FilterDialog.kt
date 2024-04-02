@@ -1,10 +1,16 @@
 package pachmp.meventer.components.mainmenu.components.events.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.with
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,7 +51,7 @@ import androidx.compose.ui.window.Dialog
 import pachmp.meventer.data.DTO.EventSelection
 import pachmp.meventer.data.categories
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun FilterDialog(
     visible: MutableState<Boolean>,
@@ -53,17 +59,16 @@ fun FilterDialog(
 ) {
 
     var isPaid by remember { mutableStateOf(false) }
-    var minPrice by remember { mutableStateOf(0) }
-    var maxPrice by remember { mutableStateOf(0) }
+    var minPrice by remember { mutableStateOf("") }
+    var maxPrice by remember { mutableStateOf("") }
 
     var isAge by remember { mutableStateOf(false) }
-    var minAge by remember { mutableStateOf(0) }
-    var maxAge by remember { mutableStateOf(0) }
+    var minAge by remember { mutableStateOf("") }
 
     var showAllCategories by remember { mutableStateOf(false) }
     var selectedCategories by remember { mutableStateOf(setOf<String>()) }
 
-    var isSort by remember { mutableStateOf(false) }
+    var sort by remember { mutableStateOf(false) }
 
     if (visible.value) {
         Dialog(
@@ -72,11 +77,10 @@ fun FilterDialog(
                 showAllCategories = false
                 isPaid = false
                 isAge = false
-                minAge = 0
-                maxAge = 0
-                minPrice = 0
-                maxPrice = 0
-                isSort = false
+                minAge = ""
+                minPrice = ""
+                maxPrice = ""
+                sort = false
                 visible.value = false
             }
         ) {
@@ -102,20 +106,19 @@ fun FilterDialog(
                                     showAllCategories = false
                                     isPaid = false
                                     isAge = false
-                                    minAge = 0
-                                    maxAge = 0
-                                    minPrice = 0
-                                    maxPrice = 0
-                                    isSort = false
+                                    minAge = ""
+                                    minPrice = ""
+                                    maxPrice = ""
+                                    sort = false
                                 })
                             Text(text = "Применить",
                                 modifier = Modifier.clickable {
                                     onFilterApply(EventSelection(
                                         tags = selectedCategories.toList(),
-                                        age = minAge.toShort(),
-                                        minimalPrice = minPrice,
-                                        maximalPrice = if (maxPrice==0) null else maxPrice,
-                                        sortBy = EventSelection.SortingStates.NEAREST_ONES_FIRST.state
+                                        age = minAge.toShortOrNull(),
+                                        minimalPrice = minPrice.toIntOrNull(),
+                                        maximalPrice = maxPrice.toIntOrNull(),
+                                        sortBy = if (sort) EventSelection.SortingStates.NEAREST_ONES_FIRST.state else EventSelection.SortingStates.FURTHER_ONES_FIRST.state
                                     ))
                                     visible.value = false
                                 })
@@ -204,16 +207,9 @@ fun FilterDialog(
                                 )
                                 {
                                     OutlinedTextField(
-                                        value = minAge.toString(),
-                                        onValueChange = { minAge = it.toIntOrNull() ?: 0 },
-                                        label = { Text("Минимальный") },
-                                        modifier = Modifier.width(134.dp)
-                                    )
-
-                                    OutlinedTextField(
-                                        value = maxAge.toString(),
-                                        onValueChange = { maxAge = it.toIntOrNull() ?: 0 },
-                                        label = { Text("Максимальный") },
+                                        value = minAge,
+                                        onValueChange = { minAge = it },
+                                        label = { Text("Мин") },
                                         modifier = Modifier.width(134.dp)
                                     )
                                 }
@@ -221,9 +217,6 @@ fun FilterDialog(
 
                             }
 
-
-
-                            // Параметр "Цена"
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -242,16 +235,16 @@ fun FilterDialog(
                                 )
                                 {
                                     OutlinedTextField(
-                                        value = minPrice.toString(),
-                                        onValueChange = { minPrice = it.toIntOrNull() ?: 0 },
-                                        label = { Text("Минимальная") },
+                                        value = minPrice,
+                                        onValueChange = { minPrice = it },
+                                        label = { Text("Мин") },
                                         modifier = Modifier.width(134.dp)
                                     )
 
                                     OutlinedTextField(
-                                        value = maxPrice.toString(),
-                                        onValueChange = { maxPrice = it.toIntOrNull() ?: 0 },
-                                        label = { Text("Максимальная") },
+                                        value = maxPrice,
+                                        onValueChange = { maxPrice = it },
+                                        label = { Text("Макс") },
                                         modifier = Modifier.width(134.dp)
                                     )
                                 }
@@ -264,9 +257,21 @@ fun FilterDialog(
                             ) {
                                 Text(text = "Сортировка", fontSize = 24.sp)
                                 Switch(
-                                    checked = isSort,
-                                    onCheckedChange = { isSort = it }
+                                    checked = sort,
+                                    onCheckedChange = { sort = it }
                                 )
+                            }
+                            AnimatedContent(
+                                targetState = if (sort) "ближайшие" else "далёкие",
+                                transitionSpec = {
+                                    if (sort) {
+                                        slideInVertically(initialOffsetY = {height->-height}) togetherWith slideOutVertically(targetOffsetY = {height->height})
+                                    } else {
+                                        slideInVertically(initialOffsetY = {height->height}) togetherWith slideOutVertically(targetOffsetY = {height->-height})
+                                    }
+                                }, label = "sort state"
+                            ) {
+                                Text(it, fontSize = 24.sp)
                             }
 
                         }

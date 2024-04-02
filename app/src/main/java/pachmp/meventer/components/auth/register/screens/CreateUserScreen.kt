@@ -2,7 +2,6 @@ package pachmp.meventer.components.auth.register.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,7 +37,6 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -51,7 +49,6 @@ import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import pachmp.meventer.ui.transitions.FadeTransition
-import pachmp.meventer.R
 import pachmp.meventer.components.auth.register.RegisterViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -112,7 +109,7 @@ fun CreateUserScreen(registerViewModel: RegisterViewModel) {
                     }
                 }
             },
-            snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
+            snackbarHost = { SnackbarHost(registerViewModel.snackBarHostState) }
         ) { paddingValues ->
             Column(
                 modifier = Modifier

@@ -1,4 +1,4 @@
-package pachmp.meventer.components.mainmenu.components.events.components.eventEditor.screens
+package pachmp.meventer.components.mainmenu.components.events.components.editor.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -80,7 +80,7 @@ import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.components.mainmenu.components.events.components.Rank
 import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
-import pachmp.meventer.components.mainmenu.components.events.components.eventEditor.EventEditorViewModel
+import pachmp.meventer.components.mainmenu.components.events.components.editor.EventEditorViewModel
 import pachmp.meventer.components.mainmenu.components.events.components.getUserRank
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.components.widgets.MaterialButton
@@ -100,16 +100,15 @@ fun EditEventScreen(
     eventEditorViewModel: EventEditorViewModel = hiltViewModel(),
 ) {
     remember{eventEditorViewModel.initEditor(eventsViewModel.selected!!.id, eventsViewModel.user!!.id)}
+
     with(eventEditorViewModel) {
         if (event != null && appUser != null) {
-            val formattedDate by remember {
-                derivedStateOf {
+            val formattedDate by derivedStateOf {
                     DateTimeFormatter
                         .ofPattern("dd MMM yyyy")
                         .withLocale(Locale.getDefault())
                         .format(pickedDate)
                 }
-            }
             val formattedTime by remember {
                 derivedStateOf {
                     DateTimeFormatter

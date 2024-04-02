@@ -13,6 +13,8 @@ data class Repositories @Inject constructor(
     val eventRepository: EventRepository,
     val userRepository: UserRepository,
     val fileRepository: FileRepository,
+    val chatRepository: ChatRepository,
+    val chatSocketRepository: ChatSocketRepository,
     val encryptedSharedPreferences: SharedPreferences,
     @ApplicationContext val appContext: Context
 )

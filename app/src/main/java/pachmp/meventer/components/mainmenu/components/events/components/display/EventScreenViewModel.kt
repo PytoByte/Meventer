@@ -1,10 +1,8 @@
-package pachmp.meventer.components.mainmenu.components.events.components.eventScreen
+package pachmp.meventer.components.mainmenu.components.events.components.display
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -23,8 +21,6 @@ import pachmp.meventer.data.DTO.User
 import pachmp.meventer.data.DTO.UserFeedbackCreate
 import pachmp.meventer.data.DTO.UserFeedbackUpdate
 import pachmp.meventer.data.repository.Repositories
-import java.time.Instant
-import java.time.ZoneOffset
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,7 +29,7 @@ class EventScreenViewModel @Inject constructor(
     @Nav navigator: Navigator,
     repositories: Repositories,
 ) : BottomViewModel(rootNavigator, navigator, repositories) {
-    var parentSnackbarHostState = snackbarHostState
+    var parentSnackbarHostState = snackBarHostState
 
     var allMembers by mutableStateOf<List<UserModel>?>(null)
 
@@ -64,7 +60,7 @@ class EventScreenViewModel @Inject constructor(
                 return@launch
             }
 
-            val userResponse = repositories.userRepository.getUserData(NullableUserID(id = appUserID))
+            val userResponse = repositories.userRepository.getUserData(appUserID)
             if (checkResponse(userResponse)) {
                 appUser = UserModel(
                     id = appUserID,
@@ -85,12 +81,12 @@ class EventScreenViewModel @Inject constructor(
             updateFeedbacks()
 
             organizers = List(event!!.organizers.size) {
-                userModelFromUserID(it, Rank.ORGANIZER)
+                userModelFromUserID(event!!.organizers[it], Rank.ORGANIZER)
             }
 
 
-            participants = List(event!!.organizers.size) {
-                userModelFromUserID(it, Rank.PARTICIPANT)
+            participants = List(event!!.participants.size) {
+                userModelFromUserID(event!!.participants[it], Rank.PARTICIPANT)
             }
 
             allMembers = organizers!!+participants!!+originator!!
@@ -102,9 +98,9 @@ class EventScreenViewModel @Inject constructor(
         originatorRating = 0f
         val feedbacksResponse = repositories.userRepository.getFeedbacks(NullableUserID(id = originator!!.id))
         if (checkResponse(feedbacksResponse) {
-                if (it.code==404.toShort()) { originatorFeedbacks = emptyList(); false } else {  null } }) {
+                if (it.value==404) { originatorFeedbacks = emptyList(); false } else {  null } }) {
             originatorFeedbacks = List(feedbacksResponse!!.data!!.size) {
-                val authorResponse = repositories.userRepository.getUserData(NullableUserID(feedbacksResponse.data!![it].fromUserID))
+                val authorResponse = repositories.userRepository.getUserData(feedbacksResponse.data!![it].fromUserID)
                 originatorRating += feedbacksResponse.data[it].rating
                 if (checkResponse(authorResponse)) {
                     if (authorResponse!!.data!!.id==appUser!!.id) {
@@ -113,7 +109,7 @@ class EventScreenViewModel @Inject constructor(
                     }
                     FeedbackModel(
                         id = feedbacksResponse.data[it].id,
-                        author = authorResponse!!.data!!,
+                        author = authorResponse.data!!,
                         rating = feedbacksResponse.data[it].rating,
                         comment = feedbacksResponse.data[it].comment
                     )
@@ -130,14 +126,18 @@ class EventScreenViewModel @Inject constructor(
         }
     }
 
-    fun changeUserOrganizer(userID: Int) {
+    fun changeUserOrganizer(userModel: UserModel) {
         viewModelScope.launch {
             val response = repositories.eventRepository.changeUserOrganizer(
-                EventOrganizer(event!!.id, userID)
+                EventOrganizer(event!!.id, userModel.id)
             )
-            if (checkResultResponse(response)) {
-                ready = false
-                init(event!!.id, appUser!!.id)
+            if (checkResponse(response)) {
+                val fr = organizers!!.find { userModel.id==it.id }
+                if (fr!=null) {
+                    organizers = organizers!!-userModel
+                } else {
+                    organizers = organizers!!+userModel
+                }
             }
         }
     }
@@ -145,15 +145,21 @@ class EventScreenViewModel @Inject constructor(
     fun changeUserParticipant() {
         viewModelScope.launch {
             val response = repositories.eventRepository.changeUserParticipant(event!!.id)
-            if (checkResultResponse(response)) {
-                ready = false
-                init(event!!.id, appUser!!.id)
+            if (checkResponse(response)) {
+                val fr = allMembers!!.find { appUser!!.id==it.id }
+                if (fr!=null) {
+                    participants = participants!!-fr
+                    allMembers = participants!!-fr
+                } else {
+                    participants = participants!!+appUser!!
+                    allMembers = participants!!+appUser!!
+                }
             }
         }
     }
 
     suspend fun userModelFromUserID(userID: Int, rank: Rank, onUserGet: (User) -> Unit = {}): UserModel {
-        val userRequest = repositories.userRepository.getUserData(NullableUserID(id = userID))
+        val userRequest = repositories.userRepository.getUserData(userID)
         if (checkResponse(userRequest)) {
             val user = userRequest!!.data!!
             onUserGet(user)
@@ -172,7 +178,7 @@ class EventScreenViewModel @Inject constructor(
     fun createFeedback() {
         viewModelScope.launch {
             val response = repositories.userRepository.createFeedback(UserFeedbackCreate(originatorUser!!.id, rating, comment))
-            if (checkResultResponse(response)) {
+            if (checkResponse(response)) {
                 updateFeedbacks()
                 parentSnackbarHostState.showSnackbar("Отзыв отправлен")
             }
@@ -184,7 +190,7 @@ class EventScreenViewModel @Inject constructor(
             val feedback = originatorFeedbacks!!.find { it.author?.id==appUser!!.id }
             if (feedback!=null) {
                 val response = repositories.userRepository.updateFeedback(UserFeedbackUpdate(feedback!!.id, rating, comment))
-                if (checkResultResponse(response)) {
+                if (checkResponse(response)) {
                     updateFeedbacks()
                 }
             } else {
@@ -198,7 +204,7 @@ class EventScreenViewModel @Inject constructor(
             val feedback = originatorFeedbacks!!.find { it.author?.id==appUser!!.id }
             if (feedback!=null) {
                 val response = repositories.userRepository.deleteFeedback(feedback.id)
-                if (checkResultResponse(response)) {
+                if (checkResponse(response)) {
                     rating = 0f
                     comment = ""
                     updateFeedbacks()

@@ -49,7 +49,7 @@ fun PasswordEditScreen(
     profileEditViewModel: ProfileEditViewModel = hiltViewModel(),
 ) {
     with(profileEditViewModel) {
-        parentSnackbarHostState = profileViewModel.snackbarHostState
+        parentSnackbarHostState = profileViewModel.snackBarHostState
         if (user != null) {
             val showCalendar = remember { mutableStateOf(false) }
             val launcher =
@@ -76,7 +76,7 @@ fun PasswordEditScreen(
                     }
                 }
             ) { paddingValues ->
-                codeDialog(codeDialogVisible, profileEditViewModel) {
+                CodeDialog(codeDialogVisible, profileEditViewModel) {
                     updateUserPassword()
                 }
                 Column(
