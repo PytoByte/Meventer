@@ -10,8 +10,10 @@ import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.url
 import io.ktor.http.HttpMethod
+import io.ktor.websocket.CloseReason
 import io.ktor.websocket.DefaultWebSocketSession
 import io.ktor.websocket.WebSocketSession
+import io.ktor.websocket.close
 import io.ktor.websocket.send
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +37,7 @@ class ChatSocketRepository @Inject constructor(
     @ApplicationContext appContext: Context
 ) : DefaultRepository(encryptedSharedPreferences, appContext) {
 
-    private lateinit var session: DefaultClientWebSocketSession
+    private var session: DefaultClientWebSocketSession? = null
 
     private val onMessageListeners = mutableListOf<(Message) -> Unit>()
     private val onMessageUpdateListeners = mutableListOf<(MessageUpdated) -> Unit>()
@@ -50,38 +52,46 @@ class ChatSocketRepository @Inject constructor(
     fun addOnMessageDeleteListener(onMessageDelete: (messageID: Long) -> Unit) =
         onMessageDeleteListeners.add(onMessageDelete)
 
-    init {
+    fun isSessionInit(): Boolean {
+        return session!=null
+    }
+
+    fun initSocket() {
         GlobalScope.launch(Dispatchers.Default) {
             session = Mutex().withLock {
                 withHttpClient {
                     webSocketSession(method = HttpMethod.Get) {
-                        url("wss://10.0.2.2:8080/chat/socket")
+                        url("wss://89.23.99.58:80/chat/socket")
                         bearerAuth(getToken())
                     }
                 } ?: throw InstantiationException("(SOCKET) Не удалось инииализировать сокет")
             }
-            if (session.isActive) {
+            if (session!!.isActive) {
                 Log.d("SOCKET", "Сессия готова")
                 initReceiver()
             } else throw InstantiationException("(SOCKET) Не удалось инииализировать сокет")
         }
     }
 
+    suspend fun closeSocket() {
+        session!!.close(CloseReason(CloseReason.Codes.GOING_AWAY, "End by myself"))
+    }
+
     suspend fun send(messageSend: MessageSend)  {
-        session.send(Json.encodeToString(MessageSend.serializer(), messageSend))
+        session!!.send(Json.encodeToString(MessageSend.serializer(), messageSend))
     }
 
     suspend fun send(messageUpdate: MessageUpdate)  {
-        session.send(Json.encodeToString(MessageUpdate.serializer(), messageUpdate))
+        session!!.send(Json.encodeToString(MessageUpdate.serializer(), messageUpdate))
     }
 
     suspend fun send(messageDelete: MessageDelete) {
-        session.send(Json.encodeToString(MessageDelete.serializer(), messageDelete))
+        session!!.send(Json.encodeToString(MessageDelete.serializer(), messageDelete))
     }
 
     private suspend fun initReceiver() {
         Log.d("SOCKET", "Прослушивание..")
-        session.incoming.consumeEach { frame ->
+        session!!.incoming.consumeEach { frame ->
             val receive = frame.data.decodeToString()
             Log.d("SOCKET", "Получено $receive")
             try {
@@ -90,23 +100,21 @@ class ChatSocketRepository @Inject constructor(
                     it(decodedReceive)
                 }
                 return@consumeEach
-            } catch (_: Exception) {
-            }
+            } catch (_: Exception) { }
             try {
                 val decodedReceive = Json.decodeFromString<MessageUpdated>(receive)
                 onMessageUpdateListeners.forEach {
                     it(decodedReceive)
                 }
                 return@consumeEach
-            } catch (_: Exception) {
-            }
+            } catch (_: Exception) { }
             try {
                 val decodedReceive = receive.toLong()
                 onMessageDeleteListeners.forEach {
                     it(decodedReceive)
                 }
-            } catch (_: Exception) {
-            }
+                return@consumeEach
+            } catch (_: Exception) {}
             throw UnknownError("(SOCKET) Не удалось декодировать сообщение с сервера")
         }
     }

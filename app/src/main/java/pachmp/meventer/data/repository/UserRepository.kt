@@ -60,11 +60,11 @@ class UserRepository @Inject constructor(
         }.toResponse<Unit>()
     }
 
-    suspend fun getFeedbacks(nullableUserID: NullableUserID = NullableUserID(null)) = withHttpClient {
+    suspend fun getFeedbacks(userID: Int? = null) = withHttpClient {
         post("${repositoryURL}feedback/get") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
-            setBody(nullableUserID)
+            setBody(userID)
         }.toResponse<List<UserFeedback>>()
     }
 
@@ -75,7 +75,7 @@ class UserRepository @Inject constructor(
                 setBody(userID)
             }
             bearerAuth(getToken())
-        }.apply { Log.d("I AM HERE", this.status.value.toString()+this.status.description) }.toResponse<User>()
+        }.toResponse<User>()
     }
 
 
@@ -146,6 +146,8 @@ class UserRepository @Inject constructor(
     @OptIn(InternalAPI::class)
     suspend fun updateUserData(userUpdate: UserUpdate, avatar: File?) = withHttpClient {
         post("${repositoryURL}update/data") {
+            println(avatar!!.extension)
+
             bearerAuth(getToken())
             setBody(MultiPartFormDataContent(
                 parts = formData {

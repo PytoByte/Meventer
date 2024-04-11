@@ -38,9 +38,9 @@ class LoginViewModel @Inject constructor(@RootNav navigator: Navigator, reposito
             if (email.isEmpty() || password.isEmpty()) {
                 snackBarHostState.showSnackbar(message = "Поля не заполнены")
             } else {
-                val tokenResponse = repositories.userRepository.login(UserLogin(email = email, password = password))
-                if (checkResponse(response = tokenResponse, checkToken = false)) {
-                    val token = tokenResponse!!.data!!
+                afterCheckResponse(repositories.userRepository.login(UserLogin(email = email, password = password)))
+                { response ->
+                    val token = response.data!!
                     Log.d("NEW TOKEN", token)
                     repositories.encryptedSharedPreferences.edit().putString("token", token).apply()
                     navigator.clearNavigate(NavGraphs.mainmenu)

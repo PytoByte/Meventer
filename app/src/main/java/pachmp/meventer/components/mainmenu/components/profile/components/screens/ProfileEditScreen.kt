@@ -1,5 +1,6 @@
 package pachmp.meventer.components.mainmenu.components.profile.components.screens
 
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.net.toFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
@@ -48,7 +50,7 @@ fun ProfileEdit(
     profileViewModel: ProfileViewModel,
     profileEditViewModel: ProfileEditViewModel = hiltViewModel(),
 ) {
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
         profileEditViewModel.updateAvatarUri(it)
     }
 
@@ -84,7 +86,7 @@ fun ProfileEdit(
                     Text("Изменение данных", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.size(5.dp))
                     Avatar(model = if (avatarUri == null) avatarUriCurrent.toString() else avatarUri.toString())
-                    Button(onClick = { launcher.launch(arrayOf("image/*")) }) {
+                    Button(onClick = { launcher.launch("image/*") }) {
                         Text("Изменить аватар")
                     }
                     TextCom(label = "Ник", value = nickname) { nickname = it }

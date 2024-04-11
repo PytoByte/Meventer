@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddModerator
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.RemoveModerator
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
@@ -84,7 +85,7 @@ fun EventScreen(
     eventsViewModel: EventsViewModel,
     eventScreenViewModel: EventScreenViewModel = hiltViewModel(),
 ) {
-    eventScreenViewModel.init(eventsViewModel.selected!!.id, eventsViewModel.user!!.id)
+    remember{eventScreenViewModel.init(eventsViewModel.selected!!.id, eventsViewModel.user!!.id)}
     with(eventScreenViewModel) {
         parentSnackbarHostState = eventsViewModel.snackBarHostState
         if (ready == null) {
@@ -196,7 +197,7 @@ fun EventScreen(
                             value = originatorRating,
                             config = RatingBarConfig().numStars(5)
                                 .style(RatingBarStyle.HighLighted)
-                                .size(20.dp),
+                                .size(30.dp),
                             onValueChange = {},
                             onRatingChanged = { showRatingDialog.value = true })
 
@@ -298,14 +299,14 @@ fun UserItem(
                                 )
                             }
                         }
-                        /*if (appUser.rank.value > user.rank.value) {
-                            IconButton(onClick = { /*TODO кик человека*/ }) {
+                        if (appUser.rank.value > user.rank.value) {
+                            IconButton(onClick = { kickUser(user) }) {
                                 Icon(
                                     imageVector = Icons.Default.PersonRemove,
                                     contentDescription = "kick"
                                 )
                             }
-                        }*/
+                        }
                     }
                 }
             }
@@ -379,7 +380,7 @@ fun OriginarorFeedbacksDialog(
                                     value = rating,
                                     config = RatingBarConfig().numStars(5)
                                         .style(RatingBarStyle.HighLighted)
-                                        .size(20.dp),
+                                        .size(30.dp),
                                     onValueChange = {},
                                     onRatingChanged = { rating = it })
                                 OutlinedTextField(value = comment, onValueChange = { comment = it })

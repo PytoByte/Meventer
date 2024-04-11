@@ -14,6 +14,8 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.request
+import io.ktor.http.fullPath
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
@@ -43,7 +45,7 @@ open class DefaultRepository(
             level = LogLevel.ALL
             logger = object : Logger {
                 override fun log(message: String) {
-                    Log.d("HTTP call", message)
+                    Log.d("Ktor response", message)
                 }
             }
         }
@@ -82,8 +84,8 @@ open class DefaultRepository(
     }
 
     //protected val baseURL = "https://127.0.0.1:8080/"
-    private val serverIP = "10.0.2.2"
-    protected val baseURL = "https://${serverIP}:8080/"
+    private val serverIP = "89.23.99.58"
+    protected val baseURL = "https://${serverIP}:80/"
 
     protected suspend fun <Type> withHttpClient(
         config: HttpClientConfig<OkHttpConfig>.() -> Unit = defaultConfig,
@@ -99,5 +101,8 @@ open class DefaultRepository(
 
     protected fun getToken() = encryptedSharedPreferences.getString("token", "")!!
 
-    suspend inline fun <reified T>HttpResponse.toResponse() = Response(this.status, this.body<T>())
+    suspend inline fun <reified T>HttpResponse.toResponse(): Response<T> {
+        Log.d("http to response", "CODE: ${this.status.value}\nFROM: ${this.request.url.fullPath}\nMESSAGE: ${this.status.description}\nBODY: ${this.body<String>()}\nEND")
+        return Response(this.status, this.body<T>())
+    }
 }

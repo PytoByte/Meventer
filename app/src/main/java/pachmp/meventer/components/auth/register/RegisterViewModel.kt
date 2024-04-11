@@ -46,8 +46,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
             if (email.isEmpty() || !Regex("""([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)""").matches(email)) {
                 snackBarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
             } else {
-                val response = repositories.userRepository.sendEmailCode(email)
-                if (checkResponse(response = response, checkToken = false)) {
+                afterCheckResponse(repositories.userRepository.sendEmailCode(email)) {
                     navigator.clearNavigate(CodeScreenDestination())
                 }
             }
@@ -59,8 +58,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
             if (code.toIntOrNull() == null) {
                 snackBarHostState.showSnackbar(message = "Поля не заполнены")
             } else {
-                val response = repositories.userRepository.verifyEmailCode(UserEmailCode(email = email, code = code))
-                if (checkResponse(response = response, checkToken = false)) {
+                afterCheckResponse(repositories.userRepository.verifyEmailCode(UserEmailCode(email = email, code = code))) {
                     navigator.clearNavigate(CreateUserScreenDestination())
                 }
             }
@@ -84,8 +82,8 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
                     if (avatarUri!=null) cacheFile(avatarUri!!, "avatar") else null
                 )
 
-                if (checkResponse(response = tokenResponse, checkToken = false)) {
-                    val token = tokenResponse!!.data
+                afterCheckResponse(tokenResponse) { response ->
+                    val token = response.data
                     repositories.encryptedSharedPreferences.edit().putString("token", token).apply()
                     navigator.clearNavigate(NavGraphs.mainmenu)
                 }

@@ -1,4 +1,4 @@
-package pachmp.meventer.components.mainmenu.components.chats
+package pachmp.meventer.components.mainmenu.components.chats.components
 
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size

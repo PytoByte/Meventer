@@ -64,6 +64,11 @@ fun MainMenuScreen(startRoute: String="Events", mainmenuViewModel: MainMenuViewM
             eventsViewModel.updateEvents()
         }
 
+        if (BottomBarScreens.Chats.navGraph.startDestination.route == destination.route) {
+            chatsViewModel.initSocket()
+            chatsViewModel.updateChats()
+        }
+
         bottomBarShow = start
     }
 

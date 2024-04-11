@@ -182,11 +182,13 @@ fun EditEventScreen(
                     Surface {
                         Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
                             Text("Вы уверенны что хотите удалить мероприятие?")
-                            Button(onClick = {eventsViewModel.deleteEvent(event!!.id); deleteDialogState.value=false}) {
-                                Text("Да")
-                            }
-                            Button(onClick = {deleteDialogState.value = false}) {
-                                Text("Нет")
+                            Row {
+                                Button(onClick = {eventsViewModel.deleteEvent(event!!.id); deleteDialogState.value=false}) {
+                                    Text("Да")
+                                }
+                                Button(onClick = {deleteDialogState.value = false}) {
+                                    Text("Нет")
+                                }
                             }
                         }
                     }

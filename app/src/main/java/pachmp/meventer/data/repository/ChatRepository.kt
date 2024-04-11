@@ -13,6 +13,7 @@ import pachmp.meventer.data.DTO.Chat
 import pachmp.meventer.data.DTO.ChatAdministratorUpdate
 import pachmp.meventer.data.DTO.ChatNameUpdate
 import pachmp.meventer.data.DTO.ChatParticipantUpdate
+import pachmp.meventer.data.DTO.Message
 import pachmp.meventer.data.DTO.Response
 import javax.inject.Inject
 
@@ -45,12 +46,19 @@ class ChatRepository @Inject constructor(
         }.toResponse<List<Int>>()
     }
 
-    suspend fun getAllChats(chatID: Long) = withHttpClient {
-        post("${repositoryURL}getAll") {
+    suspend fun getAllChats() = withHttpClient {
+        post("${repositoryURL}getAll/chats") {
+            bearerAuth(getToken())
+            contentType(ContentType.Application.Json)
+        }.toResponse<List<Chat>>()
+    }
+
+    suspend fun getAllMessages(chatID: Long) = withHttpClient {
+        post("${repositoryURL}getAll/messages") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(chatID)
-        }.toResponse<List<Chat>>()
+        }.toResponse<List<Message>>()
     }
 
     suspend fun changeParticipant(chatParticipantUpdate: ChatParticipantUpdate) = withHttpClient {

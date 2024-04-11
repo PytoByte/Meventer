@@ -18,6 +18,7 @@ import kotlinx.serialization.json.Json
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.data.DTO.EventCreate
 import pachmp.meventer.data.DTO.EventOrganizer
+import pachmp.meventer.data.DTO.EventParticipant
 import pachmp.meventer.data.DTO.EventSelection
 import pachmp.meventer.data.DTO.EventUpdate
 import pachmp.meventer.data.DTO.EventsGet
@@ -33,6 +34,7 @@ class EventRepository @Inject constructor(
     suspend fun createEvent(eventCreate: EventCreate, images: List<File>) = withHttpClient {
         post("${repositoryURL}create") {
             bearerAuth(getToken())
+            contentType(ContentType.MultiPart.Mixed)
             setBody(
                 MultiPartFormDataContent(
                     parts = formData {
@@ -117,7 +119,7 @@ class EventRepository @Inject constructor(
     }
 
     suspend fun changeFavourite(eventID: Int) = withHttpClient {
-        post("${repositoryURL}changeUsers/featured") {
+        post("${repositoryURL}changeUsers/inFavourites") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
             setBody(eventID)
@@ -137,11 +139,11 @@ class EventRepository @Inject constructor(
         }.toResponse<Unit>()
     }
 
-    suspend fun changeUserParticipant(eventID: Int) = withHttpClient {
+    suspend fun changeUserParticipant(eventParticipant: EventParticipant) = withHttpClient {
         post("${repositoryURL}changeUsers/participant") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
-            setBody(eventID)
+            setBody(eventParticipant)
         }.toResponse<Unit>()
     }
 

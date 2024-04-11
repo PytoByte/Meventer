@@ -1,6 +1,7 @@
 @file:UseSerializers(InstantSerializer::class)
 package pachmp.meventer.data.DTO
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import pachmp.meventer.data.Serializers.InstantSerializer
@@ -8,6 +9,7 @@ import java.time.Instant
 
 @Serializable
 data class Event(
+    @SerialName("eventID")
     val id: Int,
     val name: String,
     val images: List<String>,
@@ -32,6 +34,12 @@ data class EventCreate(
     val maximalAge: Short?,
     val price: Int?,
     val tags: List<String>?
+)
+
+@Serializable
+class EventParticipant(
+    val changingID: Int? = null,
+    val eventID: Int
 )
 
 @Serializable

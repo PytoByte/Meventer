@@ -1,6 +1,9 @@
 package pachmp.meventer
 
+import android.annotation.SuppressLint
 import android.net.Uri
+import android.util.Log
+import android.webkit.MimeTypeMap
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
@@ -14,6 +17,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
+
 open class DefaultViewModel(
     val navigator: Navigator,
     val repositories: Repositories,
@@ -21,10 +25,14 @@ open class DefaultViewModel(
 
     val snackBarHostState = SnackbarHostState()
 
+    @SuppressLint("Recycle")
     fun cacheFile(uri: Uri, name: String): File {
-        val file = File(repositories.appContext.cacheDir, name)
-        val inputStream = repositories.appContext.contentResolver
-            .openInputStream(uri)!! as FileInputStream
+
+        val fileType = repositories.appContext.contentResolver.getType(uri)
+        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(fileType)
+
+        val inputStream = repositories.appContext.contentResolver.openInputStream(uri)!! as FileInputStream
+        val file = File(repositories.appContext.cacheDir, "${name}.${extension}")
         val output = FileOutputStream(file)
         val buffer = ByteArray(1024)
         var size: Int
@@ -36,50 +44,34 @@ open class DefaultViewModel(
         return file
     }
 
-    suspend fun <Type> checkResponse(
-        response: Response<Type>?, checkToken: Boolean = true,
-        requestHandler: (HttpStatusCode) -> Boolean? = { null }
+    suspend fun <Type> afterCheckResponse(
+        response: Response<Type>?,
+        responseHandler: (HttpStatusCode) -> Boolean? = { null },
+        body: suspend (Response<Type>) -> Unit = {},
     ): Boolean {
-        if (checkToken) {
-            val responseToken = repositories.userRepository.verifyToken()
-            if (responseToken != null) {
-                if (responseToken.result.value == 409) {
-                    repositories.encryptedSharedPreferences.edit().clear().apply()
-                    navigator.clearNavigate(LoginScreenDestination)
-                    return false
-                }
-            }
-        }
-
-        if (response == null) {
-            snackBarHostState.showSnackbar(
-                message = "Сервер не отвечает",
-                duration = SnackbarDuration.Short
-            )
-            return false
-        } else if (response.result.value != 200) {
-            if (response.result.value == 409) {
-                navigator.clearNavigate(LoginScreenDestination)
-                return false
-            } else {
-                val handlerResult = requestHandler(response.result)
-                if (handlerResult != null) {
-                    return handlerResult
-                } else {
-                    snackBarHostState.showSnackbar(
+        response?.let {
+            when(it.result.value){
+                200 -> {body(it); return true}
+                409, 401 -> navigator.clearNavigate(LoginScreenDestination)
+                else -> {
+                    responseHandler(response.result)?.let { handlerResult ->
+                        if (handlerResult) {
+                            body(it)
+                        }
+                        return handlerResult
+                    } ?: snackBarHostState.showSnackbar(
                         message = response.result.description,
                         duration = SnackbarDuration.Short
                     )
-                    return false
                 }
             }
-        }
-        return true
+        } ?: snackBarHostState.showSnackbar(
+            message = "Сервер не отвечает",
+            duration = SnackbarDuration.Short
+        )
+        return false
     }
 
-    fun fixEventImages(event: Event) =
-        event.copy(images = event.images.map { repositories.fileRepository.getFileURL(it) })
-
-    fun fixUserAvatar(user: User) =
-        user.copy(avatar = repositories.fileRepository.getFileURL(user.avatar))
+    fun fixEventImages(event: Event) = event.copy(images = event.images.map { repositories.fileRepository.getFileURL(it) })
+    fun fixUserAvatar(user: User) = user.copy(avatar = repositories.fileRepository.getFileURL(user.avatar))
 }

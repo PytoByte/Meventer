@@ -16,6 +16,7 @@ import pachmp.meventer.components.mainmenu.components.events.components.getUserR
 import pachmp.meventer.components.mainmenu.components.profile.FeedbackModel
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.data.DTO.EventOrganizer
+import pachmp.meventer.data.DTO.EventParticipant
 import pachmp.meventer.data.DTO.NullableUserID
 import pachmp.meventer.data.DTO.User
 import pachmp.meventer.data.DTO.UserFeedbackCreate
@@ -41,7 +42,7 @@ class EventScreenViewModel @Inject constructor(
     var ready by mutableStateOf<Boolean?>(null)
     var event by mutableStateOf<Event?>(null)
     var appUser by mutableStateOf<UserModel?>(null)
-    var originatorUser  by mutableStateOf<User?>(null)
+    var originatorUser by mutableStateOf<User?>(null)
     var originator by mutableStateOf<UserModel?>(null)
     var organizers by mutableStateOf<List<UserModel>?>(null)
     var participants by mutableStateOf<List<UserModel>?>(null)
@@ -52,7 +53,7 @@ class EventScreenViewModel @Inject constructor(
     fun init(eventID: Int, appUserID: Int) {
         viewModelScope.launch {
             val eventResponse = repositories.eventRepository.getEvent(eventID)
-            if (checkResponse(eventResponse)) {
+            if (afterCheckResponse(eventResponse)) {
                 event = fixEventImages(eventResponse!!.data!!)
             } else {
                 navigator.clearNavigate(EventScreenDestination)
@@ -61,7 +62,7 @@ class EventScreenViewModel @Inject constructor(
             }
 
             val userResponse = repositories.userRepository.getUserData(appUserID)
-            if (checkResponse(userResponse)) {
+            if (afterCheckResponse(userResponse)) {
                 appUser = UserModel(
                     id = appUserID,
                     avatar = repositories.fileRepository.getFileURL(fixUserAvatar(userResponse!!.data!!).avatar),
@@ -89,54 +90,78 @@ class EventScreenViewModel @Inject constructor(
                 userModelFromUserID(event!!.participants[it], Rank.PARTICIPANT)
             }
 
-            allMembers = organizers!!+participants!!+originator!!
+            allMembers = organizers!! + participants!! + originator!!
             ready = true
         }
     }
 
     suspend fun updateFeedbacks() {
         originatorRating = 0f
-        val feedbacksResponse = repositories.userRepository.getFeedbacks(NullableUserID(id = originator!!.id))
-        if (checkResponse(feedbacksResponse) {
-                if (it.value==404) { originatorFeedbacks = emptyList(); false } else {  null } }) {
-            originatorFeedbacks = List(feedbacksResponse!!.data!!.size) {
-                val authorResponse = repositories.userRepository.getUserData(feedbacksResponse.data!![it].fromUserID)
-                originatorRating += feedbacksResponse.data[it].rating
-                if (checkResponse(authorResponse)) {
-                    if (authorResponse!!.data!!.id==appUser!!.id) {
-                        rating = feedbacksResponse.data[it].rating
-                        comment = feedbacksResponse.data[it].comment
+        afterCheckResponse(
+            response = repositories.userRepository.getFeedbacks(originator!!.id),
+            responseHandler = {
+                if (it.value == 404) {
+                    originatorFeedbacks = emptyList(); false
+                } else null
+            }
+        ) { response ->
+            originatorFeedbacks = List(response.data!!.size) {
+                val authorResponse =
+                    repositories.userRepository.getUserData(response.data[it].fromUserID)
+                originatorRating += response.data[it].rating
+                if (afterCheckResponse(authorResponse)) {
+                    if (authorResponse!!.data!!.id == appUser!!.id) {
+                        rating = response.data[it].rating
+                        comment = response.data[it].comment
                     }
                     FeedbackModel(
-                        id = feedbacksResponse.data[it].id,
+                        id = response.data[it].id,
                         author = authorResponse.data!!,
-                        rating = feedbacksResponse.data[it].rating,
-                        comment = feedbacksResponse.data[it].comment
+                        rating = response.data[it].rating,
+                        comment = response.data[it].comment
                     )
                 } else {
                     FeedbackModel(
-                        id = feedbacksResponse.data[it].id,
+                        id = response.data[it].id,
                         author = null,
-                        rating = feedbacksResponse.data[it].rating,
-                        comment = feedbacksResponse.data[it].comment
+                        rating = response.data[it].rating,
+                        comment = response.data[it].comment
                     )
                 }
             }
-            originatorRating /= originatorFeedbacks!!.size
+            originatorRating = if (originatorFeedbacks!!.size==0) 0f else originatorRating/originatorFeedbacks!!.size
         }
     }
 
     fun changeUserOrganizer(userModel: UserModel) {
         viewModelScope.launch {
-            val response = repositories.eventRepository.changeUserOrganizer(
-                EventOrganizer(event!!.id, userModel.id)
-            )
-            if (checkResponse(response)) {
-                val fr = organizers!!.find { userModel.id==it.id }
-                if (fr!=null) {
-                    organizers = organizers!!-userModel
+            afterCheckResponse(
+                repositories.eventRepository.changeUserOrganizer(
+                    EventOrganizer(event!!.id, userModel.id)
+                )
+            ) {
+                val fr = organizers!!.find { userModel.id == it.id }
+                if (fr != null) {
+                    organizers = organizers!! - userModel
+                    participants = participants!! + userModel
                 } else {
-                    organizers = organizers!!+userModel
+                    organizers = organizers!! + userModel
+                    participants = participants!! - userModel
+                }
+            }
+        }
+    }
+
+    fun kickUser(userModel: UserModel) {
+        viewModelScope.launch {
+            afterCheckResponse(repositories.eventRepository.changeUserParticipant(EventParticipant(userModel.id, event!!.id))) {
+                val fr = allMembers!!.find { userModel.id == it.id }!!
+                if (userModel.rank==Rank.PARTICIPANT) {
+                    participants = participants!! - fr
+                    allMembers = allMembers!! - fr
+                } else if (userModel.rank==Rank.ORGANIZER) {
+                    organizers = organizers!! - fr
+                    allMembers = allMembers!! - fr
                 }
             }
         }
@@ -144,23 +169,26 @@ class EventScreenViewModel @Inject constructor(
 
     fun changeUserParticipant() {
         viewModelScope.launch {
-            val response = repositories.eventRepository.changeUserParticipant(event!!.id)
-            if (checkResponse(response)) {
-                val fr = allMembers!!.find { appUser!!.id==it.id }
-                if (fr!=null) {
-                    participants = participants!!-fr
-                    allMembers = participants!!-fr
+            afterCheckResponse(repositories.eventRepository.changeUserParticipant(EventParticipant(null, event!!.id))) {
+                val fr = allMembers!!.find { appUser!!.id == it.id }
+                if (fr != null) {
+                    participants = participants!! - fr
+                    allMembers = allMembers!! - fr
                 } else {
-                    participants = participants!!+appUser!!
-                    allMembers = participants!!+appUser!!
+                    participants = participants!! + appUser!!
+                    allMembers = allMembers!! + appUser!!
                 }
             }
         }
     }
 
-    suspend fun userModelFromUserID(userID: Int, rank: Rank, onUserGet: (User) -> Unit = {}): UserModel {
+    suspend fun userModelFromUserID(
+        userID: Int,
+        rank: Rank,
+        onUserGet: (User) -> Unit = {},
+    ): UserModel {
         val userRequest = repositories.userRepository.getUserData(userID)
-        if (checkResponse(userRequest)) {
+        if (afterCheckResponse(userRequest)) {
             val user = userRequest!!.data!!
             onUserGet(user)
             return UserModel(
@@ -177,8 +205,11 @@ class EventScreenViewModel @Inject constructor(
 
     fun createFeedback() {
         viewModelScope.launch {
-            val response = repositories.userRepository.createFeedback(UserFeedbackCreate(originatorUser!!.id, rating, comment))
-            if (checkResponse(response)) {
+            afterCheckResponse(
+                repositories.userRepository.createFeedback(
+                    UserFeedbackCreate(originatorUser!!.id, rating, comment)
+                )
+            ) {
                 updateFeedbacks()
                 parentSnackbarHostState.showSnackbar("Отзыв отправлен")
             }
@@ -187,10 +218,11 @@ class EventScreenViewModel @Inject constructor(
 
     fun updateFeedback() {
         viewModelScope.launch {
-            val feedback = originatorFeedbacks!!.find { it.author?.id==appUser!!.id }
-            if (feedback!=null) {
-                val response = repositories.userRepository.updateFeedback(UserFeedbackUpdate(feedback!!.id, rating, comment))
-                if (checkResponse(response)) {
+            val feedback = originatorFeedbacks!!.find { it.author?.id == appUser!!.id }
+            if (feedback != null) {
+                afterCheckResponse(repositories.userRepository.updateFeedback(
+                    UserFeedbackUpdate(feedback.id, rating, comment)
+                )) {
                     updateFeedbacks()
                 }
             } else {
@@ -201,10 +233,9 @@ class EventScreenViewModel @Inject constructor(
 
     fun deleteFeedback() {
         viewModelScope.launch {
-            val feedback = originatorFeedbacks!!.find { it.author?.id==appUser!!.id }
-            if (feedback!=null) {
-                val response = repositories.userRepository.deleteFeedback(feedback.id)
-                if (checkResponse(response)) {
+            val feedback = originatorFeedbacks!!.find { it.author?.id == appUser!!.id }
+            if (feedback != null) {
+                afterCheckResponse(repositories.userRepository.deleteFeedback(feedback.id)) {
                     rating = 0f
                     comment = ""
                     updateFeedbacks()

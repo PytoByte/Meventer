@@ -57,7 +57,7 @@ class EventEditorViewModel @Inject constructor(
     fun initEditor(eventID: Int, appUserID: Int) {
         viewModelScope.launch {
             val eventResponse = repositories.eventRepository.getEvent(eventID)
-            if (checkResponse(eventResponse)) {
+            if (afterCheckResponse(eventResponse)) {
                 event = eventResponse!!.data
                 title = event!!.name
                 description = event!!.description
@@ -74,7 +74,7 @@ class EventEditorViewModel @Inject constructor(
             }
 
             val userResponse = repositories.userRepository.getUserData(appUserID)
-            if (checkResponse(userResponse)) {
+            if (afterCheckResponse(userResponse)) {
                 appUser = userResponse!!.data!!
             } else {
                 navigator.clearNavigate(EventScreenDestination)

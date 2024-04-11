@@ -69,10 +69,10 @@ class EventsViewModel @Inject constructor(
 
     fun updateEvents() {
         viewModelScope.launch {
-            val responseUser = repositories.userRepository.getUserData()
-            if (checkResponse(responseUser)) {
-                user = responseUser!!.data!!
+            afterCheckResponse(repositories.userRepository.getUserData()) { response ->
+                user = response.data!!
             }
+
             val responseEvents = repositories.eventRepository.getUserEvents(
                 EventsGet(
                     actual = null,
@@ -80,12 +80,15 @@ class EventsViewModel @Inject constructor(
                     type = null
                 )
             )
-            if (checkResponse(responseEvents) {
-                    if (it.value==204) { events = emptyList(); false}
-                    else null
-            }) {
-                events = List(responseEvents!!.data!!.size) {
-                    fixEventImages(responseEvents.data!![it])
+
+            afterCheckResponse(
+                response = responseEvents,
+                responseHandler = {
+                    if (it.value==204) { events = emptyList(); false} else null
+                }
+            ) { response ->
+                events = List(response.data!!.size) {
+                    fixEventImages(response.data[it])
                 }
             }
             eventsVisible = events
@@ -94,8 +97,7 @@ class EventsViewModel @Inject constructor(
 
     fun changeLike(event: Event) {
         viewModelScope.launch {
-            val request = repositories.eventRepository.changeFavourite(event.id)
-            if (checkResponse(request)) {
+            afterCheckResponse(repositories.eventRepository.changeFavourite(event.id)) {
                 updateEvents()
             }
         }
@@ -103,13 +105,11 @@ class EventsViewModel @Inject constructor(
 
     fun navigateToEvent(event: Event) {
         viewModelScope.launch {
-            val response = repositories.eventRepository.getEvent(event.id)
-            if (checkResponse(response)) {
-                selected = fixEventImages(response!!.data!!)
-                navigator.clearNavigate(EventScreenDestination)
-            } else {
+            selected = event
+            navigator.navigate(EventScreenDestination)
+            /*} else {
                 snackBarHostState.showSnackbar("Мероприятие не найдено")
-            }
+            }*/
         }
     }
 
@@ -122,13 +122,13 @@ class EventsViewModel @Inject constructor(
 
     fun navigateToCreateEvent() {
         viewModelScope.launch {
-            navigator.clearNavigate(CreateEventScreenDestination)
+            navigator.navigate(CreateEventScreenDestination)
         }
     }
 
     fun navigateToEditEvent() {
         viewModelScope.launch {
-            navigator.clearNavigate(EditEventScreenDestination)
+            navigator.navigate(EditEventScreenDestination)
         }
     }
 
@@ -138,8 +138,7 @@ class EventsViewModel @Inject constructor(
                 val files = List(images.size) {
                     cacheFile(images[it], "image${it}")
                 }
-                val response = repositories.eventRepository.createEvent(eventCreate, files)
-                if (checkResponse(response)) {
+                afterCheckResponse(repositories.eventRepository.createEvent(eventCreate, files)) {
                     navigateToAllEvents()
                     snackBarHostState.showSnackbar("Мероприятие успешно создано")
                 }
@@ -155,8 +154,7 @@ class EventsViewModel @Inject constructor(
                 val files = List(images.size) {
                     cacheFile(images[it], "image${it}")
                 }
-                val response = repositories.eventRepository.editEvent(eventUpdate, files)
-                if (checkResponse(response)) {
+                afterCheckResponse(repositories.eventRepository.editEvent(eventUpdate, files)) {
                     navigateToAllEvents()
                     snackBarHostState.showSnackbar("Мероприятие успешно изменено")
                 }
@@ -171,7 +169,7 @@ class EventsViewModel @Inject constructor(
             eventSelection = eventSelection.copy(tags = (eventSelection.tags ?: emptyList())+listOf(query))
             Log.d("event selection", eventSelection.toString())
             val response = repositories.eventRepository.getGlobalEvents(eventSelection = eventSelection)
-            if (checkResponse(response) {false}) {
+            if (afterCheckResponse(response)) {
                 events = response!!.data!!
                 filterByFastTags()
                 snackBarHostState.showSnackbar("Найдено ${response.data!!.size} мероприятий")
@@ -183,8 +181,7 @@ class EventsViewModel @Inject constructor(
 
     fun deleteEvent(eventID: Int) {
         viewModelScope.launch {
-            val response = repositories.eventRepository.deteleEvent(eventID)
-            if (checkResponse(response)) {
+            afterCheckResponse(repositories.eventRepository.deteleEvent(eventID)) {
                 navigator.clearNavigate(AllEventsScreenDestination)
                 snackBarHostState.showSnackbar("Мероприятие удалено")
             }

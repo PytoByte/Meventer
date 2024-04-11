@@ -46,6 +46,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -360,7 +361,7 @@ fun EmbeddedSearchBar(
                 },
             textAlign = TextAlign.Center,
             fontWeight = Bold,
-            text = "отчистить историю"
+            text = "Очистить историю"
         )
         // Search suggestions or results
     }
@@ -399,7 +400,7 @@ fun FilterChip(
 @Composable
 fun FiltersRow(
     allFilters: List<String>,
-    selectedFilters: MutableState<List<String>>,
+    selectedFilters: MutableState<MutableList<String>>,
     onFilterSelected: (String) -> Unit,
     onFilterDeselected: (String) -> Unit,
 ) {
@@ -430,27 +431,23 @@ fun FilterChipExample(
     onAdd: (String) -> Unit,
     onRemove: (String) -> Unit,
 ) {
-    var selectedFilters by remember { mutableStateOf(emptyList<String>()) }
+    var selectedFilters = remember { mutableStateOf(mutableListOf<String>()) }
     val allFilters = remember {listOf("Нравится", "Создатель", "Организатор", "Участник")}
 
     Column(modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 6.dp)) {
-        val filteredSelectedFilters = allFilters.filter { it in selectedFilters }
-        val filteredUnselectedFilters = allFilters.filter { it !in selectedFilters }
+        val filteredSelectedFilters = allFilters.filter { it in selectedFilters.value }
+        val filteredUnselectedFilters = allFilters.filter { it !in selectedFilters.value }
         val mergedFilters = filteredSelectedFilters + filteredUnselectedFilters
         FiltersRow(
             allFilters = mergedFilters,
-            selectedFilters = remember{mutableStateOf(selectedFilters)},
+            selectedFilters = selectedFilters,
             onFilterSelected = { filter ->
-                selectedFilters = selectedFilters.toMutableList().apply {
-                    add(filter)
-                    onAdd(filter)
-                }
+                selectedFilters.value.add(filter)
+                onAdd(filter)
             },
             onFilterDeselected = { filter ->
-                selectedFilters = selectedFilters.toMutableList().apply {
-                    remove(filter)
-                    onRemove(filter)
-                }
+                selectedFilters.value.remove(filter)
+                onRemove(filter)
             }
         )
     }

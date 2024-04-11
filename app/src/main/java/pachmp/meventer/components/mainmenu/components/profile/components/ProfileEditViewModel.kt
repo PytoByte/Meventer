@@ -48,9 +48,8 @@ class ProfileEditViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val response = repositories.userRepository.getUserData()
-            if (checkResponse(response)) {
-                user = response!!.data
+            afterCheckResponse(repositories.userRepository.getUserData()) { response ->
+                user = response.data
             }
 
             email = user!!.email
@@ -69,8 +68,7 @@ class ProfileEditViewModel @Inject constructor(
 
     fun sendCode() {
         viewModelScope.launch {
-            val response = repositories.userRepository.sendEmailCode(email)
-            if (checkResponse(response = response)) {
+            afterCheckResponse(repositories.userRepository.sendEmailCode(email)) {
                 codeDialogVisible.value = true
             }
         }
@@ -80,17 +78,18 @@ class ProfileEditViewModel @Inject constructor(
         viewModelScope.launch {
             if (nickname.isEmpty() || name.isEmpty()) {
                 parentSnackbarHostState.showSnackbar(message = "Поля не заполнены")
-            } else if (nickname == user!!.nickname && name == user!!.name && avatarUri==null) {
+            } else if (nickname == user!!.nickname && name == user!!.name && avatarUri == null) {
                 parentSnackbarHostState.showSnackbar(message = "Нет никаких изменений")
             } else {
-                val response =
-                    repositories.userRepository.updateUserData(
-                        UserUpdate(
-                            if (nickname == user!!.nickname) null else nickname,
-                            if (name == user!!.name) null else name
-                        ),
-                        avatar = avatarUri?.let { cacheFile(it, "avatar") })
-                if (checkResponse(response = response)) {
+                val response = repositories.userRepository.updateUserData(
+                    UserUpdate(
+                        if (nickname == user!!.nickname) null else nickname,
+                        if (name == user!!.name) null else name
+                    ),
+                    avatar = avatarUri?.let { cacheFile(it, "avatar") }
+                )
+
+                afterCheckResponse(response) {
                     navigator.clearNavigate(ProfileScreenDestination)
                     parentSnackbarHostState.showSnackbar("Сохранено")
                 }
@@ -102,12 +101,17 @@ class ProfileEditViewModel @Inject constructor(
         viewModelScope.launch {
             if (code.toIntOrNull() == null || email.isEmpty()) {
                 parentSnackbarHostState.showSnackbar(message = "Поля не заполнены")
-            } else if (email==user!!.email) {
+            } else if (email == user!!.email) {
                 parentSnackbarHostState.showSnackbar(message = "Нет никаких изменений")
             } else {
-                val response =
-                    repositories.userRepository.updateUserEmail(UserUpdateEmail(code, email))
-                if (checkResponse(response = response)) {
+                afterCheckResponse(
+                    repositories.userRepository.updateUserEmail(
+                        UserUpdateEmail(
+                            code,
+                            email
+                        )
+                    )
+                ) {
                     navigator.clearNavigate(ProfileScreenDestination)
                     parentSnackbarHostState.showSnackbar("Сохранено")
                 }
@@ -120,13 +124,14 @@ class ProfileEditViewModel @Inject constructor(
             if (code.toIntOrNull() == null || password.isEmpty() || password.length < 8 || password.length > 128) {
                 parentSnackbarHostState.showSnackbar(message = "Поля не заполнены или заполненны неверно")
             } else {
-                val response = repositories.userRepository.updateUserPassword(
-                    UserUpdatePassword(
-                        code,
-                        password
+                afterCheckResponse(
+                    repositories.userRepository.updateUserPassword(
+                        UserUpdatePassword(
+                            code,
+                            password
+                        )
                     )
-                )
-                if (checkResponse(response = response)) {
+                ) {
                     navigator.clearNavigate(ProfileScreenDestination)
                     parentSnackbarHostState.showSnackbar("Сохранено")
                 }

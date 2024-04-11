@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
@@ -49,88 +51,89 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import io.ktor.websocket.Frame
+import pachmp.meventer.components.mainmenu.components.chats.ChatsViewModel
+import pachmp.meventer.components.widgets.LoadingScreen
+import pachmp.meventer.data.DTO.Chat
 import pachmp.meventer.ui.transitions.BottomTransition
-
-
-// Модель для представления чата
-data class Chat(val id: Int, val title: String, val lastMessage: String, val icon: ImageVector)
-
-// Временные данные для отображения
-val sampleChats = listOf(
-    Chat(1, "Chat 1", "Last message in chat 1", Icons.Default.AccountCircle),
-    Chat(2, "Chat 2", "Last message in chat 2", Icons.Default.AccountCircle),
-    Chat(3, "Chat 3", "Last message in chat 3", Icons.Default.AccountCircle),
-    Chat(4, "Chat 4", "Last message in chat 4", Icons.Default.AccountCircle),
-    Chat(4, "Chat 4", "Last message in chat 4", Icons.Default.AccountCircle),
-    Chat(4, "Chat 4", "Last message in chat 4", Icons.Default.AccountCircle),
-    Chat(4, "Chat 4", "Last message in chat 4", Icons.Default.AccountCircle),
-    Chat(4, "Chat 4", "Last message in chat 4", Icons.Default.AccountCircle),
-    Chat(4, "Chat 4", "Last message in chat 4", Icons.Default.AccountCircle),
-    Chat(4, "Chat 4", "Last message in chat 4", Icons.Default.AccountCircle),
-    Chat(4, "Chat 4", "Last message in chat 4", Icons.Default.AccountCircle),
-    Chat(5, "Chat 5", "Last message in chat 5", Icons.Default.AccountCircle)
-)
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @ChatsNavGraph(start = true)
 @Destination(style = BottomTransition::class)
 @Composable
-fun ChatsScreen() {
+fun ChatsScreen(chatsViewModel: ChatsViewModel) {
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
-    Scaffold(
-        topBar = {
-            EmbeddedSearchBar(
-                //onQueryChange = onQueryChange,
-                isSearchActive = isSearchActive,
-                onActiveChanged = { isSearchActive = it }
-            )
-            TopAppBar(
-                title = { Frame.Text(text = "Chats") },
-                Modifier.background(Color.Blue),
-                //colors = Color.Blue
-            )
-        },
-        content = { paddingValues ->
-            Box(modifier = Modifier.padding(paddingValues)) {
-                MessageScreenContent(chats = sampleChats)
-            }
+
+    with(chatsViewModel) {
+        Scaffold(
+            topBar = {
+                EmbeddedSearchBar(
+                    //onQueryChange = onQueryChange,
+                    isSearchActive = isSearchActive,
+                    onActiveChanged = { isSearchActive = it }
+                )
+                TopAppBar(
+                    title = { Frame.Text(text = "Chats") },
+                    Modifier.background(Color.Blue),
+                    //colors = Color.Blue
+                )
+            },
+        ) { paddingValues ->
+            chats?.let { chats ->
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    MessageScreenContent(chatsViewModel, chats)
+                }
+
+
+            } ?: LoadingScreen(Modifier.fillMaxSize())
         }
-    )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MessageScreenContent(chats: List<Chat>) {
+fun MessageScreenContent(chatsViewModel: ChatsViewModel, chats: List<Chat>) {
     LazyColumn(
         modifier = Modifier.padding(8.dp)
     ) {
         items(chats) { chat ->
-            ChatItem(chat = chat)
+            ChatItem(chatsViewModel, chat)
             Divider(color = Color.LightGray, thickness = 1.dp)
         }
     }
 }
 
 @Composable
-fun ChatItem(chat: Chat) {
+fun ChatItem(chatsViewModel: ChatsViewModel, chat: Chat) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable { },
+            .clickable { chatsViewModel.navigateToChat(chat) },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = chat.icon,
-            contentDescription = "Chat Icon",
-            modifier = Modifier.size(52.dp)
-        )
+        if (chat.originator==null) {
+            Icon(
+                imageVector = Icons.Default.BrokenImage,
+                contentDescription = "Dialog Icon",
+                modifier = Modifier.size(52.dp)
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.BrokenImage,
+                contentDescription = "Chat Icon",
+                modifier = Modifier.size(52.dp)
+            )
+        }
+
         Column(modifier = Modifier.padding(start = 16.dp)) {
-            Text(text = chat.title, style = MaterialTheme.typography.labelMedium)
-            Text(text = chat.lastMessage, style = MaterialTheme.typography.bodyMedium)
+            Text(text = chat.name, style = MaterialTheme.typography.labelMedium)
+            if (chat.lastMessages.isNullOrEmpty().not()) {
+                Text(text = chat.lastMessages.last().body, style = MaterialTheme.typography.bodyMedium)
+            }
         }
     }
 }
@@ -251,7 +254,7 @@ fun EmbeddedSearchBar(
                 },
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Bold,
-            text = "отчистить историю"
+            text = "Очистить историю"
         )
         // Search suggestions or results
     }

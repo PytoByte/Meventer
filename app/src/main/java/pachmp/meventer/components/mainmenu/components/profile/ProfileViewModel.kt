@@ -1,6 +1,5 @@
 package pachmp.meventer.components.mainmenu.components.profile
 
-import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,9 +15,7 @@ import pachmp.meventer.components.destinations.PasswordEditScreenDestination
 import pachmp.meventer.components.destinations.ProfileEditDestination
 import pachmp.meventer.components.destinations.ProfileScreenDestination
 import pachmp.meventer.components.mainmenu.BottomViewModel
-import pachmp.meventer.data.DTO.NullableUserID
 import pachmp.meventer.data.DTO.User
-import pachmp.meventer.data.DTO.UserFeedback
 import pachmp.meventer.data.repository.Repositories
 import javax.inject.Inject
 
@@ -26,7 +23,7 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     @RootNav rootNavigator: Navigator,
     @Nav navigator: Navigator,
-    repositories: Repositories
+    repositories: Repositories,
 ) : BottomViewModel(rootNavigator, navigator, repositories) {
     var user by mutableStateOf<User?>(null)
         private set
@@ -41,36 +38,42 @@ class ProfileViewModel @Inject constructor(
         private set
 
     fun updateProfile() {
+        feedbackModels = null
         viewModelScope.launch {
-            val response = repositories.userRepository.getUserData()
-            if (checkResponse(response)) {
-                user = fixUserAvatar(response!!.data!!)
+            afterCheckResponse(repositories.userRepository.getUserData()) { response ->
+                user = fixUserAvatar(response.data!!)
                 avatar = user!!.avatar
+                println(avatar)
             }
 
-            val feedbacksResponse = repositories.userRepository.getFeedbacks()
-            if (checkResponse(feedbacksResponse) {
-                if (it.value==404) { feedbackModels = emptyList(); false } else {  null } }) {
-                feedbackModels = List(feedbacksResponse!!.data!!.size) {
-                    val authorResponse = repositories.userRepository.getUserData(feedbacksResponse.data!![it].fromUserID)
-                    avrRating += feedbacksResponse.data[it].rating
-                    if (checkResponse(authorResponse)) {
+            afterCheckResponse(
+                response = repositories.userRepository.getFeedbacks(),
+                responseHandler = {
+                    if (it.value == 404) {
+                        feedbackModels = emptyList(); false
+                    } else null
+                }
+            ) { response ->
+                feedbackModels = List(response.data!!.size) {
+                    val authorResponse = repositories.userRepository.getUserData(response.data[it].fromUserID)
+                    avrRating += response.data[it].rating
+                    if (afterCheckResponse(authorResponse)) {
                         FeedbackModel(
-                            id = feedbacksResponse.data[it].id,
+                            id = response.data[it].id,
                             author = fixUserAvatar(authorResponse!!.data!!),
-                            rating = feedbacksResponse.data[it].rating,
-                            comment = feedbacksResponse.data[it].comment
+                            rating = response.data[it].rating,
+                            comment = response.data[it].comment
                         )
                     } else {
                         FeedbackModel(
-                            id = feedbacksResponse.data[it].id,
+                            id = response.data[it].id,
                             author = null,
-                            rating = feedbacksResponse.data[it].rating,
-                            comment = feedbacksResponse.data[it].comment
+                            rating = response.data[it].rating,
+                            comment = response.data[it].comment
                         )
                     }
                 }
-                avrRating /= feedbackModels!!.size
+                avrRating = if (feedbackModels!!.size==0) 0f else avrRating/feedbackModels!!.size
             }
         }
     }
@@ -81,13 +84,15 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun navigateToEditData() {
-        navigator.clearNavigate(ProfileEditDestination)
+        navigator.navigate(ProfileEditDestination)
     }
+
     fun navigateToEditPassword() {
-        navigator.clearNavigate(PasswordEditScreenDestination)
+        navigator.navigate(PasswordEditScreenDestination)
     }
+
     fun navigateToEditEmail() {
-        navigator.clearNavigate(EmailEditScreenDestination)
+        navigator.navigate(EmailEditScreenDestination)
     }
 
     fun navigateToProfile() {

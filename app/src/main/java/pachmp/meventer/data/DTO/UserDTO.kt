@@ -1,6 +1,7 @@
 @file:UseSerializers(LocalDateSerializer::class)
 package pachmp.meventer.data.DTO
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import pachmp.meventer.data.Serializers.LocalDateSerializer
@@ -8,6 +9,7 @@ import java.time.LocalDate
 
 @Serializable
 data class User(
+    @SerialName("userID")
     val id: Int,
     val email: String,
     val name: String,
@@ -24,6 +26,7 @@ data class UserEmailCode(
 
 @Serializable
 data class UserFeedback(
+    @SerialName("feedbackID")
     val id: Long,
     val fromUserID: Int,
     val rating: Float,
