@@ -39,6 +39,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
 import pachmp.meventer.components.mainmenu.components.profile.components.ProfileEditViewModel
 import pachmp.meventer.components.mainmenu.components.profile.screens.ProfileNavGraph
+import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.ui.transitions.FadeTransition
 
 @ProfileNavGraph
@@ -120,13 +121,7 @@ fun PasswordEditScreen(
                 }
             }
         } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Загрузка")
-            }
+            LoadingScreen(Modifier.fillMaxSize())
         }
     }
 }

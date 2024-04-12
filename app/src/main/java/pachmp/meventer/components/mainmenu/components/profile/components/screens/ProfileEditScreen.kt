@@ -26,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,11 +35,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.net.toFile
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
 import pachmp.meventer.components.mainmenu.components.profile.components.ProfileEditViewModel
 import pachmp.meventer.components.mainmenu.components.profile.screens.ProfileNavGraph
 import pachmp.meventer.components.mainmenu.components.profile.widgets.Avatar
+import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.components.widgets.TextCom
 import pachmp.meventer.ui.transitions.FadeTransition
 
@@ -55,7 +58,15 @@ fun ProfileEdit(
     }
 
     with(profileEditViewModel) {
+        val imageBitmap = remember { getDefaultImageBitmap() }
+        if (avatarUri==null) {
+            getImage(imageBitmap, avatarCurrent)
+        } else {
+            getLocalImageUri(imageBitmap, avatarUri)
+        }
+
         parentSnackbarHostState = profileViewModel.snackBarHostState
+
         if (user != null) {
             Scaffold(
                 snackbarHost = { SnackbarHost(parentSnackbarHostState) },
@@ -85,7 +96,9 @@ fun ProfileEdit(
                 ) {
                     Text("Изменение данных", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.size(5.dp))
-                    Avatar(model = if (avatarUri == null) avatarUriCurrent.toString() else avatarUri.toString())
+
+                    Avatar(imageBitmap.value)
+
                     Button(onClick = { launcher.launch("image/*") }) {
                         Text("Изменить аватар")
                     }
@@ -98,13 +111,7 @@ fun ProfileEdit(
                 }
             }
         } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Загрузка")
-            }
+            LoadingScreen(Modifier.fillMaxSize())
         }
     }
 }

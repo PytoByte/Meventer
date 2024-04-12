@@ -113,3 +113,8 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
         //Text("Загрузка")
     }
 }
+
+@Composable
+fun CustomAsyncImage() {
+
+}

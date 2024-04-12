@@ -96,22 +96,37 @@ class ChatSocketRepository @Inject constructor(
             Log.d("SOCKET", "Получено $receive")
             try {
                 val decodedReceive = Json.decodeFromString<Message>(receive)
-                onMessageListeners.forEach {
-                    it(decodedReceive)
+                onMessageListeners.forEachIndexed { index, listener ->
+                    try {
+                        listener(decodedReceive)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        onMessageListeners.removeAt(index)
+                    }
                 }
                 return@consumeEach
             } catch (_: Exception) { }
             try {
                 val decodedReceive = Json.decodeFromString<MessageUpdated>(receive)
-                onMessageUpdateListeners.forEach {
-                    it(decodedReceive)
+                onMessageUpdateListeners.forEachIndexed { index, listener ->
+                    try {
+                        listener(decodedReceive)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        onMessageUpdateListeners.removeAt(index)
+                    }
                 }
                 return@consumeEach
             } catch (_: Exception) { }
             try {
                 val decodedReceive = receive.toLong()
-                onMessageDeleteListeners.forEach {
-                    it(decodedReceive)
+                onMessageDeleteListeners.forEachIndexed { index, listener ->
+                    try {
+                        listener(decodedReceive)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        onMessageDeleteListeners.removeAt(index)
+                    }
                 }
                 return@consumeEach
             } catch (_: Exception) {}

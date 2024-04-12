@@ -3,6 +3,7 @@ package pachmp.meventer.components.mainmenu.components.events.components.display
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -54,7 +55,7 @@ class EventScreenViewModel @Inject constructor(
         viewModelScope.launch {
             val eventResponse = repositories.eventRepository.getEvent(eventID)
             if (afterCheckResponse(eventResponse)) {
-                event = fixEventImages(eventResponse!!.data!!)
+                event = eventResponse!!.data!!
             } else {
                 navigator.clearNavigate(EventScreenDestination)
                 parentSnackbarHostState.showSnackbar("Не удалось загрузить мероприятие")
@@ -96,7 +97,7 @@ class EventScreenViewModel @Inject constructor(
     }
 
     suspend fun updateFeedbacks() {
-        originatorRating = 0f
+        var sumRating = 0f
         afterCheckResponse(
             response = repositories.userRepository.getFeedbacks(originator!!.id),
             responseHandler = {
@@ -108,7 +109,7 @@ class EventScreenViewModel @Inject constructor(
             originatorFeedbacks = List(response.data!!.size) {
                 val authorResponse =
                     repositories.userRepository.getUserData(response.data[it].fromUserID)
-                originatorRating += response.data[it].rating
+                sumRating += response.data[it].rating
                 if (afterCheckResponse(authorResponse)) {
                     if (authorResponse!!.data!!.id == appUser!!.id) {
                         rating = response.data[it].rating
@@ -129,7 +130,7 @@ class EventScreenViewModel @Inject constructor(
                     )
                 }
             }
-            originatorRating = if (originatorFeedbacks!!.size==0) 0f else originatorRating/originatorFeedbacks!!.size
+            originatorRating = if (originatorFeedbacks!!.size==0) 0f else sumRating/originatorFeedbacks!!.size
         }
     }
 
@@ -252,4 +253,5 @@ data class UserModel(
     val avatar: String?,
     val name: String?,
     val rank: Rank,
+    var image: ImageBitmap? = null
 )

@@ -1,6 +1,8 @@
 package pachmp.meventer.components.mainmenu.components.profile.screens
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,6 +43,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +53,7 @@ import com.gowtham.ratingbar.RatingBar
 import com.gowtham.ratingbar.RatingBarConfig
 import com.gowtham.ratingbar.RatingBarStyle
 import com.ramcosta.composedestinations.annotation.Destination
+import pachmp.meventer.DefaultViewModel
 import pachmp.meventer.components.mainmenu.components.profile.FeedbackModel
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
 import pachmp.meventer.components.mainmenu.components.profile.widgets.Avatar
@@ -62,11 +67,13 @@ import java.time.LocalDate
 @Composable
 fun ProfileScreen(profileViewModel: ProfileViewModel) {
     var dropdownMenuExpanded by remember { mutableStateOf(false) }
+    val imageBitmap = remember { profileViewModel.getDefaultImageBitmap() }
 
     with(profileViewModel) {
         if (user == null) {
             LoadingScreen(Modifier.fillMaxSize())
         } else {
+            getImage(imageBitmap, avatar)
             MeventerTheme {
                 Scaffold(
                     snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -116,7 +123,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
                         ) {
                             Spacer(modifier = Modifier.height(25.dp))
                             // Avatar
-                            Avatar(model = avatar!!)
+                            Avatar(imageBitmap.value)
 
                             // Username and ID
                             Spacer(modifier = Modifier.height(12.dp))
@@ -160,7 +167,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
                                                 onValueChange = {},
                                                 onRatingChanged = {})
                                         }
-                                        CommentsList(feedbacks = feedbackModels!!)
+                                        CommentsList(profileViewModel, feedbackModels!!)
                                     } else {
                                         LoadingScreen(Modifier.fillMaxWidth())
                                     }
@@ -179,62 +186,69 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
 }
 
 @Composable
-fun FeedbackCard(feedback: FeedbackModel) {
-    Card(
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-    ) {
-        var expanded by remember { mutableStateOf(false) }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.padding(top = 12.dp, start = 12.dp, end = 12.dp)
-        ) {
-            if (feedback.author!=null) {
-                AsyncImage(
-                    model = feedback.author.avatar,
-                    contentDescription = "author avatar",
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clip(CircleShape)
-                )
-                Text(text = feedback.author.name, fontWeight = FontWeight.Bold)
-            } else {
-                Text(text = "Не удалось загрузить пользователя")
-            }
-        }
-        Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "${feedback.rating}")
-                RatingBar(
-                    value = feedback.rating,
-                    config = RatingBarConfig().numStars(5).style(RatingBarStyle.HighLighted)
-                        .size(20.dp),
-                    onValueChange = {},
-                    onRatingChanged = {})
-            }
-            Column {
-                if(feedback.comment.length < 55){
-                    Text(text = feedback.comment)
-                }else{
-                    if (expanded) {
-                        Text(text = feedback.comment)
-                    } else {
-                        Text(
-                            text = feedback.comment.take(55) + "..."
-                        )
-                    }
+fun FeedbackCard(defaultViewModel: DefaultViewModel, feedback: FeedbackModel) {
+    with(defaultViewModel) {
+        val imageBitmap = remember {  getDefaultImageBitmap() }
+        getImage(imageBitmap, feedback.author?.avatar)
 
-                    if (feedback.comment.length > 55) {
-                        OutlinedButton(onClick = { expanded = !expanded }) {
-                            Text(if (expanded) "Скрыть" else "Показать весь")
+        Card(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+        ) {
+            var expanded by remember { mutableStateOf(false) }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.padding(top = 12.dp, start = 12.dp, end = 12.dp)
+            ) {
+                if (feedback.author!=null) {
+                    Image(
+                        bitmap = imageBitmap.value,
+                        contentDescription = "author avatar",
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                    Text(text = feedback.author.name, fontWeight = FontWeight.Bold)
+                } else {
+                    Text(text = "Не удалось загрузить пользователя")
+                }
+            }
+            Column(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "${feedback.rating}")
+                    RatingBar(
+                        value = feedback.rating,
+                        config = RatingBarConfig().numStars(5).style(RatingBarStyle.HighLighted)
+                            .size(20.dp),
+                        onValueChange = {},
+                        onRatingChanged = {})
+                }
+                Column {
+                    if(feedback.comment.length < 55){
+                        Text(text = feedback.comment)
+                    }else{
+                        if (expanded) {
+                            Text(text = feedback.comment)
+                        } else {
+                            Text(
+                                text = feedback.comment.take(55) + "..."
+                            )
+                        }
+
+                        if (feedback.comment.length > 55) {
+                            OutlinedButton(onClick = { expanded = !expanded }) {
+                                Text(if (expanded) "Скрыть" else "Показать весь")
+                            }
                         }
                     }
                 }
@@ -244,10 +258,10 @@ fun FeedbackCard(feedback: FeedbackModel) {
 }
 
 @Composable
-fun CommentsList(feedbacks: List<FeedbackModel>) {
+fun CommentsList(defaultViewModel: DefaultViewModel, feedbacks: List<FeedbackModel>) {
     LazyColumn {
         items(feedbacks) {
-            FeedbackCard(feedback = it)
+            FeedbackCard(defaultViewModel, it)
         }
     }
 }

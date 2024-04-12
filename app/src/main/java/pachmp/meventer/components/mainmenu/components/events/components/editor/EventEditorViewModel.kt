@@ -83,6 +83,10 @@ class EventEditorViewModel @Inject constructor(
         }
     }
 
+    fun isServerFile(path: String): Boolean {
+        return repositories.fileRepository.isServerFile(path)
+    }
+
     fun extendSelectedImageUris(uris: List<Uri>) {
         this.selectedImageUris+=uris
     }

@@ -38,10 +38,11 @@ class ProfileViewModel @Inject constructor(
         private set
 
     fun updateProfile() {
+        var sumRating = 0f
         feedbackModels = null
         viewModelScope.launch {
             afterCheckResponse(repositories.userRepository.getUserData()) { response ->
-                user = fixUserAvatar(response.data!!)
+                user = response.data!!
                 avatar = user!!.avatar
                 println(avatar)
             }
@@ -56,7 +57,7 @@ class ProfileViewModel @Inject constructor(
             ) { response ->
                 feedbackModels = List(response.data!!.size) {
                     val authorResponse = repositories.userRepository.getUserData(response.data[it].fromUserID)
-                    avrRating += response.data[it].rating
+                    sumRating += response.data[it].rating
                     if (afterCheckResponse(authorResponse)) {
                         FeedbackModel(
                             id = response.data[it].id,
@@ -73,7 +74,7 @@ class ProfileViewModel @Inject constructor(
                         )
                     }
                 }
-                avrRating = if (feedbackModels!!.size==0) 0f else avrRating/feedbackModels!!.size
+                avrRating = if (feedbackModels!!.size==0) 0f else sumRating/feedbackModels!!.size
             }
         }
     }

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
@@ -117,13 +118,13 @@ fun ChatItem(chatsViewModel: ChatsViewModel, chat: Chat) {
     ) {
         if (chat.originator==null) {
             Icon(
-                imageVector = Icons.Default.BrokenImage,
+                imageVector = Icons.Default.ChatBubbleOutline,
                 contentDescription = "Dialog Icon",
                 modifier = Modifier.size(52.dp)
             )
         } else {
             Icon(
-                imageVector = Icons.Default.BrokenImage,
+                imageVector = Icons.Default.ChatBubbleOutline,
                 contentDescription = "Chat Icon",
                 modifier = Modifier.size(52.dp)
             )
@@ -131,8 +132,8 @@ fun ChatItem(chatsViewModel: ChatsViewModel, chat: Chat) {
 
         Column(modifier = Modifier.padding(start = 16.dp)) {
             Text(text = chat.name, style = MaterialTheme.typography.labelMedium)
-            if (chat.lastMessages.isNullOrEmpty().not()) {
-                Text(text = chat.lastMessages.last().body, style = MaterialTheme.typography.bodyMedium)
+            if (chat.lastMessages.isEmpty().not()) {
+                Text(text = chat.lastMessages.first().body, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }

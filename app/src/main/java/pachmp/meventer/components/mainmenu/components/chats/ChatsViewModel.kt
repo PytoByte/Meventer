@@ -42,7 +42,11 @@ class ChatsViewModel @Inject constructor(
                 chats?.let {
                     val chat = it.find { chat -> chat.chatID==message.chatID }
                     if (chat!=null) {
-                        chat.lastMessages = chat.lastMessages+message-chat.lastMessages.first()
+                        if (chat.lastMessages.isEmpty().not()) {
+                            chat.lastMessages = chat.lastMessages+message-chat.lastMessages.first()
+                        } else {
+                            chat.lastMessages = chat.lastMessages+message
+                        }
                     }
                 }
             }

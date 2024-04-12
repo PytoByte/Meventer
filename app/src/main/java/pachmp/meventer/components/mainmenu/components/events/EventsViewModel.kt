@@ -86,11 +86,7 @@ class EventsViewModel @Inject constructor(
                 responseHandler = {
                     if (it.value==204) { events = emptyList(); false} else null
                 }
-            ) { response ->
-                events = List(response.data!!.size) {
-                    fixEventImages(response.data[it])
-                }
-            }
+            ) { response -> events = response.data!! }
             eventsVisible = events
         }
     }

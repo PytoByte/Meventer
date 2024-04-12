@@ -53,18 +53,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
+import coil.ImageLoaderFactory
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import pachmp.meventer.DefaultViewModel
 import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.components.widgets.LoadingScreen
@@ -80,86 +86,93 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
 
-    FilterDialog(showDialog) {
-        eventsViewModel.eventSelection = it
-    }
-
-    Scaffold(
-        snackbarHost = { SnackbarHost(eventsViewModel.snackBarHostState) },
-        floatingActionButton = {
-            FloatingButtonAdd {
-                eventsViewModel.navigateToCreateEvent()
-            }
-        },
-        topBar = {
-            Column {
-                EmbeddedSearchBar(
-                    isSearchActive = isSearchActive,
-                    onActiveChanged = { isSearchActive = it },
-                    onSearch = {
-                        isSearchActive = false
-                        eventsViewModel.searchEvents()
-                    },
-                    onQueryChange = { eventsViewModel.query = it }
-                )
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { showDialog.value = true }) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.FilterAlt,
-                                contentDescription = "AllFilters",
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-                    }
-                    FilterChipExample(
-                        onAdd = {
-                            when(it) {
-                                "Нравится" -> eventsViewModel.favoriteFilter = true
-                                "Создатель" -> eventsViewModel.originatorFilter = true
-                                "Организатор" -> eventsViewModel.organizerFilter = true
-                                "Участник" -> eventsViewModel.participantFilter = true
-                            }
-                            eventsViewModel.filterByFastTags()
-                        },
-                        onRemove = {
-                            when(it) {
-                                "Нравится" -> eventsViewModel.favoriteFilter = false
-                                "Создатель" -> eventsViewModel.originatorFilter = false
-                                "Организатор" -> eventsViewModel.organizerFilter = false
-                                "Участник" -> eventsViewModel.participantFilter = false
-                            }
-                            eventsViewModel.filterByFastTags()
-                        }
-                    )
-                }
-            }
+    with(eventsViewModel) {
+        FilterDialog(showDialog) {
+            eventsViewModel.eventSelection = it
         }
-    ) { paddingValues ->
-        if (eventsViewModel.eventsVisible == null || eventsViewModel.user == null) {
-            LoadingScreen(Modifier.fillMaxSize())
-        } else if (eventsViewModel.eventsVisible!!.size == 0) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Ваш список мероприятий пуст")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues), horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                items(eventsViewModel.eventsVisible!!, key = { it.id }, contentType = { Event }) { event ->
-                    EventCard(event, eventsViewModel)
+
+        Scaffold(
+            snackbarHost = { SnackbarHost(eventsViewModel.snackBarHostState) },
+            floatingActionButton = {
+                FloatingButtonAdd {
+                    eventsViewModel.navigateToCreateEvent()
                 }
-                item {
-                    Spacer(modifier = Modifier.size(65.dp))
+            },
+            topBar = {
+                Column {
+                    EmbeddedSearchBar(
+                        isSearchActive = isSearchActive,
+                        onActiveChanged = { isSearchActive = it },
+                        onSearch = {
+                            isSearchActive = false
+                            eventsViewModel.searchEvents()
+                        },
+                        onQueryChange = { eventsViewModel.query = it }
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { showDialog.value = true }) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.FilterAlt,
+                                    contentDescription = "AllFilters",
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                        FilterChipExample(
+                            onAdd = {
+                                when (it) {
+                                    "Нравится" -> eventsViewModel.favoriteFilter = true
+                                    "Создатель" -> eventsViewModel.originatorFilter = true
+                                    "Организатор" -> eventsViewModel.organizerFilter = true
+                                    "Участник" -> eventsViewModel.participantFilter = true
+                                }
+                                eventsViewModel.filterByFastTags()
+                            },
+                            onRemove = {
+                                when (it) {
+                                    "Нравится" -> eventsViewModel.favoriteFilter = false
+                                    "Создатель" -> eventsViewModel.originatorFilter = false
+                                    "Организатор" -> eventsViewModel.organizerFilter = false
+                                    "Участник" -> eventsViewModel.participantFilter = false
+                                }
+                                eventsViewModel.filterByFastTags()
+                            }
+                        )
+                    }
+                }
+            }
+        ) { paddingValues ->
+            if (eventsViewModel.eventsVisible == null || eventsViewModel.user == null) {
+                LoadingScreen(Modifier.fillMaxSize())
+            } else if (eventsViewModel.eventsVisible!!.size == 0) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Ваш список мероприятий пуст")
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues), horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    items(
+                        eventsViewModel.eventsVisible!!,
+                        key = { it.id },
+                        contentType = { Event }) { event ->
+                        val imageBitmap = remember { getDefaultImageBitmap() }
+                        getImage(imageBitmap, if (event.images.isEmpty()) null else event.images[0])
+                        EventCard(event, imageBitmap.value, eventsViewModel)
+                    }
+                    item {
+                        Spacer(modifier = Modifier.size(65.dp))
+                    }
                 }
             }
         }
@@ -179,7 +192,7 @@ fun FloatingButtonAdd(onClick: () -> Unit) {
 
 //Events
 @Composable
-fun EventCard(event: Event, eventsViewModel: EventsViewModel) {
+fun EventCard(event: Event, imageBitmap: ImageBitmap, eventsViewModel: EventsViewModel) {
     Card(
         modifier = Modifier
             .padding(10.dp)
@@ -195,13 +208,14 @@ fun EventCard(event: Event, eventsViewModel: EventsViewModel) {
                 .fillMaxWidth()
                 .height((400 * 0.6f).dp)
         ) {
-            AsyncImage(
+            Image(
                 modifier = Modifier.fillMaxSize(),
-                model = if (event.images.isEmpty()) null else event.images[0],
+                bitmap = imageBitmap,
                 contentDescription = "title",
                 contentScale = ContentScale.Crop
             )
         }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -221,7 +235,7 @@ fun EventCard(event: Event, eventsViewModel: EventsViewModel) {
                 )
                 Text(
                     text = event.startTime.atZone(ZoneId.systemDefault())
-                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm:ss")), maxLines = 1
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm")), maxLines = 1
                 )
                 Text(
                     text = if (event.price != 0) "Price: ${event.price}₽" else "Price: Free",
@@ -400,7 +414,7 @@ fun FilterChip(
 @Composable
 fun FiltersRow(
     allFilters: List<String>,
-    selectedFilters: MutableState<MutableList<String>>,
+    selectedFilters: SnapshotStateList<String>,
     onFilterSelected: (String) -> Unit,
     onFilterDeselected: (String) -> Unit,
 ) {
@@ -410,10 +424,10 @@ fun FiltersRow(
     ) {
         items(allFilters.size) { index ->
             val filter = allFilters[index]
-            val isSelected = selectedFilters.value.contains(filter)
+            val selected = selectedFilters.contains(filter)
             FilterChip(
                 text = filter,
-                isSelected = isSelected,
+                isSelected = selected,
                 onSelectedChange = { isSelected ->
                     if (isSelected) {
                         onFilterSelected(filter)
@@ -431,22 +445,22 @@ fun FilterChipExample(
     onAdd: (String) -> Unit,
     onRemove: (String) -> Unit,
 ) {
-    var selectedFilters = remember { mutableStateOf(mutableListOf<String>()) }
-    val allFilters = remember {listOf("Нравится", "Создатель", "Организатор", "Участник")}
+    var selectedFilters = remember { mutableStateListOf<String>() }
+    val allFilters = remember { listOf("Нравится", "Создатель", "Организатор", "Участник") }
 
     Column(modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 6.dp)) {
-        val filteredSelectedFilters = allFilters.filter { it in selectedFilters.value }
-        val filteredUnselectedFilters = allFilters.filter { it !in selectedFilters.value }
+        val filteredSelectedFilters = allFilters.filter { it in selectedFilters }
+        val filteredUnselectedFilters = allFilters.filter { it !in selectedFilters }
         val mergedFilters = filteredSelectedFilters + filteredUnselectedFilters
         FiltersRow(
             allFilters = mergedFilters,
             selectedFilters = selectedFilters,
             onFilterSelected = { filter ->
-                selectedFilters.value.add(filter)
+                selectedFilters.add(filter)
                 onAdd(filter)
             },
             onFilterDeselected = { filter ->
-                selectedFilters.value.remove(filter)
+                selectedFilters.remove(filter)
                 onRemove(filter)
             }
         )

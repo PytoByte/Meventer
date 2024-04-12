@@ -45,6 +45,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -240,6 +241,12 @@ fun EditEventScreen(
                                 state = pagerState,
                                 key = { selectedImageUris[it] }
                             ) {
+                                val imageBitmap = remember { getDefaultImageBitmap() }
+                                if (isServerFile(selectedImageUris[it].toString())) {
+                                    remember {getImageUri(imageBitmap, selectedImageUris[it])}
+                                } else {
+                                    remember {getLocalImageUri(imageBitmap, selectedImageUris[it])}
+                                }
                                 Box() {
                                     Column {
                                         if (imageEditor) {
@@ -265,9 +272,9 @@ fun EditEventScreen(
                                                 }
                                             }
                                         }
-                                        AsyncImage(
+                                        Image(
                                             modifier = Modifier.fillMaxSize(),
-                                            model = selectedImageUris[it],
+                                            bitmap = imageBitmap.value,
                                             contentDescription = "image",
                                             contentScale = ContentScale.FillWidth
                                         )

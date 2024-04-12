@@ -1,6 +1,7 @@
 package pachmp.meventer.components.mainmenu.components.events.components.display.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -52,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -116,9 +119,11 @@ fun EventScreen(
                         state = pagerState,
                         key = { event!!.images[it] }
                     ) {
-                        AsyncImage(
+                        val imageBitmap = remember { getDefaultImageBitmap() }
+                        getImage(imageBitmap, event!!.images[it])
+                        Image(
                             modifier = Modifier.fillMaxSize(),
-                            model = event!!.images[it],
+                            bitmap = imageBitmap.value,
                             contentDescription = "image",
                             contentScale = ContentScale.Crop
                         )
@@ -219,28 +224,45 @@ fun EventScreen(
                             text = "Участники мероприятия",
                             style = MaterialTheme.typography.titleMedium
                         )
+                        val originatorImageBitmap = remember { getDefaultImageBitmap() }
+                        getImage(originatorImageBitmap, originator?.avatar)
                         LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
+                            // TODO: FIX INFINIT LOOP
                             item {
                                 UserItem(
                                     user = originator!!,
                                     appUser = appUser!!,
+                                    imageBitmap = originatorImageBitmap.value,
                                     eventScreenViewModel
                                 )
                                 HorizontalDivider()
                             }
 
-                            items(organizers!!) {
+                            itemsIndexed(organizers!!) { index, item ->
+                                if (item.image==null) {
+                                    val imageBitmap = remember { getDefaultImageBitmap() }
+                                    getImage(imageBitmap, item.avatar)
+                                    organizers!![index].image = imageBitmap.value
+                                }
                                 UserItem(
-                                    user = it,
+                                    user = item,
                                     appUser = appUser!!,
+                                    imageBitmap = item.image ?: getDefaultImageBitmap().value,
                                     eventScreenViewModel
                                 )
                                 HorizontalDivider()
                             }
-                            items(participants!!) {
+                            itemsIndexed(participants!!) { index, item ->
+                                if (item.image==null) {
+                                    val imageBitmap = remember { getDefaultImageBitmap() }
+                                    getImage(imageBitmap, item.avatar)
+                                    participants!![index].image = imageBitmap.value
+                                }
+
                                 UserItem(
-                                    user = it,
+                                    user = item,
                                     appUser = appUser!!,
+                                    imageBitmap = item.image ?: getDefaultImageBitmap().value,
                                     eventScreenViewModel
                                 )
                                 HorizontalDivider()
@@ -259,6 +281,7 @@ fun EventScreen(
 fun UserItem(
     user: UserModel?,
     appUser: UserModel,
+    imageBitmap: ImageBitmap,
     eventScreenViewModel: EventScreenViewModel,
 ) {
     with(eventScreenViewModel) {
@@ -275,13 +298,11 @@ fun UserItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
-                AsyncImage(
-                    model = user.avatar, contentDescription = "avatar",
-                    Modifier
-                        .clip(
-                            CircleShape
-                        )
-                        .size(60.dp), contentScale = ContentScale.Crop
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = "avatar",
+                    Modifier.clip(CircleShape).size(60.dp),
+                    contentScale = ContentScale.Crop
                 )
                 Column(modifier = Modifier.padding(4.dp), verticalArrangement = Arrangement.Center) {
                     if (user.id == appUser.id) Text("${user.name!!} (Вы)") else Text(user.name!!)
@@ -408,7 +429,7 @@ fun OriginarorFeedbacksDialog(
                                         .fillMaxWidth()
                                         .heightIn(max = 200.dp)
                                 ) {
-                                    CommentsList(feedbacks = feedbackModels)
+                                    CommentsList(eventScreenViewModel, feedbackModels)
                                 }
                             }
                             Button(onClick = { visible.value = false }) {

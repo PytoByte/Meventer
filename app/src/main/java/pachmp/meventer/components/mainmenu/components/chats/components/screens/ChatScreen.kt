@@ -25,7 +25,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ArrowBackIosNew
@@ -44,6 +46,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,6 +78,8 @@ import pachmp.meventer.components.mainmenu.components.events.components.editor.E
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.data.DTO.Message
 import pachmp.meventer.ui.transitions.BottomTransition
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 var selectedImageUris by mutableStateOf(emptyList<Uri>())
     private set
@@ -127,15 +133,6 @@ fun ChatScreen(chatsViewModel: ChatsViewModel, chatViewModel: ChatViewModel = hi
                             Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Назад")
                         }
                     },
-                    actions = {
-                        Image(
-                            painter = painterResource(id = R.drawable.avatar),
-                            contentDescription = "Изображение чата",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                        )
-                    },
                     modifier = if (isKeyBoardOpen.value) Modifier.padding(top = 270.dp) else Modifier.padding(
                         0.dp
                     )
@@ -145,7 +142,7 @@ fun ChatScreen(chatsViewModel: ChatsViewModel, chatViewModel: ChatViewModel = hi
                 BottomAppBar(modifier = Modifier.heightIn(min = if (selectedImageUris.isEmpty()) 100.dp else 240.dp)) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
-                        if (selectedImageUris.isNotEmpty()) {
+                        /*if (selectedImageUris.isNotEmpty()) {
                             Card(
                                 modifier = Modifier
                                     .height(150.dp)
@@ -186,49 +183,63 @@ fun ChatScreen(chatsViewModel: ChatsViewModel, chatViewModel: ChatViewModel = hi
                         }
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = {
-                                multiplePhotoPickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            }, modifier = Modifier.rotate(30f)) {
+                            IconButton(
+                                onClick = {
+                                    multiplePhotoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                }, modifier = Modifier
+                                    .rotate(30f)
+                                    .weight(0.1f)
+                            ) {
                                 Icon(
                                     Icons.Default.AttachFile,
                                     contentDescription = "Прикрепить изображение"
                                 )
-                            }
+                            }*/
 
-
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             OutlinedTextField(
+                                modifier = Modifier.weight(0.8f),
                                 value = textToSend,
-                                shape = CircleShape,
+                                shape = RoundedCornerShape(5.dp),
                                 onValueChange = { textToSend = it },
                                 placeholder = { Text("Сообщение") }
                             )
 
 
-                            if (selectedImageUris.isNotEmpty() or textToSend.isNotEmpty()) {
-                                IconButton(
-                                    onClick = { send() },
-                                    modifier = Modifier.padding(start = 8.dp)
-                                ) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.Send,
-                                        contentDescription = "Отправить"
-                                    )
-                                }
+                            IconButton(
+                                onClick = { send() },
+                                modifier = Modifier
+                                    .padding(start = 8.dp)
+                                    .weight(0.1f),
+                                enabled = selectedImageUris.isNotEmpty() or textToSend.isNotEmpty()
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Send,
+                                    contentDescription = "Отправить"
+                                )
                             }
                         }
+
                     }
                 }
             }
         ) { paddingValue ->
+            val state = rememberLazyListState()
+
+            if (state.canScrollBackward.not()) {
+                addMessages()
+            }
+
             LazyColumn(
                 modifier = Modifier
                     .padding(paddingValue),
+                state = state,
                 contentPadding = PaddingValues(8.dp),
                 reverseLayout = true
             ) {
-                items(messages.reversed()) { message ->
+                items(messagesVisible.reversed()) { message ->
                     MessageCard(chatViewModel, message)
                 }
             }
@@ -237,8 +248,8 @@ fun ChatScreen(chatsViewModel: ChatsViewModel, chatViewModel: ChatViewModel = hi
 }
 
 @Composable
-fun MessageCard(chatViewModel: ChatViewModel, message: MessageModel) {
-    val isSentByUser = (message.sender?.id ?: -1) == chatViewModel.appUser!!.id
+fun MessageCard(chatViewModel: ChatViewModel, message: Message) {
+    val isSentByUser = message.senderID == chatViewModel.appUser!!.id
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -262,12 +273,13 @@ fun MessageCard(chatViewModel: ChatViewModel, message: MessageModel) {
                 if (isSentByUser) {
                     Text(text = message.body)
                 } else {
-                    Text(text = message.sender?.name ?: "???", fontWeight = FontWeight.Bold)
+                    Text(text = message.senderName, fontWeight = FontWeight.Bold)
                     Text(text = message.body)
                 }
-                // TODO: нормально сделать
+
                 Text(
-                    text = message.timestamp.toString(),
+                    text = message.timestamp.atZone(ZoneId.systemDefault())
+                        .format(DateTimeFormatter.ofPattern("hh:mm:ss")),
                     color = Color.Gray,
                     fontSize = 12.sp,
                     textAlign = TextAlign.Right

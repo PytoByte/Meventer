@@ -3,6 +3,18 @@ package pachmp.meventer.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import android.util.Size
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import coil.decode.DataSource
+import coil.decode.ImageSource
+import coil.fetch.FetchResult
+import coil.fetch.Fetcher
+import coil.fetch.SourceResult
+import coil.request.ImageRequest
+import coil.request.Options
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
@@ -19,8 +31,12 @@ import io.ktor.http.fullPath
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import okhttp3.OkHttpClient
+import okio.buffer
+import okio.source
 import pachmp.meventer.R
 import pachmp.meventer.data.DTO.Response
+import java.io.ByteArrayInputStream
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import java.util.concurrent.TimeUnit
@@ -53,7 +69,7 @@ open class DefaultRepository(
         engine {
             config {
                 pingInterval(20, TimeUnit.SECONDS)
-                hostnameVerifier { _, _ -> true }
+                hostnameVerifier { hostname, session -> hostname.equals("89.23.99.58") }
                 val cf = CertificateFactory.getInstance("X.509")
                 val cert = appContext.resources.openRawResource(R.raw.my_key_store)
                 try {

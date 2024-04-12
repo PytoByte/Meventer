@@ -8,6 +8,6 @@ data class MessageModel(
     val chatID: Long,
     val body: String,
     val timestamp: Instant,
-    val sender: User?,
+    val senderName: User?,
     val attachments: List<String>?
 )

@@ -40,7 +40,7 @@ class ProfileEditViewModel @Inject constructor(
 
     var parentSnackbarHostState by mutableStateOf(snackBarHostState)
 
-    var avatarUriCurrent by mutableStateOf<Uri?>(null)
+    var avatarCurrent by mutableStateOf<String?>(null)
         private set
 
     var avatarUri by mutableStateOf<Uri?>(null)
@@ -56,7 +56,7 @@ class ProfileEditViewModel @Inject constructor(
             name = user!!.name
             nickname = user!!.nickname
             birthday = user!!.dateOfBirth
-            avatarUriCurrent = repositories.fileRepository.getFileURL(user!!.avatar).toUri()
+            avatarCurrent = user!!.avatar
         }
     }
 

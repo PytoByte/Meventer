@@ -88,7 +88,7 @@ data class UserShort(
 
 @Serializable
 data class UserFeedbackUpdate(
-    val FeedbackID: Long,
+    val feedbackID: Long,
     val rating: Float,
     val comment: String
 )
