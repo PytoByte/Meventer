@@ -108,7 +108,7 @@ class EventEditorViewModel @Inject constructor(
                 startTime = LocalDateTime.of(pickedDate, pickedTime).atOffset(ZoneOffset.systemDefault().rules.getOffset(Instant.now())).toInstant(),
                 minimalAge = minAge.toShortOrNull(),
                 maximalAge = maxAge.toShortOrNull(),
-                price = price.toIntOrNull(),
+                price = if ((price.toIntOrNull()?:0)>0) price.toIntOrNull() else 0,
                 tags = selectedCategories.toList())
         }
     }
@@ -125,7 +125,7 @@ class EventEditorViewModel @Inject constructor(
                 startTime = if (event!!.startTime==startTime) null else startTime,
                 minimalAge = if (event!!.minimalAge == (minAge.toShortOrNull() ?: 0.toShort())) null else minAge.toShortOrNull() ?: 0.toShort(),
                 maximalAge = if (event!!.maximalAge == maxAge.toShortOrNull()) null else maxAge.toShortOrNull() ?: 999.toShort(),
-                price = if (event!!.price==(price.toIntOrNull() ?: 0)) null else price.toIntOrNull() ?: 0,
+                price = if (event!!.price==(price.toIntOrNull() ?: 0) && (price.toIntOrNull() ?: 0)<0) null else price.toIntOrNull() ?: 0,
                 tags = if (event!!.tags==selectedCategories.toList()) null else selectedCategories.toList(),
                 deletedImages = deletedImageUris
             )

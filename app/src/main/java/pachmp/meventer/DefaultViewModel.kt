@@ -101,6 +101,22 @@ open class DefaultViewModel(
         }
     }
 
+    fun getImageTest(imageBitmap: MutableState<ImageBitmap>, fileName: String?): MutableState<ImageBitmap> {
+        if (fileName.isNullOrEmpty().not()) {
+            viewModelScope.launch {
+                val imageRequested = repositories.fileRepository.getFile(fileName!!)
+
+                if (imageRequested == null) {
+                    Log.e("IMAGE", "Сбой в загрузке изображения")
+                } else {
+                    imageBitmap.value = imageRequested
+                }
+            }
+        }
+
+        return imageBitmap
+    }
+
     @SuppressLint("Recycle")
     fun getLocalImageUri(imageBitmap: MutableState<ImageBitmap>, fileUri: Uri?) {
         if (fileUri!=null) {

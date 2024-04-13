@@ -224,8 +224,7 @@ fun EventScreen(
                             text = "Участники мероприятия",
                             style = MaterialTheme.typography.titleMedium
                         )
-                        val originatorImageBitmap = remember { getDefaultImageBitmap() }
-                        getImage(originatorImageBitmap, originator?.avatar)
+                        val originatorImageBitmap = remember{getImageTest(getDefaultImageBitmap(), originator?.avatar)}
                         LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
                             // TODO: FIX INFINIT LOOP
                             item {
@@ -241,7 +240,7 @@ fun EventScreen(
                             itemsIndexed(organizers!!) { index, item ->
                                 if (item.image==null) {
                                     val imageBitmap = remember { getDefaultImageBitmap() }
-                                    getImage(imageBitmap, item.avatar)
+                                    remember{getImage(imageBitmap, item.avatar)}
                                     organizers!![index].image = imageBitmap.value
                                 }
                                 UserItem(
@@ -255,7 +254,7 @@ fun EventScreen(
                             itemsIndexed(participants!!) { index, item ->
                                 if (item.image==null) {
                                     val imageBitmap = remember { getDefaultImageBitmap() }
-                                    getImage(imageBitmap, item.avatar)
+                                    remember{getImage(imageBitmap, item.avatar)}
                                     participants!![index].image = imageBitmap.value
                                 }
 
