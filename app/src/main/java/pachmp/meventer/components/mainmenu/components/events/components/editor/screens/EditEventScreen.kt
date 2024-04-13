@@ -183,7 +183,7 @@ fun EditEventScreen(
                     Surface {
                         Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
                             Text("Вы уверенны что хотите удалить мероприятие?")
-                            Row {
+                            Row(horizontalArrangement = Arrangement.SpaceAround) {
                                 Button(onClick = {eventsViewModel.deleteEvent(event!!.id); deleteDialogState.value=false}) {
                                     Text("Да")
                                 }
@@ -239,7 +239,8 @@ fun EditEventScreen(
                                 modifier = Modifier
                                     .fillMaxSize(),
                                 state = pagerState,
-                                key = { selectedImageUris[it] }
+                                key = { selectedImageUris[it] },
+                                beyondBoundsPageCount = 1
                             ) {
                                 val imageBitmap = remember { getDefaultImageBitmap() }
                                 if (isServerFile(selectedImageUris[it].toString())) {

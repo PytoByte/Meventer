@@ -2,6 +2,7 @@ package pachmp.meventer.components.mainmenu.components.chats
 
 import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
@@ -27,7 +28,9 @@ class ChatsViewModel @Inject constructor(
     repositories: Repositories,
 ) : BottomViewModel(rootNavigator, navigator, repositories)  {
 
+    var query by mutableStateOf("")
     var chats by mutableStateOf<List<Chat>?>(null)
+    var visibleChats by mutableStateOf<List<Chat>?>(null)
     var selectedChat by mutableStateOf<Chat?>(null)
 
     fun initSocket() {
@@ -54,6 +57,8 @@ class ChatsViewModel @Inject constructor(
             afterCheckResponse(repositories.chatRepository.getAllChats()) { response ->
                 chats = response.data!!
             }
+
+            visibleChats = chats
         }
     }
 
@@ -64,5 +69,11 @@ class ChatsViewModel @Inject constructor(
 
     fun navigateToAllChats() {
         navigator.clearNavigate(ChatsScreenDestination)
+    }
+
+    fun filterChats() {
+        visibleChats = chats!!.filter {
+            it.name.contains(query)
+        }
     }
 }

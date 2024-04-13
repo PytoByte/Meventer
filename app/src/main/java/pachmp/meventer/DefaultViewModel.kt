@@ -68,6 +68,7 @@ open class DefaultViewModel(
                 }
 
                 409, 401 -> navigator.clearNavigate(LoginScreenDestination)
+
                 else -> {
                     responseHandler(response.result)?.let { handlerResult ->
                         if (handlerResult) {

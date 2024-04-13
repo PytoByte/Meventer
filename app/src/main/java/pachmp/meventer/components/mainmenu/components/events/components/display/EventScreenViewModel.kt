@@ -1,9 +1,12 @@
 package pachmp.meventer.components.mainmenu.components.events.components.display
 
+import android.graphics.Bitmap
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -66,7 +69,7 @@ class EventScreenViewModel @Inject constructor(
             if (afterCheckResponse(userResponse)) {
                 appUser = UserModel(
                     id = appUserID,
-                    avatar = repositories.fileRepository.getFileURL(fixUserAvatar(userResponse!!.data!!).avatar),
+                    avatar =userResponse!!.data!!.avatar,
                     name = userResponse.data!!.name,
                     rank = getUserRank(event!!, userResponse.data)
                 )
@@ -194,7 +197,7 @@ class EventScreenViewModel @Inject constructor(
             onUserGet(user)
             return UserModel(
                 id = userID,
-                avatar = fixUserAvatar(user).avatar,
+                avatar = user.avatar,
                 name = user.name,
                 rank = rank
             )
@@ -253,5 +256,5 @@ data class UserModel(
     val avatar: String?,
     val name: String?,
     val rank: Rank,
-    var image: ImageBitmap? = null
+    var image: MutableState<ImageBitmap>? = null
 )

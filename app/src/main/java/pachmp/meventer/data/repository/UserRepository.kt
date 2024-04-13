@@ -146,8 +146,6 @@ class UserRepository @Inject constructor(
     @OptIn(InternalAPI::class)
     suspend fun updateUserData(userUpdate: UserUpdate, avatar: File?) = withHttpClient {
         post("${repositoryURL}update/data") {
-            println(avatar!!.extension)
-
             bearerAuth(getToken())
             setBody(MultiPartFormDataContent(
                 parts = formData {

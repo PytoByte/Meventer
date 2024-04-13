@@ -117,8 +117,14 @@ open class DefaultRepository(
 
     protected fun getToken() = encryptedSharedPreferences.getString("token", "")!!
 
-    suspend inline fun <reified T>HttpResponse.toResponse(): Response<T> {
+    suspend inline fun <reified T>HttpResponse.toResponse(): Response<T?> {
         Log.d("http to response", "CODE: ${this.status.value}\nFROM: ${this.request.url.fullPath}\nMESSAGE: ${this.status.description}\nBODY: ${this.body<String>()}\nEND")
-        return Response(this.status, this.body<T>())
+        try {
+            return Response(this.status, this.body<T>())
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return Response(this.status, null)
+        }
+
     }
 }

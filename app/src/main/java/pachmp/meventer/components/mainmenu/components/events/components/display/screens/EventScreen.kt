@@ -117,10 +117,10 @@ fun EventScreen(
                     HorizontalPager(
                         modifier = Modifier.fillMaxSize(),
                         state = pagerState,
-                        key = { event!!.images[it] }
+                        key = { event!!.images[it] },
+                        beyondBoundsPageCount = 1
                     ) {
-                        val imageBitmap = remember { getDefaultImageBitmap() }
-                        getImage(imageBitmap, event!!.images[it])
+                        val imageBitmap = remember { getImageTest(getDefaultImageBitmap(), event!!.images[it]) }
                         Image(
                             modifier = Modifier.fillMaxSize(),
                             bitmap = imageBitmap.value,
@@ -224,14 +224,17 @@ fun EventScreen(
                             text = "Участники мероприятия",
                             style = MaterialTheme.typography.titleMedium
                         )
-                        val originatorImageBitmap = remember{getImageTest(getDefaultImageBitmap(), originator?.avatar)}
                         LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
                             // TODO: FIX INFINIT LOOP
                             item {
+                                if (originator!!.image==null) {
+                                    originator!!.image = remember { getDefaultImageBitmap() }
+                                    remember{getImage(originator!!.image!!, originator!!.avatar)}
+                                }
                                 UserItem(
                                     user = originator!!,
                                     appUser = appUser!!,
-                                    imageBitmap = originatorImageBitmap.value,
+                                    imageBitmap = originator!!.image ?: getDefaultImageBitmap(),
                                     eventScreenViewModel
                                 )
                                 HorizontalDivider()
@@ -239,29 +242,27 @@ fun EventScreen(
 
                             itemsIndexed(organizers!!) { index, item ->
                                 if (item.image==null) {
-                                    val imageBitmap = remember { getDefaultImageBitmap() }
-                                    remember{getImage(imageBitmap, item.avatar)}
-                                    organizers!![index].image = imageBitmap.value
+                                    organizers!![index].image = remember { getDefaultImageBitmap() }
+                                    remember{getImage(organizers!![index].image!!, item.avatar)}
                                 }
                                 UserItem(
                                     user = item,
                                     appUser = appUser!!,
-                                    imageBitmap = item.image ?: getDefaultImageBitmap().value,
+                                    imageBitmap = item.image ?: getDefaultImageBitmap(),
                                     eventScreenViewModel
                                 )
                                 HorizontalDivider()
                             }
                             itemsIndexed(participants!!) { index, item ->
                                 if (item.image==null) {
-                                    val imageBitmap = remember { getDefaultImageBitmap() }
-                                    remember{getImage(imageBitmap, item.avatar)}
-                                    participants!![index].image = imageBitmap.value
+                                    participants!![index].image = remember { getDefaultImageBitmap() }
+                                    remember{getImage(participants!![index].image!!, item.avatar)}
                                 }
 
                                 UserItem(
                                     user = item,
                                     appUser = appUser!!,
-                                    imageBitmap = item.image ?: getDefaultImageBitmap().value,
+                                    imageBitmap = item.image ?: getDefaultImageBitmap(),
                                     eventScreenViewModel
                                 )
                                 HorizontalDivider()
@@ -280,7 +281,7 @@ fun EventScreen(
 fun UserItem(
     user: UserModel?,
     appUser: UserModel,
-    imageBitmap: ImageBitmap,
+    imageBitmap: MutableState<ImageBitmap>,
     eventScreenViewModel: EventScreenViewModel,
 ) {
     with(eventScreenViewModel) {
@@ -298,7 +299,7 @@ fun UserItem(
                 horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Image(
-                    bitmap = imageBitmap,
+                    bitmap = imageBitmap.value,
                     contentDescription = "avatar",
                     Modifier.clip(CircleShape).size(60.dp),
                     contentScale = ContentScale.Crop
@@ -409,7 +410,7 @@ fun OriginarorFeedbacksDialog(
                                         Text("Отправить")
                                     }
                                 } else {
-                                    Row() {
+                                    Row(horizontalArrangement = Arrangement.SpaceAround) {
                                         Button(onClick = { updateFeedback() }) {
                                             Text("Изменить")
                                         }

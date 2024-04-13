@@ -167,7 +167,7 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
                         key = { it.id },
                         contentType = { Event }) { event ->
                         val imageBitmap = remember { getDefaultImageBitmap() }
-                        getImage(imageBitmap, if (event.images.isEmpty()) null else event.images[0])
+                        remember{getImage(imageBitmap, if (event.images.isEmpty()) null else event.images[0])}
                         EventCard(event, imageBitmap.value, eventsViewModel)
                     }
                     item {
@@ -290,7 +290,7 @@ fun EmbeddedSearchBar(
         active = isSearchActive,
         onActiveChange = activeChanged,
         modifier = if (isSearchActive) {
-            modifier
+            modifier.fillMaxWidth()
                 .animateContentSize(spring(stiffness = Spring.StiffnessHigh))
         } else {
             modifier

@@ -72,9 +72,13 @@ fun ChatsScreen(chatsViewModel: ChatsViewModel) {
         Scaffold(
             topBar = {
                 EmbeddedSearchBar(
-                    //onQueryChange = onQueryChange,
                     isSearchActive = isSearchActive,
-                    onActiveChanged = { isSearchActive = it }
+                    onActiveChanged = { isSearchActive = it },
+                    onSearch = {
+                        isSearchActive = false
+                        chatsViewModel.filterChats()
+                    },
+                    onQueryChange = { chatsViewModel.query = it }
                 )
                 TopAppBar(
                     title = { Frame.Text(text = "Chats") },
@@ -83,11 +87,16 @@ fun ChatsScreen(chatsViewModel: ChatsViewModel) {
                 )
             },
         ) { paddingValues ->
-            chats?.let { chats ->
-                Box(modifier = Modifier.padding(paddingValues)) {
-                    MessageScreenContent(chatsViewModel, chats)
+            visibleChats?.let { chats ->
+                if (chats.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Список чатов пуст")
+                    }
+                } else {
+                    Box(modifier = Modifier.padding(paddingValues)) {
+                        MessageScreenContent(chatsViewModel, chats)
+                    }
                 }
-
 
             } ?: LoadingScreen(Modifier.fillMaxSize())
         }
@@ -145,7 +154,8 @@ fun EmbeddedSearchBar(
     isSearchActive: Boolean,
     onActiveChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    onSearch: ((String) -> Unit)? = null
+    onSearch: ((String) -> Unit)? = null,
+    onQueryChange: (String) -> Unit,
 ) {
     var searchQuery by rememberSaveable { mutableStateOf("") }
     val searchHistory = remember { mutableStateListOf("") }
@@ -158,7 +168,7 @@ fun EmbeddedSearchBar(
         query = searchQuery,
         onQueryChange = { query ->
             searchQuery = query
-//            onQueryChange(query)
+            onQueryChange(query)
         },
         onSearch = onSearch ?: {
             if (searchHistory.contains(searchQuery)) {
@@ -170,7 +180,7 @@ fun EmbeddedSearchBar(
         active = isSearchActive,
         onActiveChange = activeChanged,
         modifier = if (isSearchActive) {
-            modifier
+            modifier.fillMaxWidth()
                 .animateContentSize(spring(stiffness = Spring.StiffnessHigh))
         } else {
             modifier
