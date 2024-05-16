@@ -1,28 +1,32 @@
 package pachmp.meventer.components.mainmenu.components.chats.components
 
-import androidx.compose.foundation.lazy.LazyListState
+import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
+import pachmp.meventer.R
 import pachmp.meventer.RootNav
 import pachmp.meventer.components.mainmenu.BottomViewModel
-import pachmp.meventer.components.mainmenu.components.chats.components.screens.MessageModel
 import pachmp.meventer.data.DTO.Chat
 import pachmp.meventer.data.DTO.Message
+import pachmp.meventer.data.DTO.MessageDelete
 import pachmp.meventer.data.DTO.MessageSend
+import pachmp.meventer.data.DTO.MessageUpdate
+import pachmp.meventer.data.DTO.MessageUpdated
 import pachmp.meventer.data.DTO.User
+import pachmp.meventer.data.enums.FileType
 import pachmp.meventer.data.repository.Repositories
+import java.io.File
 import java.lang.Integer.max
 import java.time.Instant
 import javax.inject.Inject
-import kotlin.math.min
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
@@ -31,18 +35,62 @@ class ChatViewModel @Inject constructor(
     repositories: Repositories,
 ) : BottomViewModel(rootNavigator, navigator, repositories) {
     var textToSend by mutableStateOf("")
-    val messages by mutableStateOf(mutableStateListOf<Message>())
+    private val messages by mutableStateOf(mutableStateListOf<Message>())
     val messagesVisible by mutableStateOf(mutableStateListOf<Message>())
+    val messagesTemp by mutableStateOf(mutableStateListOf<MessageSend>())
     var appUser by mutableStateOf<User?>(null)
     var chat by mutableStateOf<Chat?>(null)
     var picture by mutableStateOf<String?>(null)
+    var selectedMessage by mutableStateOf<Message?>(null)
+        private set
 
-    fun recieveMessage(message: Message) {
-        viewModelScope.launch {
-            if (message.chatID == chat!!.chatID) {
-                messages.add(message)
-            }
+    var selectedFilesUris by mutableStateOf(emptyList<Pair<FileType, Uri>>())
+        private set
 
+    fun extendSelectedFileUris(uris: List<Uri>) {
+        val pairs = uris.map {
+            Pair(FileType.getFileType(getFileExtension(it)), it)
+        }
+        selectedFilesUris += pairs
+    }
+
+    fun removeFile(uri: Uri) {
+        selectedFilesUris = selectedFilesUris.filter { it.second != uri }
+    }
+
+    private fun recieveMessage(message: Message) {
+        if (message.chatID == chat!!.chatID) {
+            messagesVisible.add(message)
+        }
+    }
+
+    private fun updateMessage(messageUpdated: MessageUpdated) {
+        val messageIndex = messages.indexOfFirst {
+            it.id == messageUpdated.id
+        }
+        val visibleMessageIndex = messagesVisible.indexOfFirst {
+            it.id == messageUpdated.id
+        }
+
+        if (messageIndex != -1) {
+            messages[messageIndex] = messages[messageIndex].copy(body = messageUpdated.body)
+        } else if (visibleMessageIndex != -1) {
+            messagesVisible[visibleMessageIndex] = messagesVisible[visibleMessageIndex].copy(body = messageUpdated.body)
+        }
+    }
+
+    private fun deleteMessage(id: Long) {
+        val messageIndex = messages.indexOfFirst {
+            it.id == id
+        }
+        val visibleMessageIndex = messagesVisible.indexOfFirst {
+            it.id == id
+        }
+
+        if (messageIndex != -1) {
+            messages.removeAt(messageIndex)
+        } else if (visibleMessageIndex != -1) {
+            messagesVisible.removeAt(visibleMessageIndex)
         }
     }
 
@@ -51,6 +99,8 @@ class ChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             repositories.chatSocketRepository.addOnMessageListener { recieveMessage(it) }
+            repositories.chatSocketRepository.addOnMessageUpdateListener { updateMessage(it) }
+            repositories.chatSocketRepository.addOnMessageDeleteListener { deleteMessage(it) }
 
             afterCheckResponse(repositories.userRepository.getUserData()) { response ->
                 appUser = response.data!!
@@ -59,15 +109,45 @@ class ChatViewModel @Inject constructor(
             messagesVisible.addAll(chat.lastMessages.reversed())
 
             afterCheckResponse(repositories.chatRepository.getAllMessages(chat.chatID)) { response ->
-                messages.clear()
-                messages.addAll(response.data!!)
+                if (response.data!!.size>chat.lastMessages.size) {
+                    messages.addAll(response.data.subList(0, response.data.size-chat.lastMessages.size))
+                }
+            }
+        }
+    }
+
+    suspend fun findChatWithUser(userID: Int): Chat? {
+        var chat: Chat? = null
+        afterCheckResponse(repositories.chatRepository.getAllChats()) { response ->
+            val appUserChats = response.data!!
+            appUserChats.forEach {
+                if (userID in it.participants && it.administrators==null && it.originator==null) {
+                    chat = it
+                    return@forEach
+                }
+            }
+        }
+
+        return chat
+    }
+
+    fun initFromUserID(userID: Int) {
+        viewModelScope.launch {
+            chat = findChatWithUser(userID)
+            if (chat!=null) {
+                initFromChat(chat!!)
+            } else {
+                afterCheckResponse(repositories.chatRepository.createDialog(userID)) {
+                    chat = findChatWithUser(userID)
+                    initFromChat(chat!!)
+                }
             }
         }
     }
 
     suspend fun initPicture() {
-        if (chat!!.originator==null) {
-            val userID = chat!!.participants.find { it!=appUser!!.id }
+        if (chat!!.originator == null) {
+            val userID = chat!!.participants.find { it != appUser!!.id }
             afterCheckResponse(repositories.userRepository.getUserData(userID)) { response ->
                 picture = response.data!!.avatar
             }
@@ -77,23 +157,139 @@ class ChatViewModel @Inject constructor(
     }
 
     fun addMessages() {
-        println("LOOOOAAAADDD ${messagesVisible.size} ${min(messagesVisible.size+10, messages.size)} ${messages.size}")
         if (messages.isEmpty().not()) {
-            messagesVisible.addAll(messages.subList(messagesVisible.size, min(messagesVisible.size+10, messages.size)))
+            Log.i(
+                "Chat",
+                "ADDING MESSAGES\nmessagesVisible size: ${messagesVisible.size}\nmessages size: ${messages.size}\nadd range: ${
+                    max(
+                        0,
+                        messages.size - 10
+                    )
+                }..${messages.size}"
+            )
+            messagesVisible.addAll(0, messages.subList(max(0, messages.size - 10), messages.size))
+            messages.removeRange(max(0, messages.size - 10), messages.size)
         }
+    }
+
+    fun selectMessage(message: Message) {
+        selectedMessage = message
+        textToSend = message.body
+        selectedFilesUris = emptyList()
+    }
+
+    fun unselectMessage() {
+        selectedMessage = null
+        textToSend = ""
     }
 
     fun send() {
         viewModelScope.launch {
-            repositories.chatSocketRepository.send(
-                MessageSend(
-                    chat!!.chatID,
-                    textToSend,
-                    Instant.now(),
-                    null
+            val text = textToSend
+            var attachment: File? = null
+            var serverAttachment: String? = null
+            val filesUris = selectedFilesUris
+
+            textToSend = ""
+            selectedFilesUris = emptyList()
+
+            if (filesUris.isNotEmpty()) {
+                attachment = cacheFile(filesUris[0].second, "attachment")
+            }
+
+            val uploadMessage = MessageSend(
+                chat!!.chatID,
+                text+"\n"+ repositories.appContext.getString(R.string.file_uploading),
+                Instant.now(),
+                null
+            )
+            messagesTemp.add(uploadMessage)
+            if (attachment!=null) {
+                afterCheckResponse(repositories.fileRepository.upload(attachment)) {
+                    serverAttachment = it.data
+                }
+            }
+            messagesTemp.remove(uploadMessage)
+
+            val messageSend = MessageSend(
+                chat!!.chatID,
+                text,
+                Instant.now(),
+                serverAttachment
+            )
+
+            launch {
+                messagesTemp.add(messageSend)
+                repositories.chatSocketRepository.send(messageSend)
+                messagesTemp.remove(messageSend)
+            }
+
+            if (filesUris.size>1) {
+                sendFiles(filesUris.subList(1, filesUris.size).map{it.second})
+            }
+        }
+    }
+
+    suspend fun sendFiles(filesUri: List<Uri>) {
+        filesUri.forEach { uri ->
+            val attachment = cacheFile(uri, "attachment")
+            var serverAttachment: String? = null
+
+            val uploadMessage = MessageSend(
+                chat!!.chatID,
+                repositories.appContext.getString(R.string.file_uploading),
+                Instant.now(),
+                null
+            )
+
+            messagesTemp.add(uploadMessage)
+            if (attachment!=null) {
+                afterCheckResponse(repositories.fileRepository.upload(attachment)) {
+                    serverAttachment = it.data
+                }
+            }
+            messagesTemp.remove(uploadMessage)
+
+            val messageSend = MessageSend(
+                chat!!.chatID,
+                textToSend,
+                Instant.now(),
+                serverAttachment
+            )
+
+            viewModelScope.launch {
+                messagesTemp.add(messageSend)
+                repositories.chatSocketRepository.send(messageSend)
+                messagesTemp.remove(messageSend)
+            }
+        }
+    }
+
+    fun update() {
+        viewModelScope.launch {
+            repositories.chatSocketRepository.update(
+                MessageUpdate(
+                    selectedMessage!!.id,
+                    selectedMessage!!.chatID,
+                    textToSend
+                )
+            )
+            selectedMessage = null
+            textToSend = ""
+        }
+    }
+
+    fun delete(message: Message) {
+        viewModelScope.launch {
+            repositories.chatSocketRepository.delete(
+                MessageDelete(
+                    message.id,
+                    message.chatID
                 )
             )
             textToSend = ""
         }
     }
+
+
 }

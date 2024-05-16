@@ -1,3 +1,124 @@
 <resources>
     <string name="app_name">Meventer</string>
+
+    <string name="sigh_in">Вход</string>
+    <string name="sign_up">Регистрация</string>
+    <string name="i_dont_have_an_account">У меня нет аккаунта</string>
+    <string name="i_have_an_account">У меня есть аккаунт</string>
+    <string name="creating_user">Создание пользователя</string>
+    <string name="feedbacks">Отзывы</string>
+    <string name="choose_date">Выберите дату</string>
+    <string name="verification">Подтверждение</string>
+    <string name="profile">Профиль</string>
+    <string name="events">Мероприятия</string>
+    <string name="chats">Чаты</string>
+    <string name="avatar">Аватар</string>
+    <string name="nick">Ник</string>
+    <string name="name">Имя</string>
+    <string name="age">Возраст</string>
+    <string name="birthday">Дата рождения</string>
+    <string name="ready">Готово</string>
+    <string name="ok">Ок</string>
+    <string name="cancel">Отмена</string>
+    <string name="save">Сохранить</string>
+    <string name="next">Далее</string>
+    <string name="choose_file">Выбрать файл</string>
+    <string name="avatar_change">Изменить аватар</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="data_edit">Редактировать данные</string>
+    <string name="data_editing">Изменение данных</string>
+    <string name="email">Эл. Почта</string>
+    <string name="email_code_request">Введите код, отправленный на эл. почту</string>
+    <string name="email_change">Изменить эл. почту</string>
+    <string name="email_changing">Изменение эл. почты</string>
+    <string name="password">Пароль</string>
+    <string name="password_length_hint">Длина от %1$s символов</string>
+    <string name="password_change">Изменить пароль</string>
+    <string name="password_changing">Изменение пароля</string>
+    <string name="code">Код</string>
+    <string name="nick_preview">Результат: @%1$s</string>
+    <string name="event_price">Цена: %1$s</string>
+    <string name="choose_time">Выберите время</string>
+    <string name="event_delete_confirmation">Вы уверенны что хотите удалить мероприятие?</string>
+    <string name="events_list_empty">Ваш список мероприятий пуст</string>
+    <string name="free">Бесплатно</string>
+    <string name="load_image">Добавить изображения</string>
+    <string name="no_images">Нет изображений</string>
+    <string name="title_image">Титульное изображение</string>
+    <string name="numbered_image">Изображение №%1$s</string>
+    <string name="create">Создать</string>
+    <string name="event_creation">Создание мероприятия</string>
+    <string name="categories">Категории</string>
+    <string name="hide">Скрыть</string>
+    <string name="show_all">Показать все</string>
+    <string name="title">Залоговок</string>
+    <string name="required_field">Обязательное поле</string>
+    <string name="field_max_length">Максимальная длина %1$s</string>
+    <string name="start_date_time">Дата и время начала</string>
+    <string name="date">Дата</string>
+    <string name="time">Время</string>
+    <string name="age_limit">Возрастное ограничение</string>
+    <string name="from">От</string>
+    <string name="to">До</string>
+    <string name="price">Цена</string>
+    <string name="description">Описание</string>
+    <string name="leave_feedback">Оставить отзыв</string>
+    <string name="edit">Изменить</string>
+    <string name="delete">Удалить</string>
+    <string name="send">Отправить</string>
+    <string name="expand">Развернуть</string>
+    <string name="condense">Свернуть</string>
+    <string name="user_loading_failed">Не удалось загрузить пользователя</string>
+    <string name="empty_feedback_list">Нету отзывов</string>
+    <string name="close">Закрыть</string>
+    <string name="start">Начало</string>
+    <string name="event_participants">Участники мероприятия</string>
+    <string name="you">Вы</string>
+    <string name="leave">Покинуть</string>
+    <string name="join">Присоединиться</string>
+    <string name="chat_list_empty">Список чатов пуст</string>
+    <string name="editing">Редактирование</string>
+    <string name="message">Сообщение</string>
+
+    <string name="fast_tag_like">Нравится</string>
+    <string name="fast_tag_creator">Создатель</string>,
+    <string name="fast_tag_organizer">Организатор</string>
+    <string name="fast_tag_participant">Участник</string>
+    <string name="drop">Сбросить</string>
+    <string name="apply">Применить</string>
+    <string name="sort">Сортировка</string>
+    <string name="sort_start_soon">Начнутся скоро</string>
+    <string name="sort_start_far">Начнутся не скоро</string>
+    <string name="filters">Фильтры</string>
+    <string name="min">Мин</string>
+    <string name="max">Макс</string>
+    <string name="by_start_date">По дате начала</string>
+    <string name="file_uploading">Загрузка файла</string>
+    <string name="sending">Отправка..</string>
+    <string name="go_to_dialog">Перейти к диалогу с %1$s</string>
+    <string name="image">Изображение</string>
+    <string name="file">Файл</string>
+    <string name="field_filled_wrong">Поле заполнено некорректно</string>
+    <string name="event_validate_error">Некоторые поля не заполненны или заполненны неверно. Проверьте актуальность даты создания</string>
+    <string name="event_create_success">Мероприятие успешно изменено</string>
+    <string name="event_update_success">Мероприятие успешно создано</string>
+    <string name="feedback_sended">Отзыв отправлен</string>
+    <string name="feedback_not_found">Отзыв не найден</string>
+    <string name="no_changes">Нет никаких изменений</string>
+    <string name="saved">Сохранено</string>
+    <string name="fields_empty_or_validate_error">Поля не заполнены или заполненны неверно</string>
+    <string name="update">Обновить</string>
+    <string name="server_silent">Сервер не отвечает</string>
+
+    <string-array name="event_tags">
+        <item>Спорт</item>
+        <item>Игры</item>
+        <item>Учеба</item>
+        <item>Еда</item>
+        <item>Музыка</item>
+        <item>Искусство</item>
+        <item>Путешествия</item>
+        <item>Транспорт</item>
+    </string-array>
 </resources>

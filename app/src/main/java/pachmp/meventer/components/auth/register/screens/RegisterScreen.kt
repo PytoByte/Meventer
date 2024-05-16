@@ -18,12 +18,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.NavGraph
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import pachmp.meventer.R
 import pachmp.meventer.components.auth.register.RegisterViewModel
+import pachmp.meventer.data.validators.UserValidator
 import pachmp.meventer.ui.transitions.FadeTransition
 
 
@@ -55,26 +57,33 @@ fun RegisterScreen(registerViewModel: RegisterViewModel) {
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "logo"
                 )
-                Text("Регистрация")
+                Text(stringResource(R.string.sign_up))
 
+                var emailIsError = false
                 OutlinedTextField(
                     value = registerViewModel.email,
-                    onValueChange = { email = it },
-                    label = { Text("Почта") },
-                    singleLine = true
+                    onValueChange = { email = it; emailIsError = !UserValidator().emailValidate(it) },
+                    label = { Text(stringResource(R.string.email)) },
+                    singleLine = true,
+                    isError = emailIsError,
+                    supportingText = {
+                        if (emailIsError) {
+                            Text(stringResource(R.string.field_filled_wrong))
+                        }
+                    }
                 )
 
                 Button(onClick = {
                     registerViewModel.registerRequest()
                 }) {
-                    Text("Зарегистрироваться")
+                    Text(stringResource(R.string.next))
                 }
 
                 OutlinedButton(
                     modifier = Modifier.padding(top = 10.dp, bottom = 25.dp),
                     onClick = { registerViewModel.navigateToLogin() }
                 ) {
-                    Text("У меня есть аккаунт")
+                    Text(stringResource(R.string.i_have_an_account))
                 }
             }
         }

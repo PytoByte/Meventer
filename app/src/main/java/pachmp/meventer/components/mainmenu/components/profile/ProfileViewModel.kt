@@ -80,8 +80,11 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun logout() {
-        repositories.encryptedSharedPreferences.edit().putString("token", null).apply()
-        rootNavigator.clearNavigate(NavGraphs.login)
+        viewModelScope.launch {
+            repositories.userRepository.logout()
+            repositories.encryptedSharedPreferences.edit().putString("token", null).apply()
+            rootNavigator.clearNavigate(NavGraphs.login)
+        }
     }
 
     fun navigateToEditData() {

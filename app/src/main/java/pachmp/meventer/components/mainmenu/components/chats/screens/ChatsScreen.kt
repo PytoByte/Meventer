@@ -1,63 +1,44 @@
 package pachmp.meventer.components.mainmenu.components.chats.screens
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.ChatBubbleOutline
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material3.Divider
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import io.ktor.websocket.Frame
+import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.chats.ChatsViewModel
+import pachmp.meventer.components.widgets.EmbeddedSearchBar
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.data.DTO.Chat
+import pachmp.meventer.data.DTO.UserShort
 import pachmp.meventer.ui.transitions.BottomTransition
 
 
@@ -66,19 +47,15 @@ import pachmp.meventer.ui.transitions.BottomTransition
 @Destination(style = BottomTransition::class)
 @Composable
 fun ChatsScreen(chatsViewModel: ChatsViewModel) {
-    var isSearchActive by rememberSaveable { mutableStateOf(false) }
-
     with(chatsViewModel) {
         Scaffold(
             topBar = {
                 EmbeddedSearchBar(
-                    isSearchActive = isSearchActive,
-                    onActiveChanged = { isSearchActive = it },
-                    onSearch = {
-                        isSearchActive = false
-                        chatsViewModel.filterChats()
-                    },
-                    onQueryChange = { chatsViewModel.query = it }
+                    query = chatsViewModel.query,
+                    onSearch = { chatsViewModel.findChats(it) },
+                    onQueryChange = { chatsViewModel.query = it },
+                    globalFlag = true,
+                    onClearSearch = { clearSearch() }
                 )
                 TopAppBar(
                     title = { Frame.Text(text = "Chats") },
@@ -90,11 +67,11 @@ fun ChatsScreen(chatsViewModel: ChatsViewModel) {
             visibleChats?.let { chats ->
                 if (chats.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Список чатов пуст")
+                        Text(stringResource(R.string.chat_list_empty))
                     }
                 } else {
                     Box(modifier = Modifier.padding(paddingValues)) {
-                        MessageScreenContent(chatsViewModel, chats)
+                        MessageScreenContent(chatsViewModel, chats, users)
                     }
                 }
 
@@ -103,16 +80,23 @@ fun ChatsScreen(chatsViewModel: ChatsViewModel) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MessageScreenContent(chatsViewModel: ChatsViewModel, chats: List<Chat>) {
+fun MessageScreenContent(chatsViewModel: ChatsViewModel, chats: List<Chat>, users: List<UserShort>?) {
     LazyColumn(
         modifier = Modifier.padding(8.dp)
     ) {
-        items(chats) { chat ->
-            ChatItem(chatsViewModel, chat)
-            Divider(color = Color.LightGray, thickness = 1.dp)
+        if (users==null) {
+            items(chats) { chat ->
+                ChatItem(chatsViewModel, chat)
+                HorizontalDivider(color = Color.LightGray, thickness = 1.dp)
+            }
+        } else {
+            items(users) { user ->
+                UserItem(chatsViewModel, user)
+                HorizontalDivider(color = Color.LightGray, thickness = 1.dp)
+            }
         }
+
     }
 }
 
@@ -125,7 +109,7 @@ fun ChatItem(chatsViewModel: ChatsViewModel, chat: Chat) {
             .clickable { chatsViewModel.navigateToChat(chat) },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (chat.originator==null) {
+        if (chat.originator == null) {
             Icon(
                 imageVector = Icons.Default.ChatBubbleOutline,
                 contentDescription = "Dialog Icon",
@@ -140,133 +124,46 @@ fun ChatItem(chatsViewModel: ChatsViewModel, chat: Chat) {
         }
 
         Column(modifier = Modifier.padding(start = 16.dp)) {
-            Text(text = chat.name, style = MaterialTheme.typography.labelMedium)
-            if (chat.lastMessages.isEmpty().not()) {
-                Text(text = chat.lastMessages.first().body, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = chat.name,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
+            )
+            if (chat.lastMessages.isNotEmpty()) {
+                Text(
+                    text = if (chat.lastMessages.first().body.isNotBlank()) chat.lastMessages.first().body else "Файл",
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1
+                )
             }
         }
     }
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun EmbeddedSearchBar(
-    isSearchActive: Boolean,
-    onActiveChanged: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    onSearch: ((String) -> Unit)? = null,
-    onQueryChange: (String) -> Unit,
-) {
-    var searchQuery by rememberSaveable { mutableStateOf("") }
-    val searchHistory = remember { mutableStateListOf("") }
-    val activeChanged: (Boolean) -> Unit = { active ->
-        //searchQuery = ""
-//        onQueryChange("")
-        onActiveChanged(active)
-    }
-    SearchBar(
-        query = searchQuery,
-        onQueryChange = { query ->
-            searchQuery = query
-            onQueryChange(query)
-        },
-        onSearch = onSearch ?: {
-            if (searchHistory.contains(searchQuery)) {
-                searchHistory.remove(searchQuery)
-            }
-            searchHistory.add(0, searchQuery)
-            activeChanged(false)
-        },
-        active = isSearchActive,
-        onActiveChange = activeChanged,
-        modifier = if (isSearchActive) {
-            modifier.fillMaxWidth()
-                .animateContentSize(spring(stiffness = Spring.StiffnessHigh))
-        } else {
-            modifier
-                .padding(start = 12.dp, top = 2.dp, end = 12.dp, bottom = 12.dp)
-                .fillMaxWidth()
-                .animateContentSize(spring(stiffness = Spring.StiffnessHigh))
-        },
-        placeholder = { Text("Поиск") },
-        leadingIcon = {
-            if (isSearchActive) {
-                IconButton(
-                    onClick = { activeChanged(false) },
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "back",
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            } else {
-                Icon(
-                    imageVector = Icons.Rounded.Search,
-                    contentDescription = "lupa",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        },
-        trailingIcon = if (isSearchActive && searchQuery.isNotEmpty()) {
-            {
-                IconButton(
-                    onClick = {
-                        searchQuery = ""
-//                        onQueryChange("")
-                    },
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = "clearField",
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-        } else {
-            null
-        },
-        colors = SearchBarDefaults.colors(
-            containerColor = if (isSearchActive) {
-                MaterialTheme.colorScheme.background
-            } else {
-                MaterialTheme.colorScheme.surfaceContainerLow
-            },
-        ),
-        tonalElevation = 0.dp,
-        windowInsets = if (isSearchActive) {
-            SearchBarDefaults.windowInsets
-        } else {
-            WindowInsets(0.dp)
-        }
+fun UserItem(chatsViewModel: ChatsViewModel, userShort: UserShort) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable { chatsViewModel.navigateToDialog(userShort.id) },
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        searchHistory.forEach {
-            if (it.isNotEmpty()) {
-                Row(modifier = Modifier
-                    .padding(all = 14.dp)
-                    .fillMaxWidth()
-                    .clickable { searchQuery = it },
-                    horizontalArrangement = Arrangement.Start
-                )
-                {
-                    Icon(imageVector = Icons.Default.History, contentDescription = null)
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(text = it)
-                }
-            }
+        Card(modifier = Modifier.size(55.dp), shape = CircleShape) {
+            Image(
+                modifier = Modifier.fillMaxSize(),
+                bitmap = chatsViewModel.getImageFromName(userShort.avatar).value,
+                contentDescription = "Dialog Icon",
+                contentScale = ContentScale.Crop
+            )
         }
-        HorizontalDivider()
-        Text(
-            modifier = Modifier
-                .padding(all = 14.dp)
-                .fillMaxWidth()
-                .clickable {
-                    searchHistory.clear()
-                },
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold,
-            text = "Очистить историю"
-        )
-        // Search suggestions or results
+
+        Column(modifier = Modifier.padding(start = 16.dp)) {
+            Text(
+                text = userShort.nickname,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }

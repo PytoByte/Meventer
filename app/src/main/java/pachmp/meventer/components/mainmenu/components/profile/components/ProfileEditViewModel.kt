@@ -4,12 +4,12 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
+import pachmp.meventer.R
 import pachmp.meventer.RootNav
 import pachmp.meventer.components.destinations.ProfileScreenDestination
 import pachmp.meventer.components.mainmenu.BottomViewModel
@@ -18,6 +18,7 @@ import pachmp.meventer.data.DTO.UserUpdate
 import pachmp.meventer.data.DTO.UserUpdateEmail
 import pachmp.meventer.data.DTO.UserUpdatePassword
 import pachmp.meventer.data.repository.Repositories
+import pachmp.meventer.data.validators.UserValidator
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -76,10 +77,10 @@ class ProfileEditViewModel @Inject constructor(
 
     fun updateUserData() {
         viewModelScope.launch {
-            if (nickname.isEmpty() || name.isEmpty()) {
-                parentSnackbarHostState.showSnackbar(message = "Поля не заполнены")
+            if (!UserValidator().nickValidate(nickname) || !UserValidator().nameValidate(name)) {
+                parentSnackbarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
             } else if (nickname == user!!.nickname && name == user!!.name && avatarUri == null) {
-                parentSnackbarHostState.showSnackbar(message = "Нет никаких изменений")
+                parentSnackbarHostState.showSnackbar(message = repositories.appContext.getString(R.string.no_changes))
             } else {
                 val response = repositories.userRepository.updateUserData(
                     UserUpdate(
@@ -91,7 +92,7 @@ class ProfileEditViewModel @Inject constructor(
 
                 afterCheckResponse(response) {
                     navigator.clearNavigate(ProfileScreenDestination)
-                    parentSnackbarHostState.showSnackbar("Сохранено")
+                    parentSnackbarHostState.showSnackbar(repositories.appContext.getString(R.string.saved))
                 }
             }
         }
@@ -100,9 +101,9 @@ class ProfileEditViewModel @Inject constructor(
     fun updateUserEmail() {
         viewModelScope.launch {
             if (code.toIntOrNull() == null || email.isEmpty()) {
-                parentSnackbarHostState.showSnackbar(message = "Поля не заполнены")
+                parentSnackbarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
             } else if (email == user!!.email) {
-                parentSnackbarHostState.showSnackbar(message = "Нет никаких изменений")
+                parentSnackbarHostState.showSnackbar(message = repositories.appContext.getString(R.string.no_changes))
             } else {
                 afterCheckResponse(
                     repositories.userRepository.updateUserEmail(
@@ -113,7 +114,7 @@ class ProfileEditViewModel @Inject constructor(
                     )
                 ) {
                     navigator.clearNavigate(ProfileScreenDestination)
-                    parentSnackbarHostState.showSnackbar("Сохранено")
+                    parentSnackbarHostState.showSnackbar(repositories.appContext.getString(R.string.saved))
                 }
             }
         }
@@ -121,8 +122,8 @@ class ProfileEditViewModel @Inject constructor(
 
     fun updateUserPassword() {
         viewModelScope.launch {
-            if (code.toIntOrNull() == null || password.isEmpty() || password.length < 8 || password.length > 128) {
-                parentSnackbarHostState.showSnackbar(message = "Поля не заполнены или заполненны неверно")
+            if (!UserValidator().codeValidate(code) || !UserValidator().passwordValidate(password)) {
+                parentSnackbarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
             } else {
                 afterCheckResponse(
                     repositories.userRepository.updateUserPassword(
@@ -133,7 +134,7 @@ class ProfileEditViewModel @Inject constructor(
                     )
                 ) {
                     navigator.clearNavigate(ProfileScreenDestination)
-                    parentSnackbarHostState.showSnackbar("Сохранено")
+                    parentSnackbarHostState.showSnackbar(repositories.appContext.getString(R.string.saved))
                 }
             }
         }

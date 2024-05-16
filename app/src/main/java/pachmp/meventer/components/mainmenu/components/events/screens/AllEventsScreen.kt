@@ -1,80 +1,58 @@
 package pachmp.meventer.components.mainmenu.components.events.screens
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterAlt
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontWeight.Companion.Bold
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.ImageLoader
-import coil.ImageLoaderFactory
-import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
-import pachmp.meventer.DefaultViewModel
 import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
+import pachmp.meventer.components.widgets.EmbeddedSearchBar
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.data.DTO.Event
+import pachmp.meventer.data.enums.FastTags
 import pachmp.meventer.ui.transitions.BottomTransition
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -83,8 +61,10 @@ import java.time.format.DateTimeFormatter
 @Destination(style = BottomTransition::class)
 @Composable
 fun AllEventsScreen(eventsViewModel: EventsViewModel) {
-    var isSearchActive by rememberSaveable { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
+
+    val fastTags =
+        FastTags.values().associate { Pair(it.nameResourceID, stringResource(it.nameResourceID)) }
 
     with(eventsViewModel) {
         FilterDialog(showDialog) {
@@ -101,13 +81,11 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
             topBar = {
                 Column {
                     EmbeddedSearchBar(
-                        isSearchActive = isSearchActive,
-                        onActiveChanged = { isSearchActive = it },
-                        onSearch = {
-                            isSearchActive = false
-                            eventsViewModel.searchEvents()
-                        },
-                        onQueryChange = { eventsViewModel.query = it }
+                        query = eventsViewModel.query,
+                        onQueryChange = { eventsViewModel.query = it },
+                        onSearch = { eventsViewModel.searchEvents(it) },
+                        globalFlag = true,
+                        onClearSearch = { clearSearch() }
                     )
                     Row(
                         horizontalArrangement = Arrangement.Center,
@@ -122,22 +100,21 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
                                 )
                             }
                         }
-                        FilterChipExample(
-                            onAdd = {
-                                when (it) {
-                                    "Нравится" -> eventsViewModel.favoriteFilter = true
-                                    "Создатель" -> eventsViewModel.originatorFilter = true
-                                    "Организатор" -> eventsViewModel.organizerFilter = true
-                                    "Участник" -> eventsViewModel.participantFilter = true
-                                }
-                                eventsViewModel.filterByFastTags()
-                            },
-                            onRemove = {
-                                when (it) {
-                                    "Нравится" -> eventsViewModel.favoriteFilter = false
-                                    "Создатель" -> eventsViewModel.originatorFilter = false
-                                    "Организатор" -> eventsViewModel.organizerFilter = false
-                                    "Участник" -> eventsViewModel.participantFilter = false
+                        TopFilterRow(
+                            filters = fastTags.values.toList(),
+                            onUpdate = { filter, state ->
+                                when (filter) {
+                                    fastTags[R.string.fast_tag_like] -> eventsViewModel.favoriteFilter =
+                                        state
+
+                                    fastTags[R.string.fast_tag_creator] -> eventsViewModel.originatorFilter =
+                                        state
+
+                                    fastTags[R.string.fast_tag_organizer] -> eventsViewModel.organizerFilter =
+                                        state
+
+                                    fastTags[R.string.fast_tag_participant] -> eventsViewModel.participantFilter =
+                                        state
                                 }
                                 eventsViewModel.filterByFastTags()
                             }
@@ -146,15 +123,15 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
                 }
             }
         ) { paddingValues ->
-            if (eventsViewModel.eventsVisible == null || eventsViewModel.user == null) {
+            if (eventsVisible == null || user == null) {
                 LoadingScreen(Modifier.fillMaxSize())
-            } else if (eventsViewModel.eventsVisible!!.size == 0) {
+            } else if (eventsVisible!!.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Ваш список мероприятий пуст")
+                    Text(stringResource(R.string.events_list_empty))
                 }
             } else {
                 LazyColumn(
@@ -166,9 +143,8 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
                         eventsViewModel.eventsVisible!!,
                         key = { it.id },
                         contentType = { Event }) { event ->
-                        val imageBitmap = remember { getDefaultImageBitmap() }
-                        remember{getImage(imageBitmap, if (event.images.isEmpty()) null else event.images[0])}
-                        EventCard(event, imageBitmap.value, eventsViewModel)
+
+                        EventCard(event, getImageFromName(if (event.images.isEmpty()) null else event.images[0]).value, eventsViewModel)
                     }
                     item {
                         Spacer(modifier = Modifier.size(65.dp))
@@ -182,7 +158,7 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
 @Composable
 fun FloatingButtonAdd(onClick: () -> Unit) {
     FloatingActionButton(
-        onClick = { onClick() },
+        onClick = onClick,
         modifier = Modifier
             .size(60.dp)
     ) {
@@ -238,7 +214,11 @@ fun EventCard(event: Event, imageBitmap: ImageBitmap, eventsViewModel: EventsVie
                         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm")), maxLines = 1
                 )
                 Text(
-                    text = if (event.price != 0) "Price: ${event.price}₽" else "Price: Free",
+                    text =
+                    if (event.price != 0)
+                        stringResource(R.string.event_price, "${event.price}₽")
+                    else
+                        stringResource(R.string.event_price, stringResource(R.string.free)),
                     maxLines = 1
                 )
             }
@@ -258,211 +238,31 @@ fun EventCard(event: Event, imageBitmap: ImageBitmap, eventsViewModel: EventsVie
     }
 }
 
-//Searh
-//Searh
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun EmbeddedSearchBar(
-    isSearchActive: Boolean,
-    onActiveChanged: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    onSearch: ((String) -> Unit)? = null,
-    onQueryChange: (String) -> Unit,
-) {
-    var searchQuery by rememberSaveable { mutableStateOf("") }
-    val searchHistory = remember { mutableStateListOf("") }
-    val activeChanged: (Boolean) -> Unit = { active ->
-        onActiveChanged(active)
-    }
-    SearchBar(
-        query = searchQuery,
-        onQueryChange = { query ->
-            onQueryChange(query)
-            searchQuery = query
-        },
-        onSearch = onSearch ?: {
-            if (searchHistory.contains(searchQuery)) {
-                searchHistory.remove(searchQuery)
-            }
-            searchHistory.add(0, searchQuery)
-            activeChanged(false)
-        },
-        active = isSearchActive,
-        onActiveChange = activeChanged,
-        modifier = if (isSearchActive) {
-            modifier.fillMaxWidth()
-                .animateContentSize(spring(stiffness = Spring.StiffnessHigh))
-        } else {
-            modifier
-                .padding(start = 12.dp, top = 2.dp, end = 12.dp)
-                .fillMaxWidth()
-                .animateContentSize(spring(stiffness = Spring.StiffnessHigh))
-        },
-        placeholder = { Text("Поиск") },
-        leadingIcon = {
-            if (isSearchActive) {
-                IconButton(
-                    onClick = { activeChanged(false) },
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "back",
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            } else {
-                Icon(
-                    imageVector = Icons.Rounded.Search,
-                    contentDescription = "lupa",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        },
-        trailingIcon = if (isSearchActive && searchQuery.isNotEmpty()) {
-            {
-                IconButton(
-                    onClick = {
-                        searchQuery = ""
-                    },
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = "clearField",
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-        } else {
-            null
-        },
-        colors = SearchBarDefaults.colors(
-            containerColor = if (isSearchActive) {
-                MaterialTheme.colorScheme.background
-            } else {
-                MaterialTheme.colorScheme.surfaceContainerLow
-            },
-        ),
-        tonalElevation = 0.dp,
-        windowInsets = if (isSearchActive) {
-            SearchBarDefaults.windowInsets
-        } else {
-            WindowInsets(0.dp)
-        }
-    ) {
-        searchHistory.forEach {
-            if (it.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .padding(all = 14.dp)
-                        .fillMaxWidth()
-                        .clickable { searchQuery = it },
-                    horizontalArrangement = Arrangement.Start
-                )
-                {
-                    Icon(imageVector = Icons.Default.History, contentDescription = null)
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(text = it)
-                }
+fun TopFilterRow(filters: List<String>, onUpdate: (String, Boolean) -> Unit) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        items(filters) {
+            var selected by rememberSaveable { mutableStateOf(false) }
+
+            val background =
+                if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+
+            val contentColor =
+                if (selected) MaterialTheme.colorScheme.onPrimary
+                else MaterialTheme.colorScheme.primary
+
+            Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = background,
+                    contentColor = contentColor
+                ),
+                onClick = {
+                    selected = !selected
+                    onUpdate(it, selected)
+                }) {
+                Text(it)
             }
         }
-        HorizontalDivider()
-        Text(
-            modifier = Modifier
-                .padding(all = 14.dp)
-                .fillMaxWidth()
-                .clickable {
-                    searchHistory.clear()
-                },
-            textAlign = TextAlign.Center,
-            fontWeight = Bold,
-            text = "Очистить историю"
-        )
-        // Search suggestions or results
-    }
-}
-
-//Filter
-@Composable
-fun FilterChip(
-    text: String,
-    isSelected: Boolean,
-    onSelectedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val backgroundColor =
-        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(
-            alpha = 0.2f
-        )
-    val contentColor =
-        if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
-
-    Surface(
-        modifier = modifier.padding(4.dp),
-        shape = CircleShape,
-        color = backgroundColor,
-        onClick = { onSelectedChange(!isSelected) }
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = contentColor,
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
-        )
-    }
-}
-
-@Composable
-fun FiltersRow(
-    allFilters: List<String>,
-    selectedFilters: SnapshotStateList<String>,
-    onFilterSelected: (String) -> Unit,
-    onFilterDeselected: (String) -> Unit,
-) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(vertical = 4.dp)
-    ) {
-        items(allFilters.size) { index ->
-            val filter = allFilters[index]
-            val selected = selectedFilters.contains(filter)
-            FilterChip(
-                text = filter,
-                isSelected = selected,
-                onSelectedChange = { isSelected ->
-                    if (isSelected) {
-                        onFilterSelected(filter)
-                    } else {
-                        onFilterDeselected(filter)
-                    }
-                }
-            )
-        }
-    }
-}
-
-@Composable
-fun FilterChipExample(
-    onAdd: (String) -> Unit,
-    onRemove: (String) -> Unit,
-) {
-    var selectedFilters = remember { mutableStateListOf<String>() }
-    val allFilters = remember { listOf("Нравится", "Создатель", "Организатор", "Участник") }
-
-    Column(modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 6.dp)) {
-        val filteredSelectedFilters = allFilters.filter { it in selectedFilters }
-        val filteredUnselectedFilters = allFilters.filter { it !in selectedFilters }
-        val mergedFilters = filteredSelectedFilters + filteredUnselectedFilters
-        FiltersRow(
-            allFilters = mergedFilters,
-            selectedFilters = selectedFilters,
-            onFilterSelected = { filter ->
-                selectedFilters.add(filter)
-                onAdd(filter)
-            },
-            onFilterDeselected = { filter ->
-                selectedFilters.remove(filter)
-                onRemove(filter)
-            }
-        )
     }
 }

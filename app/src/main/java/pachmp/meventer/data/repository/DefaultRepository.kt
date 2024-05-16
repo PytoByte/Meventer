@@ -3,18 +3,6 @@ package pachmp.meventer.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import android.util.Size
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import coil.ImageLoader
-import coil.ImageLoaderFactory
-import coil.decode.DataSource
-import coil.decode.ImageSource
-import coil.fetch.FetchResult
-import coil.fetch.Fetcher
-import coil.fetch.SourceResult
-import coil.request.ImageRequest
-import coil.request.Options
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
@@ -31,12 +19,8 @@ import io.ktor.http.fullPath
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import okhttp3.OkHttpClient
-import okio.buffer
-import okio.source
 import pachmp.meventer.R
 import pachmp.meventer.data.DTO.Response
-import java.io.ByteArrayInputStream
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import java.util.concurrent.TimeUnit
@@ -49,6 +33,13 @@ open class DefaultRepository(
     val encryptedSharedPreferences: SharedPreferences,
     val appContext: Context
 ) {
+    //"10.0.2.2"
+    //192.168.1.225 - я
+    //192.168.0.102 - лёша
+    protected val serverIP = "10.0.2.2"
+    protected val baseURL = "https://${serverIP}:8080/"
+
+
     private val defaultConfig: HttpClientConfig<OkHttpConfig>.() -> Unit = {
         install(WebSockets) {
             contentConverter = KotlinxWebsocketSerializationConverter(Json)
@@ -69,10 +60,10 @@ open class DefaultRepository(
         engine {
             config {
                 pingInterval(20, TimeUnit.SECONDS)
-                hostnameVerifier { hostname, session -> hostname.equals("89.23.99.58") }
+                hostnameVerifier { hostname, session -> hostname.equals(serverIP) }
                 val cf = CertificateFactory.getInstance("X.509")
-                val cert = appContext.resources.openRawResource(R.raw.my_key_store)
-                try {
+
+                appContext.resources.openRawResource(R.raw.meventer).use { cert ->
                     val ca = cf.generateCertificate(cert)
 
                     val keyStoreType = KeyStore.getDefaultType()
@@ -91,17 +82,11 @@ open class DefaultRepository(
                         sslContext.socketFactory,
                         tmf.trustManagers[0] as X509TrustManager
                     )
-                } finally {
-                    cert.close()
                 }
 
             }
         }
     }
-
-    //protected val baseURL = "https://127.0.0.1:8080/"
-    private val serverIP = "89.23.99.58"
-    protected val baseURL = "https://${serverIP}:80/"
 
     protected suspend fun <Type> withHttpClient(
         config: HttpClientConfig<OkHttpConfig>.() -> Unit = defaultConfig,

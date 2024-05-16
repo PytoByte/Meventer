@@ -4,6 +4,7 @@ package pachmp.meventer.data.DTO
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
+import pachmp.meventer.R
 import pachmp.meventer.data.Serializers.InstantSerializer
 import java.time.Instant
 
@@ -44,15 +45,15 @@ class EventParticipant(
 
 @Serializable
 data class EventSelection(
-    val tags: List<String>?,
+    val tags: List<String>,
     val age: Short?,
     val minimalPrice: Int?,
     val maximalPrice: Int?,
     val sortBy: String?
 ) {
-    enum class SortingStates(val state: String) {
-        NEAREST_ONES_FIRST("Nearest ones first"),
-        FURTHER_ONES_FIRST("Further ones first")
+    enum class SortingState(val state: String, val nameResourceID: Int) {
+        NEAREST_ONES_FIRST("Nearest ones first", R.string.sort_start_soon),
+        FURTHER_ONES_FIRST("Further ones first", R.string.sort_start_far)
     }
 }
 

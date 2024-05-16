@@ -2,7 +2,6 @@ package pachmp.meventer.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.forms.MultiPartFormDataContent
@@ -17,7 +16,6 @@ import io.ktor.http.contentType
 import io.ktor.http.headers
 import io.ktor.util.InternalAPI
 import kotlinx.serialization.json.Json.Default.encodeToString
-import pachmp.meventer.data.DTO.NullableUserID
 import pachmp.meventer.data.DTO.User
 import pachmp.meventer.data.DTO.UserEmailCode
 import pachmp.meventer.data.DTO.UserFeedback
@@ -25,6 +23,7 @@ import pachmp.meventer.data.DTO.UserFeedbackCreate
 import pachmp.meventer.data.DTO.UserFeedbackUpdate
 import pachmp.meventer.data.DTO.UserLogin
 import pachmp.meventer.data.DTO.UserRegister
+import pachmp.meventer.data.DTO.UserShort
 import pachmp.meventer.data.DTO.UserUpdate
 import pachmp.meventer.data.DTO.UserUpdateEmail
 import pachmp.meventer.data.DTO.UserUpdatePassword
@@ -143,6 +142,12 @@ class UserRepository @Inject constructor(
         }.toResponse<String>()
     }
 
+    suspend fun logout() = withHttpClient {
+        post("${repositoryURL}logout") {
+            bearerAuth(getToken())
+        }.toResponse<Unit>()
+    }
+
     @OptIn(InternalAPI::class)
     suspend fun updateUserData(userUpdate: UserUpdate, avatar: File?) = withHttpClient {
         post("${repositoryURL}update/data") {
@@ -194,5 +199,13 @@ class UserRepository @Inject constructor(
             contentType(ContentType.Application.Json)
             setBody(userUpdatePassword)
         }.toResponse<Unit>()
+    }
+
+    suspend fun getUsersByNick(nick: String) = withHttpClient {
+        post("${repositoryURL}byNickname") {
+            bearerAuth(getToken())
+            contentType(ContentType.Application.Json)
+            setBody(nick)
+        }.toResponse<List<UserShort>>()
     }
 }

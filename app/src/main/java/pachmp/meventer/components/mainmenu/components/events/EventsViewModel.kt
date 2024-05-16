@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
+import pachmp.meventer.R
 import pachmp.meventer.RootNav
 import pachmp.meventer.components.destinations.AllEventsScreenDestination
 import pachmp.meventer.components.destinations.CreateEventScreenDestination
@@ -44,7 +45,7 @@ class EventsViewModel @Inject constructor(
 
     var query by mutableStateOf("")
 
-    var eventSelection by mutableStateOf(EventSelection(emptyList(), 0, 0, null, EventSelection.SortingStates.NEAREST_ONES_FIRST.state))
+    var eventSelection by mutableStateOf(EventSelection(emptyList(), 0, 0, null, EventSelection.SortingState.NEAREST_ONES_FIRST.state))
 
     var favoriteFilter by mutableStateOf(false)
     var participantFilter by mutableStateOf(false)
@@ -67,8 +68,15 @@ class EventsViewModel @Inject constructor(
         }
     }
 
-    fun updateEvents() {
-        viewModelScope.launch {
+    fun clearFastTags() {
+        favoriteFilter = false
+        participantFilter = false
+        organizerFilter = false
+        originatorFilter = false
+    }
+
+
+    fun updateEvents() = viewModelScope.launch {
             afterCheckResponse(repositories.userRepository.getUserData()) { response ->
                 user = response.data!!
             }
@@ -89,7 +97,6 @@ class EventsViewModel @Inject constructor(
             ) { response -> events = response.data!! }
             eventsVisible = events
         }
-    }
 
     fun changeLike(event: Event) {
         viewModelScope.launch {
@@ -107,6 +114,10 @@ class EventsViewModel @Inject constructor(
                 snackBarHostState.showSnackbar("Мероприятие не найдено")
             }*/
         }
+    }
+
+    fun navigateToDialog() {
+
     }
 
     fun navigateToAllEvents() {
@@ -136,10 +147,10 @@ class EventsViewModel @Inject constructor(
                 }
                 afterCheckResponse(repositories.eventRepository.createEvent(eventCreate, files)) {
                     navigateToAllEvents()
-                    snackBarHostState.showSnackbar("Мероприятие успешно создано")
+                    snackBarHostState.showSnackbar(repositories.appContext.getString(R.string.event_update_success))
                 }
             } else {
-                snackBarHostState.showSnackbar("Некоторые поля не заполненны или заполненны неверно. Проверьте актуальность даты создания")
+                snackBarHostState.showSnackbar(repositories.appContext.getString(R.string.event_validate_error))
             }
         }
     }
@@ -152,26 +163,52 @@ class EventsViewModel @Inject constructor(
                 }
                 afterCheckResponse(repositories.eventRepository.editEvent(eventUpdate, files)) {
                     navigateToAllEvents()
-                    snackBarHostState.showSnackbar("Мероприятие успешно изменено")
+                    snackBarHostState.showSnackbar(repositories.appContext.getString(R.string.event_create_success))
                 }
             } else {
-                snackBarHostState.showSnackbar("Некоторые поля не заполненны или заполненны неверно. Проверьте актуальность даты создания")
+                snackBarHostState.showSnackbar(repositories.appContext.getString(R.string.event_validate_error))
             }
         }
     }
 
-    fun searchEvents() {
+    fun searchEvents(globalSearch: Boolean = false) {
         viewModelScope.launch {
-            eventSelection = eventSelection.copy(tags = (eventSelection.tags ?: emptyList())+listOf(query))
             Log.d("event selection", eventSelection.toString())
-            val response = repositories.eventRepository.getGlobalEvents(eventSelection = eventSelection)
-            if (afterCheckResponse(response)) {
-                events = response!!.data!!
-                filterByFastTags()
-                snackBarHostState.showSnackbar("Найдено ${response.data!!.size} мероприятий")
+            if (globalSearch) {
+                clearFastTags()
+                if (query.isNotBlank()) {
+                    eventSelection = eventSelection.copy(tags = (eventSelection.tags)+listOf(query))
+                }
+                val response = repositories.eventRepository.getGlobalEvents(eventSelection = eventSelection)
+                if (afterCheckResponse(response)) {
+                    events = response!!.data!!
+                    eventsVisible = events
+                    snackBarHostState.showSnackbar("Найдено ${response.data!!.size} мероприятий")
+                } else {
+                    snackBarHostState.showSnackbar("Мероприятия не найдены")
+                }
             } else {
-                snackBarHostState.showSnackbar("Мероприятия не найдены")
+                updateEvents().join()
+                if (events!=null) {
+                    eventsVisible = events!!.filter {
+                        (it.tags.containsAll(eventSelection.tags) || eventSelection.tags.isEmpty()) &&
+                        it.price >= (eventSelection.minimalPrice ?: 0) && it.price <= (eventSelection.maximalPrice ?: it.price) &&
+                        it.minimalAge<=(eventSelection.age?:it.minimalAge) && (it.maximalAge?:9999)>=(eventSelection.age?:it.maximalAge?:9999) &&
+                        ((query in it.name) || (query in it.description))
+                    }.sortedBy { it.startTime }
+                    if (eventSelection.sortBy=="далёкие") {
+                        eventsVisible = eventsVisible!!.reversed()
+                    }
+                    snackBarHostState.showSnackbar("Найдено ${eventsVisible!!.size} мероприятий")
+                }
             }
+        }
+    }
+
+    fun clearSearch() {
+        viewModelScope.launch {
+            updateEvents()
+            clearFastTags()
         }
     }
 

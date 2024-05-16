@@ -51,7 +51,7 @@ data class UserRegister(
     val code: String,
     val email: String,
     val password: String,
-    val nickname: String?,
+    val nickname: String,
     val name: String,
     val dateOfBirth: String
 )
@@ -81,6 +81,7 @@ data class UserUpdatePassword(
 
 @Serializable
 data class UserShort(
+    @SerialName("userID")
     val id: Int,
     val nickname: String,
     val avatar: String

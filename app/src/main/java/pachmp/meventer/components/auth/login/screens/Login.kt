@@ -10,12 +10,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,13 +17,20 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
@@ -46,7 +47,9 @@ fun LoginScreen(loginViewModel: LoginViewModel = hiltViewModel()) {
         snackbarHost = { SnackbarHost(loginViewModel.snackBarHostState) }
     ) { paddingValues ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
         ) {
@@ -55,14 +58,14 @@ fun LoginScreen(loginViewModel: LoginViewModel = hiltViewModel()) {
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "logo"
             )
-            Text("Вход")
+            Text(stringResource(R.string.sigh_in))
             Column {
 
             }
             OutlinedTextField(
                 value = loginViewModel.email,
                 onValueChange = { loginViewModel.updateEmail(it) },
-                label = { Text("Почта") },
+                label = { Text(stringResource(R.string.email)) },
                 singleLine = true
             )
 
@@ -70,7 +73,7 @@ fun LoginScreen(loginViewModel: LoginViewModel = hiltViewModel()) {
             OutlinedTextField(
                 value = loginViewModel.password,
                 onValueChange = { loginViewModel.updatePassword(it) },
-                label = { Text("Пароль") },
+                label = { Text(stringResource(R.string.password)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 visualTransformation = if (passwordVisibleState) VisualTransformation.None else PasswordVisualTransformation(),
@@ -92,14 +95,14 @@ fun LoginScreen(loginViewModel: LoginViewModel = hiltViewModel()) {
             Button(modifier = Modifier.padding(top = 10.dp),
                 onClick = { loginViewModel.loginRequest() }
             ) {
-                Text("Войти")
+                Text(stringResource(R.string.sigh_in))
             }
 
             OutlinedButton(
                 modifier = Modifier.padding(top = 10.dp, bottom = 25.dp),
                 onClick = { loginViewModel.navigateToRegister() }
             ) {
-                Text("У меня нет аккаунта")
+                Text(stringResource(R.string.i_dont_have_an_account))
             }
         }
     }

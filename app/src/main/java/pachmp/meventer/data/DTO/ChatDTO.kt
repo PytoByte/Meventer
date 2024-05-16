@@ -1,6 +1,7 @@
 package pachmp.meventer.data.DTO
 
 import kotlinx.serialization.Serializable
+import pachmp.meventer.data.DTO.Message
 
 // ChatAdministratorUpdate and ChatParticipantUpdate seems very similar, isn't it?
 

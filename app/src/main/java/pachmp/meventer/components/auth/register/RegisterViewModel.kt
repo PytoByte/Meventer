@@ -7,16 +7,18 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import pachmp.meventer.components.NavGraphs
-import pachmp.meventer.components.destinations.CodeScreenDestination
-import pachmp.meventer.data.DTO.UserEmailCode
-import pachmp.meventer.data.DTO.UserRegister
 import pachmp.meventer.DefaultViewModel
 import pachmp.meventer.Navigator
+import pachmp.meventer.R
 import pachmp.meventer.RootNav
+import pachmp.meventer.components.NavGraphs
+import pachmp.meventer.components.destinations.CodeScreenDestination
 import pachmp.meventer.components.destinations.CreateUserScreenDestination
 import pachmp.meventer.components.destinations.RegisterScreenDestination
+import pachmp.meventer.data.DTO.UserEmailCode
+import pachmp.meventer.data.DTO.UserRegister
 import pachmp.meventer.data.repository.Repositories
+import pachmp.meventer.data.validators.UserValidator
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -43,8 +45,8 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
 
     fun registerRequest() {
         viewModelScope.launch {
-            if (email.isEmpty() || !Regex("""([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)""").matches(email)) {
-                snackBarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
+            if (!UserValidator().emailValidate(email)) {
+                snackBarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
             } else {
                 afterCheckResponse(repositories.userRepository.sendEmailCode(email)) {
                     navigator.clearNavigate(CodeScreenDestination())
@@ -55,8 +57,8 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
 
     fun confirmRegister() {
         viewModelScope.launch {
-            if (code.toIntOrNull() == null) {
-                snackBarHostState.showSnackbar(message = "Поля не заполнены")
+            if (!UserValidator().codeValidate(code)) {
+                snackBarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
             } else {
                 afterCheckResponse(repositories.userRepository.verifyEmailCode(UserEmailCode(email = email, code = code))) {
                     navigator.clearNavigate(CreateUserScreenDestination())
@@ -67,24 +69,27 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
 
     fun createUser() {
         viewModelScope.launch {
-            if (nickname.isEmpty() || password.isEmpty() || password.length < 8 || password.length > 128) {
-                snackBarHostState.showSnackbar(message = "Поля не заполнены или заполнены неверно")
+            val userRegister = UserRegister(
+                code = code,
+                email = email,
+                password = password,
+                nickname = nickname,
+                name = name,
+                dateOfBirth = birthday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            )
+
+            if (!UserValidator().userRegisterValidate(userRegister)) {
+                snackBarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
             } else {
                 val tokenResponse = repositories.userRepository.register(
-                    UserRegister(
-                        code = code,
-                        email = email,
-                        password = password,
-                        nickname = nickname,
-                        name = name,
-                        dateOfBirth = birthday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                    ),
+                    userRegister,
                     if (avatarUri!=null) cacheFile(avatarUri!!, "avatar") else null
                 )
 
                 afterCheckResponse(tokenResponse) { response ->
                     val token = response.data
                     repositories.encryptedSharedPreferences.edit().putString("token", token).apply()
+                    clearRegister()
                     navigator.clearNavigate(NavGraphs.mainmenu)
                 }
             }
@@ -95,6 +100,14 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
         navigator.clearNavigate(NavGraphs.login)
     }
 
+    private fun clearRegister() {
+        password = ""
+        code = ""
+        name = ""
+        nickname = ""
+        birthday = LocalDate.now()
+        avatarUri = null
+    }
 
     fun cancelRegister() {
         password = ""

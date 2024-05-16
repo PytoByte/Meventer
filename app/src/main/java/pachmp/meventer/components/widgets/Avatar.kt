@@ -1,4 +1,4 @@
-package pachmp.meventer.components.mainmenu.components.profile.widgets
+package pachmp.meventer.components.widgets
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
@@ -8,11 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.ImageLoader
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 
 @Composable
 fun Avatar(imageBitmap: ImageBitmap) {

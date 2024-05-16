@@ -1,30 +1,25 @@
 package pachmp.meventer.components.mainmenu.components.events.components.display
 
-import android.graphics.Bitmap
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import pachmp.meventer.Nav
 import pachmp.meventer.Navigator
+import pachmp.meventer.R
 import pachmp.meventer.RootNav
 import pachmp.meventer.components.destinations.EventScreenDestination
 import pachmp.meventer.components.mainmenu.BottomViewModel
-import pachmp.meventer.components.mainmenu.components.events.components.Rank
-import pachmp.meventer.components.mainmenu.components.events.components.getUserRank
 import pachmp.meventer.components.mainmenu.components.profile.FeedbackModel
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.data.DTO.EventOrganizer
 import pachmp.meventer.data.DTO.EventParticipant
-import pachmp.meventer.data.DTO.NullableUserID
 import pachmp.meventer.data.DTO.User
 import pachmp.meventer.data.DTO.UserFeedbackCreate
 import pachmp.meventer.data.DTO.UserFeedbackUpdate
+import pachmp.meventer.data.enums.Ranks
 import pachmp.meventer.data.repository.Repositories
 import javax.inject.Inject
 
@@ -61,7 +56,7 @@ class EventScreenViewModel @Inject constructor(
                 event = eventResponse!!.data!!
             } else {
                 navigator.clearNavigate(EventScreenDestination)
-                parentSnackbarHostState.showSnackbar("Не удалось загрузить мероприятие")
+                parentSnackbarHostState.showSnackbar(repositories.appContext.getString(R.string.user_loading_failed))
                 return@launch
             }
 
@@ -71,27 +66,27 @@ class EventScreenViewModel @Inject constructor(
                     id = appUserID,
                     avatar =userResponse!!.data!!.avatar,
                     name = userResponse.data!!.name,
-                    rank = getUserRank(event!!, userResponse.data)
+                    ranks = Ranks.getUserRank(event!!, userResponse.data)
                 )
             } else {
                 navigator.clearNavigate(EventScreenDestination)
-                parentSnackbarHostState.showSnackbar("Не удалось загрузить пользователя")
+                parentSnackbarHostState.showSnackbar(repositories.appContext.getString(R.string.user_loading_failed))
                 return@launch
             }
 
-            originator = userModelFromUserID(event!!.originator, Rank.ORIGINATOR) {
+            originator = userModelFromUserID(event!!.originator, Ranks.ORIGINATOR) {
                 originatorUser = it
             }
 
             updateFeedbacks()
 
             organizers = List(event!!.organizers.size) {
-                userModelFromUserID(event!!.organizers[it], Rank.ORGANIZER)
+                userModelFromUserID(event!!.organizers[it], Ranks.ORGANIZER)
             }
 
 
             participants = List(event!!.participants.size) {
-                userModelFromUserID(event!!.participants[it], Rank.PARTICIPANT)
+                userModelFromUserID(event!!.participants[it], Ranks.PARTICIPANT)
             }
 
             allMembers = organizers!! + participants!! + originator!!
@@ -160,10 +155,10 @@ class EventScreenViewModel @Inject constructor(
         viewModelScope.launch {
             afterCheckResponse(repositories.eventRepository.changeUserParticipant(EventParticipant(userModel.id, event!!.id))) {
                 val fr = allMembers!!.find { userModel.id == it.id }!!
-                if (userModel.rank==Rank.PARTICIPANT) {
+                if (userModel.ranks==Ranks.PARTICIPANT) {
                     participants = participants!! - fr
                     allMembers = allMembers!! - fr
-                } else if (userModel.rank==Rank.ORGANIZER) {
+                } else if (userModel.ranks==Ranks.ORGANIZER) {
                     organizers = organizers!! - fr
                     allMembers = allMembers!! - fr
                 }
@@ -188,7 +183,7 @@ class EventScreenViewModel @Inject constructor(
 
     suspend fun userModelFromUserID(
         userID: Int,
-        rank: Rank,
+        ranks: Ranks,
         onUserGet: (User) -> Unit = {},
     ): UserModel {
         val userRequest = repositories.userRepository.getUserData(userID)
@@ -199,10 +194,10 @@ class EventScreenViewModel @Inject constructor(
                 id = userID,
                 avatar = user.avatar,
                 name = user.name,
-                rank = rank
+                ranks = ranks
             )
         } else {
-            return UserModel(id = userID, avatar = null, name = null, rank = rank)
+            return UserModel(id = userID, avatar = null, name = null, ranks = ranks)
         }
 
     }
@@ -215,7 +210,7 @@ class EventScreenViewModel @Inject constructor(
                 )
             ) {
                 updateFeedbacks()
-                parentSnackbarHostState.showSnackbar("Отзыв отправлен")
+                parentSnackbarHostState.showSnackbar(repositories.appContext.getString(R.string.feedback_sended))
             }
         }
     }
@@ -230,7 +225,7 @@ class EventScreenViewModel @Inject constructor(
                     updateFeedbacks()
                 }
             } else {
-                parentSnackbarHostState.showSnackbar("Отзыв не найден")
+                parentSnackbarHostState.showSnackbar(repositories.appContext.getString(R.string.feedback_not_found))
             }
         }
     }
@@ -245,16 +240,10 @@ class EventScreenViewModel @Inject constructor(
                     updateFeedbacks()
                 }
             } else {
-                parentSnackbarHostState.showSnackbar("Отзыв не найден")
+                parentSnackbarHostState.showSnackbar(repositories.appContext.getString(R.string.feedback_not_found))
             }
         }
     }
 }
 
-data class UserModel(
-    val id: Int,
-    val avatar: String?,
-    val name: String?,
-    val rank: Rank,
-    var image: MutableState<ImageBitmap>? = null
-)
+

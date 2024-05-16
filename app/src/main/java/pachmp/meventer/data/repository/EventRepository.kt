@@ -27,11 +27,11 @@ import javax.inject.Inject
 
 class EventRepository @Inject constructor(
     encryptedSharedPreferences: SharedPreferences,
-    @ApplicationContext appContext: Context
+    @ApplicationContext appContext: Context,
 ) : DefaultRepository(encryptedSharedPreferences, appContext) {
     private val repositoryURL = baseURL + "event/"
 
-    suspend fun createEvent(eventCreate: EventCreate, images: List<File>) = withHttpClient {
+    suspend fun createEvent(eventCreate: EventCreate, images: List<File?>) = withHttpClient {
         post("${repositoryURL}create") {
             bearerAuth(getToken())
             contentType(ContentType.MultiPart.Mixed)
@@ -49,6 +49,10 @@ class EventRepository @Inject constructor(
                             })
 
                         for ((index, image) in images.withIndex()) {
+                            if (image == null) {
+                                continue
+                            }
+
                             append(
                                 key = "image$index",
                                 value = image.readBytes(),
@@ -61,6 +65,7 @@ class EventRepository @Inject constructor(
                                 }
                             )
                         }
+
                     }
                 )
             )
@@ -83,7 +88,7 @@ class EventRepository @Inject constructor(
         }.toResponse<Unit>()
     }
 
-    suspend fun editEvent(eventUpdate: EventUpdate, images: List<File>) = withHttpClient {
+    suspend fun editEvent(eventUpdate: EventUpdate, images: List<File?>) = withHttpClient {
         post("${repositoryURL}update") {
             bearerAuth(getToken())
             setBody(
@@ -100,6 +105,9 @@ class EventRepository @Inject constructor(
                             })
 
                         for ((index, image) in images.withIndex()) {
+                            if (image == null) {
+                                continue
+                            }
                             append(
                                 key = "image$index",
                                 value = image.readBytes(),

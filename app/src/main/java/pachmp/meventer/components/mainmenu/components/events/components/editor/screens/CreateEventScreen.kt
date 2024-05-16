@@ -1,38 +1,5 @@
 package pachmp.meventer.components.mainmenu.components.events.components.editor.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import com.ramcosta.composedestinations.annotation.Destination
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,38 +14,74 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.ramcosta.composedestinations.annotation.Destination
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
-import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
 import pachmp.meventer.components.mainmenu.components.events.components.editor.EventEditorViewModel
+import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
 import pachmp.meventer.components.widgets.MaterialButton
-import pachmp.meventer.data.categories
+import pachmp.meventer.data.validators.EventValidator
 import pachmp.meventer.ui.transitions.FadeTransition
 import java.time.LocalDate
 import java.time.LocalTime
@@ -93,6 +96,8 @@ fun CreateEventScreen(
     eventsViewModel: EventsViewModel,
     eventEditorViewModel: EventEditorViewModel = hiltViewModel(),
 ) {
+    val categories = stringArrayResource(R.array.event_tags)
+
     with(eventEditorViewModel) {
         val formattedDate by remember {
             derivedStateOf {
@@ -131,18 +136,18 @@ fun CreateEventScreen(
             }
         )
         var showAllCategories by remember { mutableStateOf(false) }
-        val visibleCategories = if (showAllCategories) categories else categories.take(4)
+        val visibleCategories = if (showAllCategories) categories else categories.take(4).toTypedArray()
 
         MaterialDialog(
             dialogState = dateDialogState,
             buttons = {
-                positiveButton(text = "Ок")
-                negativeButton(text = "Отмена")
+                positiveButton(text = stringResource(R.string.ready))
+                negativeButton(text = stringResource(R.string.cancel))
             }
         ) {
             datepicker(
-                initialDate = LocalDate.now(),
-                title = "Выберите дату",
+                initialDate = pickedDate,
+                title = stringResource(R.string.choose_date),
                 allowedDateValidator = {
                     (it.dayOfMonth >= LocalDate.now().dayOfMonth && it.month == LocalDate.now().month && it.year == LocalDate.now().year) || it.year > LocalDate.now().year || it.month > LocalDate.now().month
                 },
@@ -154,13 +159,13 @@ fun CreateEventScreen(
         MaterialDialog(
             dialogState = timeDialogState,
             buttons = {
-                positiveButton(text = "Ок")
-                negativeButton(text = "Отмена")
+                positiveButton(text = stringResource(R.string.ready))
+                negativeButton(text = stringResource(R.string.cancel))
             }
         ) {
             timepicker(
-                initialTime = LocalTime.now(),
-                title = "Выберите время",
+                initialTime = pickedTime,
+                title = stringResource(R.string.choose_time),
                 timeRange = if (pickedDate == LocalDate.now()) LocalTime.now()..LocalTime.MAX else LocalTime.MIN..LocalTime.MAX,
                 is24HourClock = true
             ) {
@@ -188,7 +193,7 @@ fun CreateEventScreen(
                             Button(onClick = { multiplePhotoPickerLauncher.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                             ) }) {
-                                Text("Добавить изображения")
+                                Text(stringResource(R.string.load_image))
                             }
                         }
                     }
@@ -198,7 +203,7 @@ fun CreateEventScreen(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("Картинки не установлены")
+                            Text(stringResource(R.string.no_images))
                         }
                     } else {
                         HorizontalPager(
@@ -215,9 +220,9 @@ fun CreateEventScreen(
                                                 Icon(imageVector = Icons.Filled.Cancel, contentDescription = null, modifier = Modifier.size(20.dp))
                                             }
                                             if (it==0) {
-                                                Text("Титульное изображение")
+                                                Text(stringResource(R.string.title_image))
                                             } else {
-                                                Text("Изображение №${it}")
+                                                Text(stringResource(R.string.numbered_image, it))
                                             }
                                         }
                                     }
@@ -229,7 +234,9 @@ fun CreateEventScreen(
                 }
                 IconButton(
                     onClick = { imageEditor = imageEditor.not() },
-                    modifier = Modifier.padding(start = 3.dp).background(Color.White)
+                    modifier = Modifier
+                        .padding(start = 3.dp)
+                        .background(Color.White)
                 ) {
                     Icon(
                         imageVector = if (imageEditor) Icons.Default.Check else Icons.Default.AddPhotoAlternate,
@@ -265,7 +272,7 @@ fun CreateEventScreen(
                                 .padding(start = 5.dp, end = 5.dp)
                                 .fillMaxWidth()
                                 .heightIn(40.dp)
-                                .height(50.dp), text = "Создать",
+                                .height(50.dp), text = stringResource(R.string.create),
                             onClick = {
                                 eventsViewModel.createEvent(getEventCreate(), selectedImageUris)
                             }
@@ -273,6 +280,8 @@ fun CreateEventScreen(
                     }
                 }
             ) { paddingValues ->
+                val eventValidator = EventValidator()
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -282,7 +291,7 @@ fun CreateEventScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Создание мероприятия",
+                        text = stringResource(R.string.event_creation),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -291,7 +300,7 @@ fun CreateEventScreen(
                     Spacer(modifier = Modifier.padding(5.dp))
 
                     Text(
-                        text = "Категории",
+                        text = stringResource(R.string.categories),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -339,22 +348,33 @@ fun CreateEventScreen(
                         }
                     }
 
-                    Text(text = if (showAllCategories) "Скрыть" else "Показать все",
+                    Text(text = if (showAllCategories) stringResource(R.string.hide) else stringResource(
+                        R.string.show_all
+                    ),
                         modifier = Modifier
                             .clickable { showAllCategories = !showAllCategories })
-
+                    
+                    var titleIsError by remember { mutableStateOf(false) }
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = title,
-                        onValueChange = {if (it.length<=50) title = it},
-                        label = { Text("Залоговок") },
-                        supportingText = { Text("${title.length}/50 *Обязательное поле") },
+                        onValueChange = {title = it; titleIsError = !eventValidator.nameValidator(it)},
+                        label = { Text(stringResource(R.string.title)) },
+                        supportingText = {
+                            Column() {
+                                Text(stringResource(R.string.required_field))
+                                Text(stringResource(R.string.field_max_length, eventValidator.nameMaxLength))
+                                if (titleIsError) {
+                                    Text(stringResource(R.string.field_filled_wrong))
+                                }
+                        } },
+                        isError = titleIsError,
                         singleLine = true
                     )
 
                     Spacer(modifier = Modifier.padding(5.dp))
                     Text(
-                        text = "Дата и время начала",
+                        text = stringResource(R.string.start_date_time),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -374,7 +394,7 @@ fun CreateEventScreen(
                                 },
                             value = formattedDate,
                             onValueChange = {},
-                            label = { Text("Дата") },
+                            label = { Text(stringResource(R.string.date)) },
                             singleLine = true,
                             enabled = true,
                             readOnly = true
@@ -390,16 +410,16 @@ fun CreateEventScreen(
                                 },
                             value = formattedTime,
                             onValueChange = {},
-                            label = { Text("Время") },
+                            label = { Text(stringResource(R.string.time)) },
                             singleLine = true,
                             enabled = true,
                             readOnly = true
                         )
                     }
-
+                    
                     Spacer(modifier = Modifier.padding(5.dp))
                     Text(
-                        text = "Возрастное ограничение",
+                        text = stringResource(R.string.age_limit),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -410,41 +430,71 @@ fun CreateEventScreen(
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
+                        var minAgeIsError by remember { mutableStateOf(false) }
                         OutlinedTextField(
                             modifier = Modifier.weight(0.5f),
                             value = minAge,
-                            onValueChange = {if (it.length<=3) minAge = it},
-                            label = { Text("От") },
+                            onValueChange = {minAge = it; minAgeIsError = !eventValidator.ageValidator(it)},
+                            label = { Text(stringResource(R.string.from)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            isError = minAgeIsError,
+                            supportingText = {
+                                if (minAgeIsError) {
+                                    Text(stringResource(R.string.field_filled_wrong))
+                                }
+                            },
                             singleLine = true
                         )
+                        var maxAgeIsError by remember { mutableStateOf(false) }
                         OutlinedTextField(
                             modifier = Modifier.weight(0.5f),
                             value = maxAge,
-                            onValueChange = {if (it.length<=3) maxAge = it},
-                            label = { Text("До") },
+                            onValueChange = {maxAge = it; maxAgeIsError = !eventValidator.ageValidator(it)},
+                            label = { Text(stringResource(R.string.to)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true
+                            singleLine = true,
+                            isError = maxAgeIsError,
+                            supportingText = {
+                                if (maxAgeIsError) {
+                                    Text(stringResource(R.string.field_filled_wrong))
+                                }
+                            }
                         )
                     }
 
                     Spacer(modifier = Modifier.padding(5.dp))
+                    var priceIsError by remember { mutableStateOf(false) }
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = price,
-                        onValueChange = {if (it.length<=100) price = it},
-                        label = { Text("Стоимость") },
+                        onValueChange = {price = it; priceIsError = !eventValidator.priceValidator(it)},
+                        isError = priceIsError,
+                        supportingText = {
+                                         if (priceIsError) {
+                                             Text(stringResource(R.string.field_filled_wrong))
+                                         }
+                        },
+                        label = { Text(stringResource(R.string.price)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true
                     )
+                    var descriptionIsError by remember { mutableStateOf(false) }
                     OutlinedTextField(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 200.dp),
                         value = description,
-                        onValueChange = {if (it.length<=600) description = it},
-                        label = { Text("Описание") },
-                        supportingText = { Text("${description.length}/600") }
+                        onValueChange = {description = it; descriptionIsError = !eventValidator.descriptionValidator(it)},
+                        isError = descriptionIsError,
+                        label = { Text(stringResource(R.string.description)) },
+                        supportingText = {
+                            Column {
+                                Text(stringResource(R.string.field_max_length, eventValidator.descriptionMaxLength))
+                                if (descriptionIsError) {
+                                    Text(stringResource(R.string.field_filled_wrong))
+                                }
+                            }
+                        }
                     )
                 }
             }

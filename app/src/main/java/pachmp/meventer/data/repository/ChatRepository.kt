@@ -3,7 +3,6 @@ package pachmp.meventer.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -14,7 +13,6 @@ import pachmp.meventer.data.DTO.ChatAdministratorUpdate
 import pachmp.meventer.data.DTO.ChatNameUpdate
 import pachmp.meventer.data.DTO.ChatParticipantUpdate
 import pachmp.meventer.data.DTO.Message
-import pachmp.meventer.data.DTO.Response
 import javax.inject.Inject
 
 class ChatRepository @Inject constructor(
@@ -30,15 +28,14 @@ class ChatRepository @Inject constructor(
         }.toResponse<Unit>()
     }
 
-    // TODO: I think this request is in development. I mean, maybe it should require a userID?
-    suspend fun createDialog() = withHttpClient {
+    suspend fun createDialog(userID: Int) = withHttpClient {
         post("${repositoryURL}create/dialog") {
             bearerAuth(getToken())
             contentType(ContentType.Application.Json)
+            setBody(userID)
         }.toResponse<Unit>()
     }
 
-    // TODO: I think this request is in development. I mean, maybe it should require a chatID?
     suspend fun getParticipants() = withHttpClient {
         post("${repositoryURL}participants") {
             bearerAuth(getToken())

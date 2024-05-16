@@ -17,9 +17,9 @@ import pachmp.meventer.components.mainmenu.BottomViewModel
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.data.DTO.EventCreate
 import pachmp.meventer.data.DTO.EventUpdate
-import pachmp.meventer.data.DTO.NullableUserID
 import pachmp.meventer.data.DTO.User
 import pachmp.meventer.data.repository.Repositories
+import pachmp.meventer.data.validators.EventValidator
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -31,8 +31,8 @@ import javax.inject.Inject
 class EventEditorViewModel @Inject constructor(
     @RootNav rootNavigator: Navigator,
     @Nav navigator: Navigator,
-    repositories: Repositories
-) : BottomViewModel(rootNavigator, navigator, repositories)  {
+    repositories: Repositories,
+) : BottomViewModel(rootNavigator, navigator, repositories) {
     var event by mutableStateOf<Event?>(null)
     var appUser by mutableStateOf<User?>(null)
 
@@ -46,11 +46,11 @@ class EventEditorViewModel @Inject constructor(
     var selectedImageUris by mutableStateOf(emptyList<Uri>())
         private set
 
-    var deletedImageUris by mutableStateOf(emptyList<String>())
+    private var deletedImageUris by mutableStateOf(emptyList<String>())
         private set
 
-    var pickedDate by mutableStateOf(LocalDate.now())
-    var pickedTime by mutableStateOf(LocalTime.now())
+    var pickedDate: LocalDate by mutableStateOf(LocalDate.now())
+    var pickedTime: LocalTime by mutableStateOf(LocalTime.now())
     var selectedCategories by mutableStateOf(setOf<String>())
 
 
@@ -65,8 +65,12 @@ class EventEditorViewModel @Inject constructor(
                 minAge = event!!.minimalAge.toString()
                 maxAge = event!!.maximalAge?.toString() ?: ""
                 selectedCategories = event!!.tags.toSet()
-                pickedDate = event!!.startTime.atOffset(ZoneOffset.systemDefault().rules.getOffset(Instant.now())).toLocalDate()
-                pickedTime = event!!.startTime.atOffset(ZoneOffset.systemDefault().rules.getOffset(Instant.now())).toLocalTime()
+                pickedDate =
+                    event!!.startTime.atOffset(ZoneOffset.systemDefault().rules.getOffset(Instant.now()))
+                        .toLocalDate()
+                pickedTime =
+                    event!!.startTime.atOffset(ZoneOffset.systemDefault().rules.getOffset(Instant.now()))
+                        .toLocalTime()
                 selectedImageUris = fixEventImages(event!!).images.map { it.toUri() }
             } else {
                 navigator.clearNavigate(EventScreenDestination)
@@ -83,56 +87,63 @@ class EventEditorViewModel @Inject constructor(
         }
     }
 
-    fun isServerFile(path: String): Boolean {
-        return repositories.fileRepository.isServerFile(path)
-    }
-
     fun extendSelectedImageUris(uris: List<Uri>) {
-        this.selectedImageUris+=uris
+        this.selectedImageUris += uris
     }
 
     fun removeSelectedImageUris(uriID: Int) {
         if (repositories.fileRepository.isServerFile(selectedImageUris[uriID].toString())) {
-            deletedImageUris = deletedImageUris+repositories.fileRepository.getFileName(selectedImageUris[uriID].toString())
+            deletedImageUris =
+                deletedImageUris + repositories.fileRepository.getFileName(selectedImageUris[uriID].toString())
         }
-        selectedImageUris=selectedImageUris.subList(0,uriID)+selectedImageUris.subList(uriID+1,selectedImageUris.size)
+        selectedImageUris = selectedImageUris.subList(0, uriID) + selectedImageUris.subList(
+            uriID + 1,
+            selectedImageUris.size
+        )
     }
 
     fun getEventCreate(): EventCreate? {
-        if (title.isEmpty() || LocalDateTime.of(pickedDate, pickedTime)<=LocalDateTime.now()) {
-            return null
-        } else {
-            return EventCreate(
-                name = title,
-                description = description,
-                startTime = LocalDateTime.of(pickedDate, pickedTime).atOffset(ZoneOffset.systemDefault().rules.getOffset(Instant.now())).toInstant(),
-                minimalAge = minAge.toShortOrNull(),
-                maximalAge = maxAge.toShortOrNull(),
-                price = if ((price.toIntOrNull()?:0)>0) price.toIntOrNull() else 0,
-                tags = selectedCategories.toList())
-        }
+        val eventCreate = EventCreate(
+            name = title,
+            description = description,
+            startTime = LocalDateTime.of(pickedDate, pickedTime)
+                .atOffset(ZoneOffset.systemDefault().rules.getOffset(Instant.now())).toInstant(),
+            minimalAge = minAge.toShortOrNull(),
+            maximalAge = maxAge.toShortOrNull(),
+            price = if ((price.toIntOrNull() ?: 0) > 0) price.toIntOrNull() else 0,
+            tags = selectedCategories.toList()
+        )
+
+        return if (EventValidator().eventCreateValidate(eventCreate)) eventCreate else null
     }
 
     fun getEventUpdate(): EventUpdate? {
-        if (title.isEmpty() || LocalDateTime.of(pickedDate, pickedTime)<=LocalDateTime.now()) {
-            return null
-        } else {
-            val startTime = LocalDateTime.of(pickedDate, pickedTime).atOffset(ZoneOffset.systemDefault().rules.getOffset(Instant.now())).toInstant()
-            return EventUpdate(
+        val startTime = LocalDateTime.of(pickedDate, pickedTime)
+            .atOffset(ZoneOffset.systemDefault().rules.getOffset(Instant.now())).toInstant()
+
+        val eventUpdate = EventUpdate(
                 eventID = event!!.id,
-                name = if (event!!.name==title) null else title,
-                description = if (event!!.description==description) null else description,
-                startTime = if (event!!.startTime==startTime) null else startTime,
-                minimalAge = if (event!!.minimalAge == (minAge.toShortOrNull() ?: 0.toShort())) null else minAge.toShortOrNull() ?: 0.toShort(),
-                maximalAge = if (event!!.maximalAge == maxAge.toShortOrNull()) null else maxAge.toShortOrNull() ?: 999.toShort(),
-                price = if (event!!.price==(price.toIntOrNull() ?: 0) && (price.toIntOrNull() ?: 0)<0) null else price.toIntOrNull() ?: 0,
-                tags = if (event!!.tags==selectedCategories.toList()) null else selectedCategories.toList(),
+                name = if (event!!.name == title) null else title,
+                description = if (event!!.description == description) null else description,
+                startTime = if (event!!.startTime == startTime) null else startTime,
+                minimalAge = if (event!!.minimalAge == (minAge.toShortOrNull()
+                        ?: 0.toShort())
+                ) null else minAge.toShortOrNull() ?: 0.toShort(),
+                maximalAge = if (event!!.maximalAge == maxAge.toShortOrNull()) null else maxAge.toShortOrNull()
+                    ?: 999.toShort(),
+                price = if (event!!.price == (price.toIntOrNull() ?: 0) && (price.toIntOrNull()
+                        ?: 0) < 0
+                ) null else price.toIntOrNull() ?: 0,
+                tags = if (event!!.tags == selectedCategories.toList()) null else selectedCategories.toList(),
                 deletedImages = deletedImageUris
             )
-        }
+
+        return if (EventValidator().evenUpdateValidate(eventUpdate)) eventUpdate else null
     }
 
     fun filterImages(): List<Uri> {
-        return selectedImageUris.filter { repositories.fileRepository.isServerFile(it.toString()).not() }
+        return selectedImageUris.filter {
+            repositories.fileRepository.isServerFile(it.toString()).not()
+        }
     }
 }

@@ -3,6 +3,7 @@ package pachmp.meventer.components.mainmenu.components.events.components.display
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,26 +57,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import com.gowtham.ratingbar.RatingBar
 import com.gowtham.ratingbar.RatingBarConfig
 import com.gowtham.ratingbar.RatingBarStyle
 import com.ramcosta.composedestinations.annotation.Destination
+import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
-import pachmp.meventer.components.mainmenu.components.events.components.Rank
 import pachmp.meventer.components.mainmenu.components.events.components.display.EventScreenViewModel
 import pachmp.meventer.components.mainmenu.components.events.components.display.UserModel
 import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
 import pachmp.meventer.components.mainmenu.components.profile.FeedbackModel
-import pachmp.meventer.components.mainmenu.components.profile.screens.CommentsList
-import pachmp.meventer.components.widgets.CustomText
+import pachmp.meventer.components.widgets.CommentsList
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.components.widgets.MaterialButton
+import pachmp.meventer.data.enums.Ranks
 import pachmp.meventer.ui.transitions.FadeTransition
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -120,10 +121,9 @@ fun EventScreen(
                         key = { event!!.images[it] },
                         beyondBoundsPageCount = 1
                     ) {
-                        val imageBitmap = remember { getImageTest(getDefaultImageBitmap(), event!!.images[it]) }
                         Image(
                             modifier = Modifier.fillMaxSize(),
-                            bitmap = imageBitmap.value,
+                            bitmap = getImageFromName(event!!.images[it]).value,
                             contentDescription = "image",
                             contentScale = ContentScale.Crop
                         )
@@ -159,11 +159,15 @@ fun EventScreen(
                                     .heightIn(40.dp)
                                     .height(50.dp)
                                     .weight(3f),
-                                enabled = appUser!!.rank != Rank.ORIGINATOR,
-                                text = if ( remember{derivedStateOf{allMembers!!.find { it.id==appUser!!.id }}}.value!=null ) "Покинуть" else "Присоединиться",
+                                enabled = appUser!!.ranks != Ranks.ORIGINATOR,
+                                text =
+                                if ( remember{derivedStateOf{allMembers!!.find { it.id==appUser!!.id }}}.value!=null )
+                                    stringResource(R.string.leave)
+                                else
+                                    stringResource(R.string.join),
                                 onClick = { changeUserParticipant() }
                             )
-                            if (appUser!!.rank.value >= Rank.ORGANIZER.value) {
+                            if (appUser!!.ranks.value >= Ranks.ORGANIZER.value) {
                                 IconButton(
                                     onClick = { eventsViewModel.navigateToEditEvent() },
                                     modifier = Modifier
@@ -206,30 +210,43 @@ fun EventScreen(
                             onValueChange = {},
                             onRatingChanged = { showRatingDialog.value = true })
 
-                        CustomText(
-                            text = "**Начало: **" + event!!.startTime.atZone(ZoneId.systemDefault())
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm:ss"))
+                        EventParam(
+                            name = stringResource(R.string.start),
+                            value = event!!.startTime.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd | hh:mm:ss"))
                         )
-                        CustomText(
-                            text = if (event!!.maximalAge == null || event!!.maximalAge == 999.toShort()) "**Возростное ограничение:** ${event!!.minimalAge}+ лет" else "**Возростное ограничение:** от ${event!!.minimalAge} до ${event!!.maximalAge} лет"
+
+                        EventParam(
+                            name = stringResource(R.string.age_limit),
+                            value =
+                            if (event!!.maximalAge == null || event!!.maximalAge == 999.toShort())
+                                "${event!!.minimalAge}+"
+                            else
+                                "${event!!.minimalAge} - ${event!!.maximalAge}"
                         )
-                        CustomText(
-                            text = "**Стоимость: **" + if (event!!.price == 0) "Бесплатно" else "${event!!.price}₽"
+
+                        EventParam(
+                            name = stringResource(R.string.price),
+                            value =
+                            if (event!!.price == 0)
+                                stringResource(R.string.free)
+                            else
+                                "${event!!.price}₽"
                         )
-                        CustomText(
-                            text = "**Описание: **" + event!!.description
+
+                        EventParam(
+                            name = stringResource(R.string.description),
+                            value = event!!.description
                         )
+
                         Spacer(modifier = Modifier.padding(5.dp))
                         Text(
-                            text = "Участники мероприятия",
+                            text = stringResource(R.string.event_participants),
                             style = MaterialTheme.typography.titleMedium
                         )
                         LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
-                            // TODO: FIX INFINIT LOOP
                             item {
                                 if (originator!!.image==null) {
-                                    originator!!.image = remember { getDefaultImageBitmap() }
-                                    remember{getImage(originator!!.image!!, originator!!.avatar)}
+                                    originator!!.image = getImageFromName(originator!!.avatar)
                                 }
                                 UserItem(
                                     user = originator!!,
@@ -242,8 +259,7 @@ fun EventScreen(
 
                             itemsIndexed(organizers!!) { index, item ->
                                 if (item.image==null) {
-                                    organizers!![index].image = remember { getDefaultImageBitmap() }
-                                    remember{getImage(organizers!![index].image!!, item.avatar)}
+                                    organizers!![index].image = getImageFromName(item.avatar)
                                 }
                                 UserItem(
                                     user = item,
@@ -255,8 +271,7 @@ fun EventScreen(
                             }
                             itemsIndexed(participants!!) { index, item ->
                                 if (item.image==null) {
-                                    participants!![index].image = remember { getDefaultImageBitmap() }
-                                    remember{getImage(participants!![index].image!!, item.avatar)}
+                                    participants!![index].image = getImageFromName(item.avatar)
                                 }
 
                                 UserItem(
@@ -278,6 +293,22 @@ fun EventScreen(
 }
 
 @Composable
+fun EventParam(name: String, value: String, modifier:Modifier = Modifier) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(
+            text = "${name}:",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            value,
+            fontSize = 18.sp
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
 fun UserItem(
     user: UserModel?,
     appUser: UserModel,
@@ -287,32 +318,36 @@ fun UserItem(
     with(eventScreenViewModel) {
         if (user == null) {
             Row(modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Не удалось загрузить пользователя")
+                Text(text = stringResource(R.string.user_loading_failed))
             }
 
         } else {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(70.dp),
+                    .height(70.dp).combinedClickable(onClick = {}, onLongClick = {
+
+                    }),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Image(
                     bitmap = imageBitmap.value,
                     contentDescription = "avatar",
-                    Modifier.clip(CircleShape).size(60.dp),
+                    Modifier
+                        .clip(CircleShape)
+                        .size(60.dp),
                     contentScale = ContentScale.Crop
                 )
                 Column(modifier = Modifier.padding(4.dp), verticalArrangement = Arrangement.Center) {
-                    if (user.id == appUser.id) Text("${user.name!!} (Вы)") else Text(user.name!!)
+                    if (user.id == appUser.id) Text("${user.name!!} (${stringResource(R.string.you)})") else Text(user.name!!)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
-                        Text(text = user.rank.title)
-                        if (appUser.rank == Rank.ORIGINATOR && user.id != appUser.id) {
+                        Text(text = user.ranks.title)
+                        if (appUser.ranks == Ranks.ORIGINATOR && user.id != appUser.id) {
                             IconButton(onClick = { eventScreenViewModel.changeUserOrganizer(user) }) {
                                 Icon(
                                     imageVector = if (remember{derivedStateOf{organizers!!.find { it.id==user.id }}}.value!=null) Icons.Default.RemoveModerator else Icons.Default.AddModerator,
@@ -320,7 +355,7 @@ fun UserItem(
                                 )
                             }
                         }
-                        if (appUser.rank.value > user.rank.value) {
+                        if (appUser.ranks.value > user.ranks.value) {
                             IconButton(onClick = { kickUser(user) }) {
                                 Icon(
                                     imageVector = Icons.Default.PersonRemove,
@@ -396,7 +431,7 @@ fun OriginarorFeedbacksDialog(
                             if (appUser!!.id != originator!!.id) {
                                 val feedback = feedbackModels.find { it.author?.id == appUser!!.id }
 
-                                Text("Оставить отзыв")
+                                Text(stringResource(R.string.leave_feedback))
                                 RatingBar(
                                     value = rating,
                                     config = RatingBarConfig().numStars(5)
@@ -407,22 +442,22 @@ fun OriginarorFeedbacksDialog(
                                 OutlinedTextField(value = comment, onValueChange = { comment = it })
                                 if (feedback == null) {
                                     Button(onClick = { eventScreenViewModel.createFeedback() }) {
-                                        Text("Отправить")
+                                        Text(stringResource(R.string.send))
                                     }
                                 } else {
                                     Row(horizontalArrangement = Arrangement.SpaceAround) {
                                         Button(onClick = { updateFeedback() }) {
-                                            Text("Изменить")
+                                            Text(stringResource(R.string.edit))
                                         }
                                         Button(onClick = { deleteFeedback() }) {
-                                            Text("Удалить")
+                                            Text(stringResource(R.string.delete))
                                         }
                                     }
                                 }
                             }
-                            Text("Отзывы")
+                            Text(stringResource(R.string.feedbacks))
                             if (feedbackModels.isEmpty()) {
-                                Text("Нету отзывов")
+                                Text(stringResource(R.string.empty_feedback_list))
                             } else {
                                 Box(
                                     Modifier
@@ -433,7 +468,7 @@ fun OriginarorFeedbacksDialog(
                                 }
                             }
                             Button(onClick = { visible.value = false }) {
-                                Text("Закрыть")
+                                Text(stringResource(R.string.close))
                             }
                         }
                     } else {

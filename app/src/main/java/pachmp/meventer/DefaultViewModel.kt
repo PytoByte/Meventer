@@ -1,24 +1,25 @@
 package pachmp.meventer
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Log
-import android.webkit.MimeTypeMap
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.core.net.toFile
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import pachmp.meventer.components.destinations.LoginScreenDestination
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.data.DTO.Response
@@ -29,30 +30,59 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 
 
-open class DefaultViewModel(
+abstract class DefaultViewModel(
     val navigator: Navigator,
     val repositories: Repositories,
 ) : ViewModel() {
 
     val snackBarHostState = SnackbarHostState()
 
-    @SuppressLint("Recycle")
-    fun cacheFile(uri: Uri, name: String): File {
+    fun getFileName(filePath: String): String {
+        return filePath.substringAfterLast("/")
+    }
 
-        val fileType = repositories.appContext.contentResolver.getType(uri)
-        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(fileType)
+    fun getMimeType(uri: Uri): String? {
+        return repositories.appContext.contentResolver.getType(uri)
+    }
 
-        val inputStream =
-            repositories.appContext.contentResolver.openInputStream(uri)!! as FileInputStream
+    fun getFileExtension(uri: Uri): String {
+        /*val fileType = getMimeType(uri)
+        return MimeTypeMap.getSingleton().getExtensionFromMimeType(fileType) ?: "file"*/
+        return getUriFileName(uri).substringAfterLast('.')
+    }
+
+    fun getFileExtension(path: String): String {
+        return path.substringAfterLast('.')
+    }
+
+    fun cacheFile(uri: Uri, name: String): File? {
+        val extension = getFileExtension(uri)
+
         val file = File(repositories.appContext.cacheDir, "${name}.${extension}")
-        val output = FileOutputStream(file)
-        val buffer = ByteArray(1024)
-        var size: Int
-        while (inputStream.read(buffer).also { size = it } != -1) {
-            output.write(buffer, 0, size)
+
+        repositories.appContext.contentResolver.openInputStream(uri)?.use { input ->
+            FileOutputStream(file).use { output ->
+                val buffer = ByteArray(1024)
+                var size: Int
+                while (input.read(buffer).also { size = it } != -1) {
+                    output.write(buffer, 0, size)
+                }
+            }
+        } ?: return null
+
+        return file
+    }
+
+    private fun cacheImage(imageBitmap: ImageBitmap, name: String): File {
+        val newName = name.split(".")[0]+".jpg"
+        val file = File(repositories.appContext.cacheDir, newName)
+
+        FileOutputStream(file).use { output ->
+            imageBitmap.asAndroidBitmap().compress(Bitmap.CompressFormat.JPEG, 60, output)
         }
-        inputStream.close()
-        output.close()
+
+        Log.d("IMAGE CACHE", "Caching $newName")
+
         return file
     }
 
@@ -61,6 +91,7 @@ open class DefaultViewModel(
         responseHandler: (HttpStatusCode) -> Boolean? = { null },
         body: suspend (Response<Type>) -> Unit = {},
     ): Boolean {
+
         response?.let {
             when (it.result.value) {
                 200 -> {
@@ -76,70 +107,108 @@ open class DefaultViewModel(
                         }
                         return handlerResult
                     } ?: snackBarHostState.showSnackbar(
-                        message = response.result.description,
+                        message = "(${response.result.value}) ${response.result.description}",
                         duration = SnackbarDuration.Short
                     )
                 }
             }
-        } ?: snackBarHostState.showSnackbar(
-            message = "Сервер не отвечает",
-            duration = SnackbarDuration.Short
-        )
+        } ?: yield()
+
         return false
     }
 
-    fun getImage(imageBitmap: MutableState<ImageBitmap>, fileName: String?) {
+    private fun isServerFile(path: String): Boolean {
+        return repositories.fileRepository.isServerFile(path)
+    }
+
+    @Composable
+    fun getImageFromName(fileName: String?): MutableState<ImageBitmap> = remember {
+        val imageBitmap = getDefaultImageBitmap()
+
         if (fileName.isNullOrEmpty().not()) {
             viewModelScope.launch {
-                val imageRequested = repositories.fileRepository.getFile(fileName!!)
+
+                val cacheImage = checkCachedImage(fileName!!)
+                if (cacheImage != null) {
+                    imageBitmap.value = cacheImage
+                    return@launch
+                }
+
+                val imageRequested = repositories.fileRepository.getFile(fileName)
 
                 if (imageRequested == null) {
                     Log.e("IMAGE", "Сбой в загрузке изображения")
                 } else {
+                    cacheImage(imageRequested, fileName)
                     imageBitmap.value = imageRequested
                 }
             }
         }
+
+        return@remember imageBitmap
     }
 
-    fun getImageTest(imageBitmap: MutableState<ImageBitmap>, fileName: String?): MutableState<ImageBitmap> {
-        if (fileName.isNullOrEmpty().not()) {
-            viewModelScope.launch {
-                val imageRequested = repositories.fileRepository.getFile(fileName!!)
+    @Composable
+    fun getImageFromUri(uri: Uri?): MutableState<ImageBitmap> = remember {
+        val imageBitmap = getDefaultImageBitmap()
 
-                if (imageRequested == null) {
-                    Log.e("IMAGE", "Сбой в загрузке изображения")
+        if (uri != null) {
+            viewModelScope.launch {
+                val cacheImage = checkCachedImage(getUriFileName(uri))
+                if (cacheImage != null) {
+                    imageBitmap.value = cacheImage
+                    return@launch
+                }
+
+                if (isServerFile(uri.toString())) {
+                    getGlobalImageUri(imageBitmap, uri)
                 } else {
-                    imageBitmap.value = imageRequested
+                    getLocalImageUri(imageBitmap, uri)
                 }
             }
         }
 
-        return imageBitmap
+        return@remember imageBitmap
     }
 
-    @SuppressLint("Recycle")
-    fun getLocalImageUri(imageBitmap: MutableState<ImageBitmap>, fileUri: Uri?) {
-        if (fileUri!=null) {
-            viewModelScope.launch {
-                val inputStream = repositories.appContext.contentResolver.openInputStream(fileUri)!! as FileInputStream
+    private fun checkCachedImage(fileName: String): ImageBitmap? {
+        val name = "${fileName.split(".")[0]}.jpg"
+        repositories.appContext.cacheDir.listFiles()?.forEach {
+            if (it.name == name) {
+                val inputStream = it.inputStream()
+
+                return inputStream.use {
+                    val bytes = inputStream.readBytes()
+                    Log.d("IMAGE CACHE", "Found $name")
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap()
+                }
+            }
+        }
+        return null
+    }
+
+    private fun getGlobalImageUri(imageBitmap: MutableState<ImageBitmap>, fileUri: Uri) {
+        viewModelScope.launch {
+            val imageRequested =
+                repositories.fileRepository.getFileByFullPath(fileUri.toString())
+
+            if (imageRequested == null) {
+                Log.e("IMAGE", "Сбой в загрузке изображения")
+            } else {
+                cacheImage(imageRequested, getUriFileName(fileUri))
+                imageBitmap.value = imageRequested
+            }
+        }
+    }
+
+    private fun getLocalImageUri(imageBitmap: MutableState<ImageBitmap>, fileUri: Uri) {
+        viewModelScope.launch {
+            val inputStream =
+                repositories.appContext.contentResolver.openInputStream(fileUri)!! as FileInputStream
+            inputStream.use {
                 val bytes = inputStream.readBytes()
-                imageBitmap.value = BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap()
-                inputStream.close()
-            }
-        }
-    }
-
-    fun getImageUri(imageBitmap: MutableState<ImageBitmap>, fileUri: Uri?) {
-        if (fileUri!=null) {
-            viewModelScope.launch {
-                val imageRequested = repositories.fileRepository.getFileByFullPath(fileUri.toString() ?: "")
-
-                if (imageRequested == null) {
-                    Log.e("IMAGE", "Сбой в загрузке изображения")
-                } else {
-                    imageBitmap.value = imageRequested
-                }
+                imageBitmap.value =
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap()
             }
         }
     }
@@ -148,6 +217,38 @@ open class DefaultViewModel(
         return mutableStateOf(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap())
     }
 
-    fun fixEventImages(event: Event) = event.copy(images = event.images.map { repositories.fileRepository.getFileURL(it) })
-    fun fixUserAvatar(user: User) = user.copy(avatar = repositories.fileRepository.getFileURL(user.avatar))
+    fun fixEventImages(event: Event) =
+        event.copy(images = event.images.map { repositories.fileRepository.getFileURL(it) })
+
+    fun fixUserAvatar(user: User) =
+        user.copy(avatar = repositories.fileRepository.getFileURL(user.avatar))
+
+    fun download(fileName: String) {
+        val url = repositories.fileRepository.getFileURL(fileName)
+        val mimeType = getMimeType(url.toUri())?:"*/*"
+        viewModelScope.launch {
+            repositories.fileRepository.download(url.toUri(), fileName, mimeType)
+        }
+    }
+
+    fun customDownload(dir:Uri, fileName: String) = viewModelScope.launch {
+        repositories.fileRepository.downloadCustom(dir, fileName)
+    }
+
+        /*viewModelScope.launch {
+        repositories.fileRepository.downloadCustom(dir, fileName)
+    }*/
+
+    fun getUriFileName(uri: Uri): String {
+        val returnCursor =
+            repositories.appContext.contentResolver.query(uri, null, null, null, null)
+        if (returnCursor != null) {
+            val nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            returnCursor.moveToFirst()
+            val fileName = returnCursor.getString(nameIndex)
+            returnCursor.close()
+            return fileName
+        }
+        return ""
+    }
 }
