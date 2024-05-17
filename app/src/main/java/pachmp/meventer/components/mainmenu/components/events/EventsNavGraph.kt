@@ -1,7 +1,7 @@
-package pachmp.meventer.components.mainmenu.components.events.screens
+package pachmp.meventer.components.mainmenu.components.events
 
 import com.ramcosta.composedestinations.annotation.NavGraph
-import pachmp.meventer.components.mainmenu.components.BottomNavGraph
+import pachmp.meventer.components.mainmenu.BottomNavGraph
 
 @BottomNavGraph(start = true)
 @NavGraph

@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
+import pachmp.meventer.components.mainmenu.components.events.EventsNavGraph
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.components.widgets.EmbeddedSearchBar
 import pachmp.meventer.components.widgets.LoadingScreen
@@ -72,7 +73,7 @@ fun AllEventsScreen(eventsViewModel: EventsViewModel) {
         }
 
         Scaffold(
-            snackbarHost = { SnackbarHost(eventsViewModel.snackBarHostState) },
+            snackbarHost = { SnackbarHost(eventsViewModel.snackbarHostState) },
             floatingActionButton = {
                 FloatingButtonAdd {
                     eventsViewModel.navigateToCreateEvent()

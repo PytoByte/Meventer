@@ -35,7 +35,7 @@ abstract class DefaultViewModel(
     val repositories: Repositories,
 ) : ViewModel() {
 
-    val snackBarHostState = SnackbarHostState()
+    val snackbarHostState = SnackbarHostState()
 
     fun getFileName(filePath: String): String {
         return filePath.substringAfterLast("/")
@@ -106,7 +106,7 @@ abstract class DefaultViewModel(
                             body(it)
                         }
                         return handlerResult
-                    } ?: snackBarHostState.showSnackbar(
+                    } ?: snackbarHostState.showSnackbar(
                         message = "(${response.result.value}) ${response.result.description}",
                         duration = SnackbarDuration.Short
                     )
@@ -134,7 +134,7 @@ abstract class DefaultViewModel(
                     return@launch
                 }
 
-                val imageRequested = repositories.fileRepository.getFile(fileName)
+                val imageRequested = repositories.fileRepository.getImageFromServer(fileName)
 
                 if (imageRequested == null) {
                     Log.e("IMAGE", "Сбой в загрузке изображения")
@@ -234,10 +234,6 @@ abstract class DefaultViewModel(
     fun customDownload(dir:Uri, fileName: String) = viewModelScope.launch {
         repositories.fileRepository.downloadCustom(dir, fileName)
     }
-
-        /*viewModelScope.launch {
-        repositories.fileRepository.downloadCustom(dir, fileName)
-    }*/
 
     fun getUriFileName(uri: Uri): String {
         val returnCursor =

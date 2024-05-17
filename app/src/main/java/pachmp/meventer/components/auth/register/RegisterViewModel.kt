@@ -46,7 +46,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
     fun registerRequest() {
         viewModelScope.launch {
             if (!UserValidator().emailValidate(email)) {
-                snackBarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
+                snackbarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
             } else {
                 afterCheckResponse(repositories.userRepository.sendEmailCode(email)) {
                     navigator.clearNavigate(CodeScreenDestination())
@@ -58,7 +58,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
     fun confirmRegister() {
         viewModelScope.launch {
             if (!UserValidator().codeValidate(code)) {
-                snackBarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
+                snackbarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
             } else {
                 afterCheckResponse(repositories.userRepository.verifyEmailCode(UserEmailCode(email = email, code = code))) {
                     navigator.clearNavigate(CreateUserScreenDestination())
@@ -79,7 +79,7 @@ class RegisterViewModel @Inject constructor(@RootNav navigator: Navigator, repos
             )
 
             if (!UserValidator().userRegisterValidate(userRegister)) {
-                snackBarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
+                snackbarHostState.showSnackbar(message = repositories.appContext.getString(R.string.fields_empty_or_validate_error))
             } else {
                 val tokenResponse = repositories.userRepository.register(
                     userRegister,

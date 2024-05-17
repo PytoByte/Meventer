@@ -41,6 +41,7 @@ import com.gowtham.ratingbar.RatingBarConfig
 import com.gowtham.ratingbar.RatingBarStyle
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
+import pachmp.meventer.components.mainmenu.components.profile.ProfileNavGraph
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
 import pachmp.meventer.components.widgets.Avatar
 import pachmp.meventer.components.widgets.CommentsList
@@ -61,7 +62,7 @@ fun ProfileScreen(profileViewModel: ProfileViewModel) {
         } else {
             MeventerTheme {
                 Scaffold(
-                    snackbarHost = { SnackbarHost(snackBarHostState) },
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
                     topBar = {
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,

@@ -41,7 +41,7 @@ class FileRepository @Inject constructor(
 ) : DefaultRepository(encryptedSharedPreferences, appContext) {
     private val repositoryURL = baseURL + "file/"
 
-    suspend fun getFile(fileName: String) = withHttpClient {
+    suspend fun getImageFromServer(fileName: String) = withHttpClient {
         val bitmapData = get("${repositoryURL}${fileName}").bodyAsChannel().toByteArray()
 
         val outputByte = ByteArrayOutputStream()
@@ -65,7 +65,9 @@ class FileRepository @Inject constructor(
     fun isServerFile(fileUrl: String) = fileUrl.contains(baseURL)
 
     fun clearCache() {
-
+        appContext.cacheDir.listFiles()?.forEach {
+            it.delete()
+        }
     }
 
     suspend fun upload(file: File) = withHttpClient {

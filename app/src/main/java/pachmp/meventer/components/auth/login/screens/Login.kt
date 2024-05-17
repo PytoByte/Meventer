@@ -44,7 +44,7 @@ import pachmp.meventer.ui.transitions.FadeTransition
 fun LoginScreen(loginViewModel: LoginViewModel = hiltViewModel()) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(loginViewModel.snackBarHostState) }
+        snackbarHost = { SnackbarHost(loginViewModel.snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier

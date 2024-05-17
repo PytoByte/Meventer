@@ -43,7 +43,7 @@ fun RegisterScreen(registerViewModel: RegisterViewModel) {
     with(registerViewModel) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            snackbarHost = { SnackbarHost(registerViewModel.snackBarHostState) }
+            snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
         ) { paddingValues ->
             Column(
                 modifier = Modifier

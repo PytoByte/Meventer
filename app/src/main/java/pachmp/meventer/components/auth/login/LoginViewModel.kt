@@ -36,7 +36,7 @@ class LoginViewModel @Inject constructor(@RootNav navigator: Navigator, reposito
     fun loginRequest() {
         viewModelScope.launch {
             if (email.isEmpty() || password.isEmpty()) {
-                snackBarHostState.showSnackbar(message = "Поля не заполнены")
+                snackbarHostState.showSnackbar(message = "Поля не заполнены")
             } else {
                 afterCheckResponse(repositories.userRepository.login(UserLogin(email = email, password = password)))
                 { response ->

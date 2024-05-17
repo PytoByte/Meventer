@@ -12,7 +12,8 @@ import pachmp.meventer.R
 import pachmp.meventer.RootNav
 import pachmp.meventer.components.destinations.EventScreenDestination
 import pachmp.meventer.components.mainmenu.BottomViewModel
-import pachmp.meventer.components.mainmenu.components.profile.FeedbackModel
+import pachmp.meventer.components.mainmenu.components.events.components.display.model.UserModel
+import pachmp.meventer.components.widgets.models.FeedbackModel
 import pachmp.meventer.data.DTO.Event
 import pachmp.meventer.data.DTO.EventOrganizer
 import pachmp.meventer.data.DTO.EventParticipant
@@ -29,7 +30,7 @@ class EventScreenViewModel @Inject constructor(
     @Nav navigator: Navigator,
     repositories: Repositories,
 ) : BottomViewModel(rootNavigator, navigator, repositories) {
-    var parentSnackbarHostState = snackBarHostState
+    var parentSnackbarHostState = snackbarHostState
 
     var allMembers by mutableStateOf<List<UserModel>?>(null)
 

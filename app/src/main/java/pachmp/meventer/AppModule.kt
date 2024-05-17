@@ -1,7 +1,6 @@
 package pachmp.meventer
 
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
@@ -18,7 +17,15 @@ class AppModule {
     @Provides
     @Singleton
     fun encryptedSharedPreferencesProvider(@ApplicationContext appContext: Context): SharedPreferences {
-        return appContext.getSharedPreferences("token", MODE_PRIVATE)
+        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+
+        return EncryptedSharedPreferences.create(
+            "token",
+            masterKeyAlias,
+            appContext,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
     }
 
     @Nav

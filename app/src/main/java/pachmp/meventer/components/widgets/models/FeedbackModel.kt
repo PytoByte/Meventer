@@ -1,4 +1,4 @@
-package pachmp.meventer.components.mainmenu.components.profile
+package pachmp.meventer.components.widgets.models
 
 import pachmp.meventer.data.DTO.User
 

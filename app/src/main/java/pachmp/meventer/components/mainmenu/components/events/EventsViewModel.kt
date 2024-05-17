@@ -147,10 +147,10 @@ class EventsViewModel @Inject constructor(
                 }
                 afterCheckResponse(repositories.eventRepository.createEvent(eventCreate, files)) {
                     navigateToAllEvents()
-                    snackBarHostState.showSnackbar(repositories.appContext.getString(R.string.event_update_success))
+                    snackbarHostState.showSnackbar(repositories.appContext.getString(R.string.event_update_success))
                 }
             } else {
-                snackBarHostState.showSnackbar(repositories.appContext.getString(R.string.event_validate_error))
+                snackbarHostState.showSnackbar(repositories.appContext.getString(R.string.event_validate_error))
             }
         }
     }
@@ -163,10 +163,10 @@ class EventsViewModel @Inject constructor(
                 }
                 afterCheckResponse(repositories.eventRepository.editEvent(eventUpdate, files)) {
                     navigateToAllEvents()
-                    snackBarHostState.showSnackbar(repositories.appContext.getString(R.string.event_create_success))
+                    snackbarHostState.showSnackbar(repositories.appContext.getString(R.string.event_create_success))
                 }
             } else {
-                snackBarHostState.showSnackbar(repositories.appContext.getString(R.string.event_validate_error))
+                snackbarHostState.showSnackbar(repositories.appContext.getString(R.string.event_validate_error))
             }
         }
     }
@@ -183,9 +183,9 @@ class EventsViewModel @Inject constructor(
                 if (afterCheckResponse(response)) {
                     events = response!!.data!!
                     eventsVisible = events
-                    snackBarHostState.showSnackbar("Найдено ${response.data!!.size} мероприятий")
+                    snackbarHostState.showSnackbar("Найдено ${response.data!!.size} мероприятий")
                 } else {
-                    snackBarHostState.showSnackbar("Мероприятия не найдены")
+                    snackbarHostState.showSnackbar("Мероприятия не найдены")
                 }
             } else {
                 updateEvents().join()
@@ -199,7 +199,7 @@ class EventsViewModel @Inject constructor(
                     if (eventSelection.sortBy=="далёкие") {
                         eventsVisible = eventsVisible!!.reversed()
                     }
-                    snackBarHostState.showSnackbar("Найдено ${eventsVisible!!.size} мероприятий")
+                    snackbarHostState.showSnackbar("Найдено ${eventsVisible!!.size} мероприятий")
                 }
             }
         }
@@ -216,7 +216,7 @@ class EventsViewModel @Inject constructor(
         viewModelScope.launch {
             afterCheckResponse(repositories.eventRepository.deteleEvent(eventID)) {
                 navigator.clearNavigate(AllEventsScreenDestination)
-                snackBarHostState.showSnackbar("Мероприятие удалено")
+                snackbarHostState.showSnackbar("Мероприятие удалено")
             }
         }
     }

@@ -79,7 +79,7 @@ import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.components.mainmenu.components.events.components.editor.EventEditorViewModel
-import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
+import pachmp.meventer.components.mainmenu.components.events.EventsNavGraph
 import pachmp.meventer.components.widgets.MaterialButton
 import pachmp.meventer.data.validators.EventValidator
 import pachmp.meventer.ui.transitions.FadeTransition
@@ -246,7 +246,7 @@ fun CreateEventScreen(
                 }
             }
             Scaffold(
-                snackbarHost = { SnackbarHost(eventsViewModel.snackBarHostState) },
+                snackbarHost = { SnackbarHost(eventsViewModel.snackbarHostState) },
                 bottomBar = {
                     Row(
                         modifier = Modifier

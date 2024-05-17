@@ -80,9 +80,9 @@ import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import pachmp.meventer.R
+import pachmp.meventer.components.mainmenu.components.events.EventsNavGraph
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.components.mainmenu.components.events.components.editor.EventEditorViewModel
-import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.components.widgets.MaterialButton
 import pachmp.meventer.data.enums.Ranks
@@ -355,7 +355,7 @@ fun EditEventScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = stringResource(R.string.event_creation),
+                            text = stringResource(R.string.event_changing),
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier
                                 .fillMaxWidth(),

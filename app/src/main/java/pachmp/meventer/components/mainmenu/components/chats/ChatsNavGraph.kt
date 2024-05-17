@@ -1,7 +1,7 @@
-package pachmp.meventer.components.mainmenu.components.chats.screens
+package pachmp.meventer.components.mainmenu.components.chats
 
 import com.ramcosta.composedestinations.annotation.NavGraph
-import pachmp.meventer.components.mainmenu.components.BottomNavGraph
+import pachmp.meventer.components.mainmenu.BottomNavGraph
 
 @BottomNavGraph
 @NavGraph

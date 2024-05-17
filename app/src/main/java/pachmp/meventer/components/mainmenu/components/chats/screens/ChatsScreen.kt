@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import io.ktor.websocket.Frame
 import pachmp.meventer.R
+import pachmp.meventer.components.mainmenu.components.chats.ChatsNavGraph
 import pachmp.meventer.components.mainmenu.components.chats.ChatsViewModel
 import pachmp.meventer.components.widgets.EmbeddedSearchBar
 import pachmp.meventer.components.widgets.LoadingScreen

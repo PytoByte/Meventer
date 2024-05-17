@@ -1,4 +1,4 @@
-package pachmp.meventer.components.mainmenu.components.events.components.display
+package pachmp.meventer.components.mainmenu.components.events.components.display.model
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.ImageBitmap

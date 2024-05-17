@@ -30,7 +30,7 @@ import com.gowtham.ratingbar.RatingBarConfig
 import com.gowtham.ratingbar.RatingBarStyle
 import pachmp.meventer.DefaultViewModel
 import pachmp.meventer.R
-import pachmp.meventer.components.mainmenu.components.profile.FeedbackModel
+import pachmp.meventer.components.widgets.models.FeedbackModel
 
 @Composable
 fun FeedbackCard(defaultViewModel: DefaultViewModel, feedback: FeedbackModel) {

@@ -110,6 +110,10 @@
     <string name="fields_empty_or_validate_error">Поля не заполнены или заполненны неверно</string>
     <string name="update">Обновить</string>
     <string name="server_silent">Сервер не отвечает</string>
+    <string name="participant">Участник</string>
+    <string name="organizer">Организатор</string>
+    <string name="originator">Основатель</string>
+    <string name="event_changing">Редактирование мероприятия</string>
 
     <string-array name="event_tags">
         <item>Спорт</item>

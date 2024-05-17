@@ -28,9 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
+import pachmp.meventer.components.mainmenu.components.profile.ProfileNavGraph
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
 import pachmp.meventer.components.mainmenu.components.profile.components.ProfileEditViewModel
-import pachmp.meventer.components.mainmenu.components.profile.screens.ProfileNavGraph
 import pachmp.meventer.components.widgets.Avatar
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.components.widgets.TextCom
@@ -52,7 +52,7 @@ fun ProfileEdit(
     )
 
     with(profileEditViewModel) {
-        parentSnackbarHostState = profileViewModel.snackBarHostState
+        parentSnackbarHostState = profileViewModel.snackbarHostState
 
         if (user != null) {
             Scaffold(

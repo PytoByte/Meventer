@@ -36,7 +36,7 @@ class EventEditorViewModel @Inject constructor(
     var event by mutableStateOf<Event?>(null)
     var appUser by mutableStateOf<User?>(null)
 
-    var parentSnackbarHostState: SnackbarHostState = snackBarHostState
+    var parentSnackbarHostState: SnackbarHostState = snackbarHostState
 
     var title by mutableStateOf("")
     var price by mutableStateOf("")

@@ -68,14 +68,14 @@ import com.gowtham.ratingbar.RatingBarConfig
 import com.gowtham.ratingbar.RatingBarStyle
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
+import pachmp.meventer.components.mainmenu.components.events.EventsNavGraph
 import pachmp.meventer.components.mainmenu.components.events.EventsViewModel
 import pachmp.meventer.components.mainmenu.components.events.components.display.EventScreenViewModel
-import pachmp.meventer.components.mainmenu.components.events.components.display.UserModel
-import pachmp.meventer.components.mainmenu.components.events.screens.EventsNavGraph
-import pachmp.meventer.components.mainmenu.components.profile.FeedbackModel
+import pachmp.meventer.components.mainmenu.components.events.components.display.model.UserModel
 import pachmp.meventer.components.widgets.CommentsList
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.components.widgets.MaterialButton
+import pachmp.meventer.components.widgets.models.FeedbackModel
 import pachmp.meventer.data.enums.Ranks
 import pachmp.meventer.ui.transitions.FadeTransition
 import java.time.ZoneId
@@ -91,7 +91,7 @@ fun EventScreen(
 ) {
     remember{eventScreenViewModel.init(eventsViewModel.selected!!.id, eventsViewModel.user!!.id)}
     with(eventScreenViewModel) {
-        parentSnackbarHostState = eventsViewModel.snackBarHostState
+        parentSnackbarHostState = eventsViewModel.snackbarHostState
         if (ready == null) {
             LoadingScreen(Modifier.fillMaxSize())
         } else if (ready!!) {
@@ -130,7 +130,7 @@ fun EventScreen(
                     }
                 }
                 Scaffold(
-                    snackbarHost = { SnackbarHost(snackBarHostState) },
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
                     bottomBar = {
                         Row(
                             modifier = Modifier
@@ -325,7 +325,8 @@ fun UserItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(70.dp).combinedClickable(onClick = {}, onLongClick = {
+                    .height(70.dp)
+                    .combinedClickable(onClick = {}, onLongClick = {
 
                     }),
                 verticalAlignment = Alignment.CenterVertically,
@@ -346,7 +347,7 @@ fun UserItem(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
-                        Text(text = user.ranks.title)
+                        Text(text = stringResource(id = user.ranks.titleResourceID))
                         if (appUser.ranks == Ranks.ORIGINATOR && user.id != appUser.id) {
                             IconButton(onClick = { eventScreenViewModel.changeUserOrganizer(user) }) {
                                 Icon(

@@ -85,7 +85,7 @@ import pachmp.meventer.R
 import pachmp.meventer.components.mainmenu.components.chats.ChatsViewModel
 import pachmp.meventer.components.mainmenu.components.chats.components.ChatViewModel
 import pachmp.meventer.components.mainmenu.components.chats.components.SpeechBubbleShape
-import pachmp.meventer.components.mainmenu.components.chats.screens.ChatsNavGraph
+import pachmp.meventer.components.mainmenu.components.chats.ChatsNavGraph
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.data.DTO.Message
 import pachmp.meventer.data.DTO.MessageSend

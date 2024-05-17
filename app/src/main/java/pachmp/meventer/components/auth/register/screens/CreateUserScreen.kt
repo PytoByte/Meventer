@@ -117,7 +117,7 @@ fun CreateUserScreen(registerViewModel: RegisterViewModel) {
                     }
                 }
             },
-            snackbarHost = { SnackbarHost(registerViewModel.snackBarHostState) }
+            snackbarHost = { SnackbarHost(registerViewModel.snackbarHostState) }
         ) { paddingValues ->
             Column(
                 modifier = Modifier

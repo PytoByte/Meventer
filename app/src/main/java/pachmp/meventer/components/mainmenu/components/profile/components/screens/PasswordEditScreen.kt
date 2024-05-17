@@ -40,10 +40,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
+import pachmp.meventer.components.mainmenu.components.profile.ProfileNavGraph
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
 import pachmp.meventer.components.mainmenu.components.profile.components.ProfileEditViewModel
-import pachmp.meventer.components.mainmenu.components.profile.screens.ProfileNavGraph
 import pachmp.meventer.components.widgets.LoadingScreen
+import pachmp.meventer.data.validators.UserValidator
 import pachmp.meventer.ui.transitions.FadeTransition
 
 @ProfileNavGraph
@@ -54,7 +55,7 @@ fun PasswordEditScreen(
     profileEditViewModel: ProfileEditViewModel = hiltViewModel(),
 ) {
     with(profileEditViewModel) {
-        parentSnackbarHostState = profileViewModel.snackBarHostState
+        parentSnackbarHostState = profileViewModel.snackbarHostState
         if (user != null) {
             val showCalendar = remember { mutableStateOf(false) }
             val launcher =
@@ -91,7 +92,7 @@ fun PasswordEditScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
                 ) {
-                    Image(painter = painterResource(id = R.drawable.logo), contentDescription = "logo")
+                    Image(modifier=Modifier.size(250.dp), painter = painterResource(id = R.drawable.logo), contentDescription = "logo")
                     Text(stringResource(R.string.password_changing), style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.size(5.dp))
                     var passwordVisibleState by remember { mutableStateOf(false) }
@@ -101,7 +102,7 @@ fun PasswordEditScreen(
                         label = { Text(stringResource(R.string.password)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        supportingText = { Text(stringResource(R.string.password_length_hint)) },
+                        supportingText = { Text(stringResource(R.string.password_length_hint, UserValidator().minPasswordLength)) },
                         visualTransformation = if (passwordVisibleState) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(

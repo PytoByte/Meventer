@@ -15,6 +15,7 @@ import pachmp.meventer.components.destinations.PasswordEditScreenDestination
 import pachmp.meventer.components.destinations.ProfileEditDestination
 import pachmp.meventer.components.destinations.ProfileScreenDestination
 import pachmp.meventer.components.mainmenu.BottomViewModel
+import pachmp.meventer.components.widgets.models.FeedbackModel
 import pachmp.meventer.data.DTO.User
 import pachmp.meventer.data.repository.Repositories
 import javax.inject.Inject

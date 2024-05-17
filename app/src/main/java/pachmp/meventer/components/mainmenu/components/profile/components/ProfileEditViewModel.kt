@@ -39,7 +39,7 @@ class ProfileEditViewModel @Inject constructor(
     var nickname by mutableStateOf("")
     var birthday by mutableStateOf(LocalDate.now())
 
-    var parentSnackbarHostState by mutableStateOf(snackBarHostState)
+    var parentSnackbarHostState by mutableStateOf(snackbarHostState)
 
     var avatarCurrent by mutableStateOf<String?>(null)
         private set

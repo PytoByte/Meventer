@@ -1,7 +1,6 @@
 package pachmp.meventer
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -110,7 +109,6 @@ class MainActivity : ComponentActivity() {
                     if (response==null) {
                         textState = getString(R.string.server_silent)
                     } else if (response.result.value!=200) {
-                        Log.d("TOKEN FIRST", repositories.encryptedSharedPreferences.getString("token", "")!!)
                         repositories.encryptedSharedPreferences.edit().putString("token", null).apply()
                         uiState = true
                     } else {
@@ -126,6 +124,7 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         GlobalScope.launch {
             repositories.chatSocketRepository.closeSocket()
+            repositories.fileRepository.clearCache()
         }
     }
 }

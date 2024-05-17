@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Button
@@ -25,9 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import pachmp.meventer.R
+import pachmp.meventer.components.mainmenu.components.profile.ProfileNavGraph
 import pachmp.meventer.components.mainmenu.components.profile.ProfileViewModel
 import pachmp.meventer.components.mainmenu.components.profile.components.ProfileEditViewModel
-import pachmp.meventer.components.mainmenu.components.profile.screens.ProfileNavGraph
 import pachmp.meventer.components.widgets.LoadingScreen
 import pachmp.meventer.components.widgets.TextCom
 import pachmp.meventer.ui.transitions.FadeTransition
@@ -40,7 +41,7 @@ fun EmailEditScreen(
     profileEditViewModel: ProfileEditViewModel = hiltViewModel(),
 ) {
     with(profileEditViewModel) {
-        parentSnackbarHostState = profileViewModel.snackBarHostState
+        parentSnackbarHostState = profileViewModel.snackbarHostState
         if (user != null) {
             Scaffold(
                 snackbarHost = { SnackbarHost(parentSnackbarHostState) },
@@ -68,7 +69,7 @@ fun EmailEditScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
                 ) {
-                    Image(painter = painterResource(id = R.drawable.logo), contentDescription = "logo")
+                    Image(modifier=Modifier.size(250.dp), painter = painterResource(id = R.drawable.logo), contentDescription = "logo")
                     Text(stringResource(R.string.email_changing), style = MaterialTheme.typography.titleMedium)
                     TextCom(label = stringResource(R.string.email), value = email) {email = it}
                     Button(onClick = {

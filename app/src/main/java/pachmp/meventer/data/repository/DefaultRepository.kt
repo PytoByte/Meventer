@@ -29,13 +29,10 @@ import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
 
-open class DefaultRepository(
+abstract class DefaultRepository(
     val encryptedSharedPreferences: SharedPreferences,
     val appContext: Context
 ) {
-    //"10.0.2.2"
-    //192.168.1.225 - я
-    //192.168.0.102 - лёша
     protected val serverIP = "10.0.2.2"
     protected val baseURL = "https://${serverIP}:8080/"
 
