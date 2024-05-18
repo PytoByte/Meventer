@@ -26,6 +26,21 @@ Meventer - приложение для тех, кто ценит своё вре
 
 ## Демонстрация
 
+### Профиль
+<img src="/screenshots/profile/1.png" alt="main_profile" width="250"/> <img src="/screenshots/profile/2.png" alt="edit_profile" width="250"/> <img src="/screenshots/profile/3.png" alt="edit_password" width="250"/>
+1. Главное окно 2. Изменение профиля 3. Изменение пароля
+
+### Мероприятия
+<img src="/screenshots/event/1.png" alt="main_event" width="250"/> <img src="/screenshots/event/2.png" alt="create_event" width="250"/>
+1. Главное окно 2. Создание мероприятия
+
+<img src="/screenshots/event/3.png" alt="edit_event" width="250"/> <img src="/screenshots/event/4.png" alt="display_event" width="250"/>
+
+3. Изменение мероприятия 4. Окно мероприятия
+
+### Чаты
+<img src="/screenshots/chat/1.png" alt="edit_event" width="250"/> <img src="/screenshots/chat/2.png" alt="display_event" width="250"/>
+1. Главное окно 2. Окно чата
 
 ## Проблемы
 - Малый опыт в разработке, привёл к трудностям с поддержкой проекта
