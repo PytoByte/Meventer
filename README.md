@@ -1,6 +1,7 @@
 # Meventer
 Meventer - приложение для тех, кто ценит своё время\
-Это приложения является моим отностельно крупным проектом
+Это приложения является моим отностельно крупным проектом\
+Репозиторий сервера: [форк PytoByte/Meventer_Server](https://github.com/PytoByte/Meventer_Server) или [оригинал penakelex/Meventer_Server](https://github.com/penakelex/Meventer_Server)
 
 ## Суть приложения
 Из введения к проекту:
